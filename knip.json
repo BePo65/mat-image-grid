@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "projects/mat-image-grid-lib/src/index.ts",
+    "projects/mat-image-grid-demo/src/main.ts",
+    "**/*.spec.ts",
+    "projects/mat-image-grid-demo/cypress.config.ts",
+    "projects/mat-image-grid-demo/cypress/e2e/*.ts",
+    "projects/mat-image-grid-lib/karma.conf.js",
+    "projects/mat-image-grid-demo/karma.conf.js",
+    "tools/npm-scripts/readme-updater.js"
+  ],
+  "ignore": ["projects/mat-image-grid-demo/cypress/support/*.ts"],
+  "ignoreDependencies": [
+    "@angular/platform-browser-dynamic",
+    "@angular-eslint/schematics",
+    "@angular-eslint/template-parser",
+    "@cypress/schematic",
+    "eslint-plugin-cypress",
+    "@angular/compiler",
+    "@fontsource/roboto",
+    "@fontsource/material-icons",
+    "node"
+  ],
+  "ignoreBinaries": ["knip", "check-is-deprecated"]
+}

@@ -2,32 +2,34 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "sourceMap": true,
+    "baseUrl": "./",
     "declaration": false,
+    "downlevelIteration": true,
     "experimentalDecorators": true,
-    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
-    "target": "ES2022",
+    "lib": ["ES2022", "dom"],
     "module": "ES2022",
-    "useDefineForClassFields": false,
-    "lib": [
-      "ES2022",
-      "dom"
-    ]
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "./dist/out-tsc",
+    "paths": {
+      "mat-image-grid": ["./dist/mat-image-grid-lib"]
+    },
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022",
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
+    "fullTemplateTypeCheck": true,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  }
+  },
+  "include": ["**/src/**/*.ts", "node_modules/cypress"],
+  "exclude": ["node_modules/cypress"]
 }

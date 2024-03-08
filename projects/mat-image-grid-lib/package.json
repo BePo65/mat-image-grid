@@ -1,0 +1,19 @@
+{
+  "name": "mat-image-grid-lib",
+  "version": "0.0.1",
+  "description": "A component for Angular using Angular Material that shows images as a grid of progressive images. The project contains a library component and a demo project.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BePo65/mat-image-grid.git"
+  },
+  "author": "Bernhard Pottler",
+  "license": "MIT",
+  "sideEffects": false,
+  "dependencies": {
+    "tslib": "^2.6.0"
+  },
+  "peerDependencies": {
+    "@angular/common": "^17.2.0",
+    "@angular/core": "^17.2.0"
+  }
+}
