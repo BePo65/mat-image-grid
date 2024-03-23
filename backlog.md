@@ -1,1 +1,2 @@
-- change template to real project content
+- change configuration object to @input parameters of mat-image-grid component (or 1 parameter as object) or injectable service
+- make pig get image data from a paged data store not as an array with data of all images

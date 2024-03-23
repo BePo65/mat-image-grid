@@ -72,7 +72,22 @@ npm install @bepo65/mat-image-grid
 
 ### Embed Mat-Image-Grid In Your Project
 
-Describe here the steps required to insert Mat-Image-Grid in a project.
+Configure the `mat-image-grid` in your application template and provide the necessary settings.
+
+```html
+<mat-image-grid [pigSettings]="settings"> loading... </mat-image-grid>
+```
+
+```typescript
+  protected settings: PigSettings = {
+    urlForSize: (filename: string, imageWidth: number, imageHeight: number) => {
+      // In this demo we need an url like 'https://picsum.photos/id/201/800/600'
+      return `https://picsum.photos/id/${filename}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    },
+  };
+```
+
+Besides this, we need a service that extends `MatImageGridImageServiceBase` and provides a list with information about each image to display.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -104,51 +119,146 @@ Component to create an angular material .....
 
 ##### **Properties**
 
-| Name                     | Description     |
-| ------------------------ | --------------- |
-| `@Input() <name>: <type` | \<description>. |
-|                          |                 |
+| Name                                                     | Description                                                               |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `@Input() pigSettings: PigSettings`                      | Object with the configuration settings.                                   |
+| `@Output() numberOfImagesOnServer: EventEmitter<number>` | Observable emitting the total number of images on the server.             |
+| `@Output() numberOfLoadedImages: EventEmitter<number>`   | Observable emitting the number of images currently loaded.                |
+| `loading$: EventEmitter<Observable<boolean>>`            | Observable emitting the state of loading the images list from the server. |
+|                                                          |                                                                           |
 
-##### **Methods**
+##### **Injectables**
 
-|                 |                 |
-| --------------- | --------------- |
-| `<name>`        | \<description>. |
-| **Parameters**  |
-| \<name>: <type> | \<description>. |
-|                 |                 |
+| Name                                                     | Description                                               |
+| -------------------------------------------------------- | --------------------------------------------------------- |
+| `matImageGridImageService: MatImageGridImageServiceBase` | Service that acts as an interface to the database server. |
+|                                                          |                                                           |
 
 <a id="interfaces-api"></a>
 
 ### Interfaces
 
-#### interface 1
+#### DataStoreProvider
 
-Description of interface.
+Interface for a component that fetches data from the datastore respecting sorting and filtering.
+The component is generic; the given type is used to define the object for an object with image data.
 
 ##### **Methods**
 
-|                  |                 |
-| ---------------- | --------------- |
-| `<name>`         | \<description>. |
-| **Parameters**   |
-| \<name>: \<type> | \<description>. |
-| **Returns**      |
-| \<type>          | \<description>. |
-|                  |                 |
+|                                     |                                                                   |
+| ----------------------------------- | ----------------------------------------------------------------- |
+| `getPagedData`                      | Fetches data from the datastore respecting sorting and filtering. |
+| **Parameters**                      |
+| imagesRange: RequestRowsRange       | The range of images to fetch.                                     |
+| sorts: FieldSortDefinition<T>[]     | The sort definitions to use.                                      |
+| filters: FieldFilterDefinition<T>[] | The filter definitions to use.                                    |
+| **Returns**                         |
+| Observable<Page<T>>                 | Emitting fetched data from the datastore.                         |
+|                                     |                                                                   |
+
+#### Page
+
+Interface defining the properties of a page of images data returned from the datastore.
+
+##### **Properties**
+
+| Name                    | Description                                        |
+| ----------------------- | -------------------------------------------------- |
+| `content:T[]`           | The array of the requested images data.            |
+| `startImageIndex`       | The index of the first image returned.             |
+| `returnedElements`      | The number of images in 'content'.                 |
+| `totalElements`         | The number of images in the unfiltered data store. |
+| `totalFilteredElements` | The number of images after filtering.              |
+|                         |                                                    |
+
+#### PigImageData
+
+This interface defines the parameters from the data store defining an image.
+
+##### **Properties**
+
+| Name                  | Description                                             |
+| --------------------- | ------------------------------------------------------- |
+| `filename: string`    | Name of the image file (without query parameters etc:). |
+| `aspectRatio: number` | Aspect ratio of the image (width / height).             |
+
+#### PigSettings
+
+This interface defines the parameters of a configuration object.
+
+##### **Methods**
+
+|                     |                                                            |
+| ------------------- | ---------------------------------------------------------- |
+| `urlForSize`        | Get the URL for an image with the given filename & height. |
+| **Parameters**      |
+| filename: string    | The filename of the image (from PigImageData).             |
+| imageWidth: number  | The width (in pixels) of the image.                        |
+| imageHeight: number | The height (in pixels) of the image.                       |
+| **Returns**         |
+| string              | The URL of the image.                                      |
+|                     |                                                            |
+
+#### RequestRowsRange
+
+Interface defining the properties of a requests for a range of images data.
+
+##### **Properties**
+
+| Name                      | Description                             |
+| ------------------------- | --------------------------------------- |
+| `startImageIndex: number` | The index of the first image to return. |
+| `numberOfImages: number`  | The number of images to return.         |
+|                           |                                         |
 
 <a id="type-aliases-api"></a>
 
 ### Type Aliases
 
-#### Type 1
+#### FieldFilterDefinition
 
-Description of type.
+The definition of a parameter to filter a list of images. 'T' defines the type describing an image
 
-|                         |
-| ----------------------- | --------- | ---------- |
-| type <name> = "value 1" | "value 2" | "value 3"; |
-|                         |
+|                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------ |
+| type FieldFilterDefinition<T> = StrictUnion\<(FieldFilterDefinitionSimple\<T> \| FieldFilterDefinitionRange\<T>)>; |
+|                                                                                                                    |
+
+#### FieldFilterDefinitionRange
+
+The definition of a parameter filtering for a range of values.
+
+|                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type FieldFilterDefinitionSimple<T> = {<br>&nbsp;&nbsp;fieldName: keyof T<br>&nbsp;&nbsp;valueFrom: string \| number \| Date<br>&nbsp;&nbsp;valueTo: string \| number \| Date<br>}; |
+|                                                                                                                                                                                     |
+
+#### FieldFilterDefinitionSimple
+
+The definition of a parameter filtering for a single value.
+
+|                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------ |
+| type FieldFilterDefinitionSimple<T> = {<br>&nbsp;&nbsp;fieldName: keyof T<br>&nbsp;&nbsp;value: string \| number \| Date<br>}; |
+|                                                                                                                                |
+
+#### FieldSortDefinition
+
+The definition of a single sort parameter.
+
+|                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------- |
+| type FieldSortDefinition<T> = {<br>&nbsp;&nbsp;fieldName: keyof T<br>&nbsp;&nbsp;sortDirection: SortDirectionAscDesc<br>}; |
+|                                                                                                                            |
+
+#### SortDirection
+
+The direction of a sort.
+
+|                                       |
+| ------------------------------------- |
+| type SortDirection = 'asc' \| 'desc'; |
+|                                       |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

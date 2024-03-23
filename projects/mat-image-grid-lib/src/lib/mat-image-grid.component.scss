@@ -1,0 +1,17 @@
+// -2px for header divider
+.images-container {
+  height: calc(100% - 2px);
+  overflow-y: scroll;
+}
+
+// top: position below header row
+// z-index: as image-grid has z-index=100 (default)
+.mat-image-grid-loading-spinner {
+  position: sticky;
+  top: 55px;
+  z-index: 110;
+}
+
+.mat-image-grid-loading-hide {
+  visibility: hidden;
+}

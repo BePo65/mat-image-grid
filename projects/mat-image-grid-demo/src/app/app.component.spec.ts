@@ -16,11 +16,11 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it("should have the 'mat-image-grid-demo' title", () => {
+  it('should have a title property', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
 
-    expect(app.title).toEqual('mat-image-grid-demo');
+    expect(app.title).toEqual('Mat-Image-Grid-Demo');
   });
 
   it('should render title', () => {
@@ -29,7 +29,7 @@ describe('AppComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Hello, mat-image-grid-demo',
+      'Mat-Image-Grid-Demo',
     );
   });
 });
