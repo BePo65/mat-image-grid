@@ -8,6 +8,7 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
+import { MatProgressBar } from '@angular/material/progress-bar';
 import { BehaviorSubject } from 'rxjs';
 
 import { DefaultPigSettings } from './classes/pig-settings.class';
@@ -22,7 +23,7 @@ import { MatImageGridImageServiceBase } from './mat-image-grid.service';
 @Component({
   selector: 'mat-image-grid',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatProgressBar],
   templateUrl: './mat-image-grid.component.html',
   styleUrl: './mat-image-grid.component.scss',
 })
