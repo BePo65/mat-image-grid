@@ -25,7 +25,7 @@
     "build:lib:prod": "ng build mat-image-grid-lib --configuration production",
     "build:demo": "ng build mat-image-grid-demo --delete-output-path --configuration development",
     "build:demo:prod": "ng build mat-image-grid-demo --delete-output-path --configuration production",
-    "build:ghpages": "npm run build:prod && del-cli ghpages && cpy \"dist/mat-image-grid-demo/**\" ghpages",
+    "build:ghpages": "npm run build:prod && del-cli ghpages && cpy \"dist/mat-image-grid-demo/browser/**\" ghpages  && cpy \"dist/mat-image-grid-demo/3rdpartylicenses.txt\" ghpages --flat",
     "start": "ng serve --open",
     "start:debug": "ng serve --host=127.0.0.1",
     "unimported": "npx knip",
