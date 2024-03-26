@@ -1,8 +1,9 @@
+import { Subject } from 'rxjs';
+
 import { ProgressiveImageClassNames } from '../interfaces/pig-class-names.interface';
+import { ProgressiveImageConfiguration } from '../interfaces/pig-image-configuration.interface';
 import { PigImageData } from '../interfaces/pig-image-data.interface';
 import { PigImageStyle } from '../interfaces/pig-Image-style.interface';
-
-import { Pig } from './pig.class';
 
 /**
  * This class manages a single image. It keeps track of the image's height,
@@ -30,35 +31,47 @@ import { Pig } from './pig.class';
  * focus.
  */
 export class ProgressiveImage {
-  existsOnPage = false;
-  aspectRatio: number;
-  filename: string;
-  index: number;
-  pig: Pig;
-  classNames: ProgressiveImageClassNames;
-  element?: HTMLElement;
-  style?: PigImageStyle;
+  public aspectRatio: number;
+  public classPrefix: string;
+  public existsOnPage = false;
+  public style?: PigImageStyle;
+
+  private readonly onClickSubject = new Subject<string>();
+  public onClick$ = this.onClickSubject.asObservable();
+
   // Placeholder for 'subElement'
   [key: string]: unknown;
 
+  protected filename: string;
+  protected index: number;
+  protected classNames: ProgressiveImageClassNames;
+  protected element?: HTMLElement;
+
+  private configuration: ProgressiveImageConfiguration;
+
   /**
    * Creates an instance of ProgressiveImage.
-   * @param singleImageData - An array of metadata about each image
-   * @param index - Index of image in data source
-   * @param pig - The Pig instance
-   * @returns The ProgressiveImage instance, for easy chaining with the constructor.
+   * @param singleImageData - An array of metadata about each image.
+   * @param index - Index of image in data source.
+   * @param configuration - Object with the configuration data from the parent object.
    */
-  constructor(singleImageData: PigImageData, index: number, pig: Pig) {
+  constructor(
+    singleImageData: PigImageData,
+    index: number,
+    configuration: ProgressiveImageConfiguration,
+  ) {
+    this.configuration = configuration;
+    this.classPrefix = configuration.classPrefix;
+
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;
     this.filename = singleImageData.filename;
     this.index = index;
-    this.pig = pig;
 
     this.classNames = {
-      figure: `${pig.settings.classPrefix}-figure`,
-      thumbnail: `${pig.settings.classPrefix}-thumbnail`,
-      loaded: `${pig.settings.classPrefix}-loaded`,
+      figure: `${this.classPrefix}-figure`,
+      thumbnail: `${this.classPrefix}-thumbnail`,
+      loaded: `${this.classPrefix}-loaded`,
     } as ProgressiveImageClassNames;
   }
 
@@ -72,8 +85,8 @@ export class ProgressiveImage {
     // matter the order of the figure elements, because all positioning
     // is done using transforms.
     this.existsOnPage = true;
-    this._updateStyles();
-    this.pig.container?.appendChild(this.getElement());
+    this.updateStyles();
+    this.configuration.container.nativeElement.appendChild(this.getElement());
 
     // We run the rest of the function in a 100ms setTimeout so that if the
     // user is scrolling down the page very fast and hide() is called within
@@ -104,27 +117,40 @@ export class ProgressiveImage {
 
     // Remove the image from the DOM.
     if (this.existsOnPage) {
-      this.pig.container?.removeChild(this.getElement());
+      this.configuration.container.nativeElement.removeChild(this.getElement());
     }
 
     this.existsOnPage = false;
   }
 
   /**
+   * Prepare class for disposing (e.g. complete all observables).
+   */
+  dispose() {
+    this.onClickSubject.complete();
+  }
+
+  /**
+   * Event handler for the image clicked event (attached to the figure tag).
+   * The event handler must emit a value to the onClickSubject.
+   */
+  imageClicked = () => {
+    this.onClickSubject.next(this.filename);
+  };
+
+  /**
    * Get the DOM element associated with this ProgressiveImage. We default to
    * using this.element, and we create it, if it doesn't exist.
    * @returns The DOM element associated with this instance.
    */
-  getElement(): HTMLElement {
+  protected getElement(): HTMLElement {
     if (!this.element) {
-      this.element = document.createElement(this.pig.settings.figureTagName);
+      this.element = document.createElement(this.configuration.figureTagName);
       this.element.className = this.classNames.figure;
-      if (this.pig.settings.onClickHandler !== null) {
-        this.element.addEventListener('click', () => {
-          this.pig.settings.onClickHandler(this.filename);
-        });
+      if (this.configuration.withClickEvent) {
+        this.element.addEventListener('click', this.imageClicked);
       }
-      this._updateStyles();
+      this.updateStyles();
     }
 
     return this.element;
@@ -138,7 +164,7 @@ export class ProgressiveImage {
    * @param aspectRatio - Aspect ratio of the image the image
    * @param className - Name of the class to be added to the new subelement (default value='' - i.e. no class added)
    */
-  addImageAsSubElement(
+  protected addImageAsSubElement(
     subElementName: string,
     filename: string,
     height: number,
@@ -150,7 +176,7 @@ export class ProgressiveImage {
       this[subElementName] = new Image();
       subElement = this[subElementName] as HTMLImageElement;
       const width = Math.round(aspectRatio * height);
-      subElement.src = this.pig.settings.urlForSize(filename, width, height);
+      subElement.src = this.configuration.urlForSize(filename, width, height);
       if (className.length > 0) {
         subElement.className = className;
       }
@@ -169,12 +195,12 @@ export class ProgressiveImage {
   /**
    * Add all subelements of the <figure> tag (default: 'thumbnail' and 'fullImage').
    */
-  addAllSubElements() {
+  protected addAllSubElements() {
     // Add thumbnail
     this.addImageAsSubElement(
       'thumbnail',
       this.filename,
-      this.pig.settings.thumbnailSize,
+      this.configuration.thumbnailSize,
       this.aspectRatio,
       this.classNames.thumbnail,
     );
@@ -183,7 +209,7 @@ export class ProgressiveImage {
     this.addImageAsSubElement(
       'fullImage',
       this.filename,
-      this.pig.settings.getImageSize(this.pig.lastWindowWidth),
+      this.configuration.getImageSize(this.configuration.lastWindowWidth),
       this.aspectRatio,
     );
   }
@@ -192,7 +218,7 @@ export class ProgressiveImage {
    * Remove a subelement of the <figure> tag (e.g. an image element).
    * @param subElementName - SubElement of the <figure> tag - (e.g. 'this.fullImage')
    */
-  removeSubElement(subElementName: string) {
+  protected removeSubElement(subElementName: string) {
     const subElement = this[subElementName] as HTMLImageElement;
     if (subElement) {
       subElement.src = '';
@@ -202,17 +228,23 @@ export class ProgressiveImage {
   }
 
   /**
-   * Remove all subelements of the <figure> tag (default: 'thumbnail' and 'fullImage').
+   * Remove all subelements of the <figure> tag (default: 'thumbnail' and 'fullImage')
+   * and the event handler for the figure click event (if one exists).
    */
-  removeAllSubElements() {
+  protected removeAllSubElements() {
+    if (this.configuration.withClickEvent) {
+      this.element?.removeEventListener('click', this.imageClicked);
+    }
+
     this.removeSubElement('thumbnail');
     this.removeSubElement('fullImage');
   }
 
   /**
-   * Updates the style attribute to reflect this style property on this object.
+   * Updates the style attribute to reflect the style property of this object.
+   * The style property is used to position the image in the grid.
    */
-  _updateStyles() {
+  protected updateStyles() {
     if (this.style) {
       this.getElement().style.transition = this.style.transition;
       this.getElement().style.width = `${this.style.width}px`;

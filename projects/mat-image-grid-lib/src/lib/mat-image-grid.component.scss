@@ -1,7 +1,11 @@
-// -2px for header divider
-.images-container {
+// -4px for loading indicator
+.images-grid {
   height: calc(100% - 4px);
   overflow-y: scroll;
+}
+
+.images-container {
+  position: relative;
 }
 
 // top: position below header row
