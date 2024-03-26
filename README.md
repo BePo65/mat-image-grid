@@ -4,7 +4,7 @@
 
 A fork of the [Progressive Image Grid](https://github.com/schlosser/pig.js/) adapted to Angular Material.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-0.2.0-blue.svg?cacheSeconds=2592000)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)]
 ![Angular version](https://img.shields.io/github/package-json/dependency-version/bepo65/mat-image-grid/@angular/core?color=red&label=Angular&logo=angular&logoColor=red)
 ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/bepo65/mat-image-grid/@angular/material?color=red&label=Angular-Material&logo=angular&logoColor=red)
