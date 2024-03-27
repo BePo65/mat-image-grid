@@ -6,7 +6,6 @@
 /out-tsc
 # output for demo
 /docs
-/ghpages
 
 # dependencies
 **/node_modules
