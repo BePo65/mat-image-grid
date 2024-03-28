@@ -32,7 +32,7 @@ import { PigImageStyle } from '../interfaces/pig-Image-style.interface';
  */
 export class ProgressiveImage {
   public aspectRatio: number;
-  public classPrefix: string;
+  public cssClassPrefix: string;
   public existsOnPage = false;
   public style?: PigImageStyle;
 
@@ -61,7 +61,7 @@ export class ProgressiveImage {
     configuration: ProgressiveImageConfiguration,
   ) {
     this.configuration = configuration;
-    this.classPrefix = configuration.classPrefix;
+    this.cssClassPrefix = configuration.cssClassPrefix;
 
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;
@@ -69,9 +69,9 @@ export class ProgressiveImage {
     this.index = index;
 
     this.classNames = {
-      figure: `${this.classPrefix}-figure`,
-      thumbnail: `${this.classPrefix}-thumbnail`,
-      loaded: `${this.classPrefix}-loaded`,
+      figure: `${this.cssClassPrefix}-figure`,
+      thumbnail: `${this.cssClassPrefix}-thumbnail`,
+      loaded: `${this.cssClassPrefix}-loaded`,
     } as ProgressiveImageClassNames;
   }
 
@@ -145,7 +145,7 @@ export class ProgressiveImage {
    */
   protected getElement(): HTMLElement {
     if (!this.element) {
-      this.element = document.createElement(this.configuration.figureTagName);
+      this.element = document.createElement('figure');
       this.element.className = this.classNames.figure;
       if (this.configuration.withClickEvent) {
         this.element.addEventListener('click', this.imageClicked);

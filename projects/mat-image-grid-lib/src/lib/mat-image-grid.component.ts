@@ -58,9 +58,7 @@ export class MatImageGridLibComponent<
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  private containerId = 'pigContainer';
   @ViewChild('pigContainer') private pigContainer!: ElementRef<HTMLDivElement>;
-
   private optimizedResize: OptimizedResize;
   private pigContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: PigImage[] = [];
@@ -75,9 +73,8 @@ export class MatImageGridLibComponent<
   private scrollDirection = 'down';
   private totalHeight = 0;
 
-  // TODO can we drop these parameters with the help of view encapsulation?
-  private classPrefix = 'pig';
-  private figureTagName = 'figure';
+  // TODO can we drop this parameter with the help of view encapsulation?
+  private cssClassPrefix = 'pig';
 
   // TODO how to inject matImageGridImageService with type matching ServerData?
   constructor(
@@ -86,7 +83,7 @@ export class MatImageGridLibComponent<
     this.optimizedResize = new OptimizedResize();
 
     // Inject our boilerplate CSS.
-    this.injectStyle(this.containerId, this.classPrefix, this.transitionSpeed);
+    this.injectStyle(this.cssClassPrefix, this.transitionSpeed);
   }
 
   public ngAfterViewInit(): void {
@@ -178,9 +175,8 @@ export class MatImageGridLibComponent<
   private parseImageData(imageData: ServerData[]): PigImage[] {
     const progressiveImages: PigImage[] = [];
     const configurationParameters = {
-      classPrefix: this.classPrefix,
+      cssClassPrefix: this.cssClassPrefix,
       thumbnailSize: this.thumbnailSize,
-      figureTagName: this.figureTagName,
       lastWindowWidth: this.lastWindowWidth,
       container: this.pigContainer,
       withClickEvent: this.withImageClickEvents,
@@ -222,16 +218,11 @@ export class MatImageGridLibComponent<
   // TODO injectStyle creates global classes to use for the created figure elements
   // TODO can we create them in the scss of this component?
   /**
-   * Inject CSS needed to make the grid work in the <head></head>.
-   * @param containerId - ID of the container for the images.
+   * Inject global CSS needed to make the grid work in the <head></head>.
    * @param classPrefix - The prefix associated with this library that should be prepended to classnames.
    * @param transitionSpeed - Animation duration in milliseconds
    */
-  private injectStyle(
-    containerId: string,
-    classPrefix: string,
-    transitionSpeed: number,
-  ) {
+  private injectStyle(classPrefix: string, transitionSpeed: number) {
     const css =
       `.${classPrefix}-figure {` +
       '  background-color: #D5D5D5;' +

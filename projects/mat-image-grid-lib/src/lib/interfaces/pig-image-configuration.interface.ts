@@ -1,11 +1,10 @@
 import { ElementRef } from '@angular/core';
 
 export interface ProgressiveImageConfiguration {
-  classPrefix: string;
-  thumbnailSize: number;
-  figureTagName: string;
-  lastWindowWidth: number;
   container: ElementRef<HTMLDivElement>;
+  cssClassPrefix: string;
+  thumbnailSize: number;
+  lastWindowWidth: number;
   withClickEvent?: boolean;
   getImageSize: (lastWindowWidth: number) => number;
   urlForSize: (
