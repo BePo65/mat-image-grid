@@ -8,11 +8,11 @@ import {
   Page,
   RequestImagesRange,
 } from 'projects/mat-image-grid-lib/src';
-import { PigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/pig-image-data.interface';
+import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
 
 @Injectable()
 export class AppImagesMockupService extends MatImageGridImageServiceBase {
-  private images: PigImageData[] = [];
+  private images: MigImageData[] = [];
 
   public constructor() {
     super();
@@ -21,7 +21,7 @@ export class AppImagesMockupService extends MatImageGridImageServiceBase {
   public fillImageDatabaseMockup(numberOfRows = 0): void {
     this.images = [];
     for (let i = 0; i < numberOfRows; i++) {
-      this.images.push(this.createPigImageMockup());
+      this.images.push(this.createMigImageMockup());
     }
   }
 
@@ -36,29 +36,29 @@ export class AppImagesMockupService extends MatImageGridImageServiceBase {
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    sorts?: FieldSortDefinition<PigImageData>[],
-    filters?: FieldFilterDefinition<PigImageData>[],
+    sorts?: FieldSortDefinition<MigImageData>[],
+    filters?: FieldFilterDefinition<MigImageData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<PigImageData>> {
-    const pigImages = this.images.slice(
+  ): Observable<Page<MigImageData>> {
+    const migImages = this.images.slice(
       imagesRange.startImageIndex,
       imagesRange.startImageIndex + imagesRange.numberOfImages,
     );
     const resultPage = {
-      content: pigImages,
+      content: migImages,
       startImageIndex: imagesRange.startImageIndex,
-      returnedElements: pigImages.length,
+      returnedElements: migImages.length,
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
-    } as Page<PigImageData>;
+    } as Page<MigImageData>;
     return of(resultPage);
   }
 
-  private createPigImageMockup(): PigImageData {
+  private createMigImageMockup(): MigImageData {
     return {
-      filename: this.randomInt(5000, 100000).toString(),
+      imageId: this.randomInt(5000, 100000).toString(),
       aspectRatio: this.randomAspectRatio(),
-    } as PigImageData;
+    } as MigImageData;
   }
 
   /**

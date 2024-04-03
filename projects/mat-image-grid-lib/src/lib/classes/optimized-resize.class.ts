@@ -1,3 +1,7 @@
+import { Renderer2 } from '@angular/core';
+
+import { UnloadHandler } from '../interfaces/mig-common.types';
+
 type Callback = () => void;
 
 /**
@@ -8,53 +12,87 @@ type Callback = () => void;
  * https://developer.mozilla.org/en-US/docs/Web/Events/resize
  */
 export class OptimizedResize {
-  _callbacks: Callback[] = [];
-  _running = false;
+  private callbacks: Callback[] = [];
+  private isRunning = false;
+  private window: (Window & typeof globalThis) | null;
+  private renderer: Renderer2;
+  private resizeUnloadHandler: UnloadHandler | null = null;
+  private resizeDebounceTime = 66;
+
+  /**
+   *Creates an instance of OptimizedResize.
+   * @param documentRef - Reference to the angular DOCUMENT element.
+   * @param renderer2 - Angular class to modify DOM (here: add / remove event handlers).
+   */
+  constructor(documentRef: Document, renderer2: Renderer2) {
+    // get a reference to the 'window' object that can be used in ssr environments too.
+    this.window = documentRef.defaultView;
+    this.renderer = renderer2;
+  }
 
   /**
    * Add a callback to be run on resize.
    * @param callback - The callback to run on resize.
    */
   add(callback: Callback) {
-    if (!this._callbacks.length) {
-      window.addEventListener('resize', this._resize.bind(this));
+    if (!this.callbacks.length) {
+      this.reEnable();
     }
 
-    this._callbacks.push(callback);
+    this.callbacks.push(callback);
   }
 
   /**
-   * Disables all resize handlers.
+   * Disables (but do not remove) all resize handlers.
    */
   disable() {
-    window.removeEventListener('resize', this._resize.bind(this));
+    if (this.resizeUnloadHandler) {
+      this.resizeUnloadHandler();
+      this.resizeUnloadHandler = null;
+    }
   }
 
   /**
    * Enables all resize handlers, if they were disabled.
    */
   reEnable() {
-    window.addEventListener('resize', this._resize.bind(this));
+    if (!this.resizeUnloadHandler) {
+      // TODO change to resizeObserver?!
+      this.resizeUnloadHandler = this.renderer.listen(
+        this.window,
+        'resize',
+        this.resize.bind(this),
+      );
+    }
   }
 
-  // fired on resize event
-  _resize() {
-    if (!this._running) {
-      this._running = true;
-      if (window.requestAnimationFrame) {
-        window.requestAnimationFrame(this._runCallbacks.bind(this));
+  dispose() {
+    this.disable();
+    this.callbacks = [];
+  }
+
+  /**
+   * Handle the resize event.
+   */
+  private resize() {
+    if (!this.isRunning) {
+      this.isRunning = true;
+      if (this.window?.requestAnimationFrame) {
+        this.window.requestAnimationFrame(this.runCallbacks.bind(this));
       } else {
-        setTimeout(this._runCallbacks.bind(this), 66);
+        setTimeout(this.runCallbacks.bind(this), this.resizeDebounceTime);
       }
     }
   }
 
-  // run the actual callbacks
-  _runCallbacks() {
-    this._callbacks.forEach((callback) => {
+  /**
+   * Run the actual callbacks.
+   */
+  private runCallbacks() {
+    this.callbacks.forEach((callback) => {
       callback();
     });
 
-    this._running = false;
+    this.isRunning = false;
   }
 }

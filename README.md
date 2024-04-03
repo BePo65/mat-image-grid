@@ -75,15 +75,17 @@ npm install @bepo65/mat-image-grid
 Configure the `mat-image-grid` in your application template and provide the necessary settings.
 
 ```html
-<mat-image-grid [pigSettings]="settings"> loading... </mat-image-grid>
+<mat-image-grid [urlForSize]="urlForSize"> loading... </mat-image-grid>
 ```
 
 ```typescript
-  protected settings: PigSettings = {
-    urlForSize: (filename: string, imageWidth: number, imageHeight: number) => {
-      // In this demo we need an url like 'https://picsum.photos/id/201/800/600'
-      return `https://picsum.photos/id/${filename}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
-    },
+  protected urlForSize = (
+    imageId: string,
+    imageWidth: number,
+    imageHeight: number,
+  ) => {
+    // In this demo we use an url like 'https://picsum.photos/id/201/800/600'
+    return `https://picsum.photos/id/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   };
 ```
 
@@ -105,6 +107,19 @@ Navigate to http://localhost:4200
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## Theming
+
+### Css variables
+
+The definition of a parameter to filter a list of images. 'T' defines the type describing an image.
+
+| Name                                   | Usage                                                             |
+| -------------------------------------- | ----------------------------------------------------------------- |
+| --mat-image-grid-ease-duration: 500ms; | The time used as `transition-duration` for moving the full image. |
+|                                        |                                                                   |
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ## API Reference
 
 `import { MatImageGrid } from '@bepo65/mat-image-grid';`
@@ -119,13 +134,22 @@ Component to create an angular material .....
 
 ##### **Properties**
 
-| Name                                                     | Description                                                               |
-| -------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `@Input() pigSettings: PigSettings`                      | Object with the configuration settings.                                   |
-| `@Output() numberOfImagesOnServer: EventEmitter<number>` | Observable emitting the total number of images on the server.             |
-| `@Output() numberOfLoadedImages: EventEmitter<number>`   | Observable emitting the number of images currently loaded.                |
-| `loading$: EventEmitter<Observable<boolean>>`            | Observable emitting the state of loading the images list from the server. |
-|                                                          |                                                                           |
+| Name                                                                                         | Description                                                                                                               |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `@Input() primaryImageBufferHeight: number`                                                  | Height (in 'px') of the image buffer in current scroll direction (default = 1000).                                        |
+| `@Input() secondaryImageBufferHeight: number`                                                | Height (in 'px') of the image buffer in opposition to the current scroll direction (default = 300).                       |
+| `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                 |
+| `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                          |
+| `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                             |
+| `@Input({ required: true }) urlForSize: UrlForSize = this.urlForSizeDefault`                 | Callback for getting the url for an image with the given ID and size (default: url = '/ID/width/height').                 |
+| `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class). |
+| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).              |
+| `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).   |
+| `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                             |
+| `@Output() numberOfLoadedImages: EventEmitter<number>`                                       | Observable emitting the number of images currently loaded.                                                                |
+| `imageClicked: EventEmitter<Observable<string>>`                                             | Observable emitting the ID of the image, when clicking the image.                                                         |
+| `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                 |
+|                                                                                              |                                                                                                                           |
 
 ##### **Injectables**
 
@@ -171,35 +195,34 @@ Interface defining the properties of a page of images data returned from the dat
 | `totalFilteredElements` | The number of images after filtering.              |
 |                         |                                                    |
 
-#### PigImageData
+#### MigImageData
 
 This interface defines the parameters from the data store defining an image.
 
 ##### **Properties**
 
-| Name                  | Description                                             |
-| --------------------- | ------------------------------------------------------- |
-| `filename: string`    | Name of the image file (without query parameters etc:). |
-| `aspectRatio: number` | Aspect ratio of the image (width / height).             |
+| Name                  | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
+| `imageId: string`     | ID of the image file (without query parameters etc; e.g. the filename). |
+| `aspectRatio: number` | Aspect ratio of the image (width / height).                             |
 
-#### PigSettings
+#### MigImageConfiguration
 
-This interface defines the parameters of a configuration object.
+This interface defines the parameters of a configuration object for creating a new instance of the ProgressiveImage class.
 
-##### **Methods**
+##### **Properties**
 
-|                     |                                                            |
-| ------------------- | ---------------------------------------------------------- |
-| `urlForSize`        | Get the URL for an image with the given filename & height. |
-| **Parameters**      |
-| filename: string    | The filename of the image (from PigImageData).             |
-| imageWidth: number  | The width (in pixels) of the image.                        |
-| imageHeight: number | The height (in pixels) of the image.                       |
-| **Returns**         |
-| string              | The URL of the image.                                      |
-|                     |                                                            |
+| Name                                    | Description                                           |
+| --------------------------------------- | ----------------------------------------------------- |
+| `container: ElementRef<HTMLDivElement>` | The array of the requested images data.               |
+| `thumbnailSize: number`                 | The number of images in 'content'.                    |
+| `lastWindowWidth: number`               | The number of images after filtering.                 |
+| `withClickEvent?: boolean`              | The number of images after filtering.                 |
+| `getImageSize: GetImageSize`            | Get the URL of an image with the given ID and height. |
+| `urlForSize: UrlForSize`                | Get the URL of an image with the given ID and height. |
+|                                         |                                                       |
 
-#### RequestRowsRange
+#### RequestImagesRange
 
 Interface defining the properties of a requests for a range of images data.
 
@@ -215,9 +238,27 @@ Interface defining the properties of a requests for a range of images data.
 
 ### Type Aliases
 
+#### CreateMigImage
+
+The definition of a generic function that creates an image instance from the server data ('singleImageData') and a configuration object of an image.
+
+|                                      |                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| **Generic types**                    |
+| M extends MigImageData               | The type of the data from the server describing the image.         |
+| P extends ProgressiveImage           | The type of the data describing an image.                          |
+| **Parameters**                       |
+| renderer: Renderer2                  | The Renderer to be injected into the ProgressiveImage constructor. |
+| singleImageData: M                   | The data from the server describing the image..                    |
+| index: number                        | The index of the image in the list of all images (0..n-1).         |
+| configuration: MigImageConfiguration | The configuration data for this image.                             |
+| **Returns**                          |
+| P                                    | A new instance of the class describing an image.                   |
+|                                      |                                                                    |
+
 #### FieldFilterDefinition
 
-The definition of a parameter to filter a list of images. 'T' defines the type describing an image
+The definition of a parameter to filter a list of images. 'T' defines the type describing an image.
 
 |                                                                                                                    |
 | ------------------------------------------------------------------------------------------------------------------ |
@@ -251,14 +292,61 @@ The definition of a single sort parameter.
 | type FieldSortDefinition<T> = {<br>&nbsp;&nbsp;fieldName: keyof T<br>&nbsp;&nbsp;sortDirection: SortDirectionAscDesc<br>}; |
 |                                                                                                                            |
 
+#### GetImageSize
+
+The definition of a function to get the image size (height in pixels) to use for this window width.
+
+|                         |                                                    |
+| ----------------------- | -------------------------------------------------- |
+| **Parameters**          |
+| lastWindowWidth: number | The last computed width of the images container.   |
+| **Returns**             |
+| number                  | The size (height in pixels) of the images to load. |
+|                         |                                                    |
+
+#### GetMinAspectRatio
+
+The definition of a function to get the minimum required aspect ratio for a valid row of images.
+
+|                         |                                                |
+| ----------------------- | ---------------------------------------------- |
+| **Parameters**          |
+| lastWindowWidth: number | The last computed width of the browser window. |
+| **Returns**             |
+| number                  | The minimum aspect ratio at this window width. |
+|                         |                                                |
+
 #### SortDirection
 
-The direction of a sort.
+The definition of a parameter defining the direction of a sort.
 
 |                                       |
 | ------------------------------------- |
 | type SortDirection = 'asc' \| 'desc'; |
 |                                       |
+
+#### UrlForSize
+
+The definition of a function that gets the url of an image from the id, width and height of an image.
+
+|                     |                                                             |
+| ------------------- | ----------------------------------------------------------- |
+| **Parameters**      |
+| imageId: string     | The ID of the image (from MigImageData; e.g. the filename). |
+| imageWidth: number  | The width (in pixels) of the image.                         |
+| imageHeight: number | The height (in pixels) of the image.                        |
+| **Returns**         |
+| string              | The URL of the image.                                       |
+|                     |                                                             |
+
+#### UnloadHandler
+
+The definition of the unload handler returned by `renderer2.listen`.
+
+|                                  |
+| -------------------------------- |
+| type UnloadHandler = () => void; |
+|                                  |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

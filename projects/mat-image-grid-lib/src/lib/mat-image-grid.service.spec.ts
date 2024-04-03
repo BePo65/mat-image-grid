@@ -7,7 +7,7 @@ import {
   Page,
 } from '../public-api';
 
-import { PigImageData } from './interfaces/pig-image-data.interface';
+import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridImageServiceBase } from './mat-image-grid.service';
 
 describe('MatImageGridLibService', () => {
@@ -23,26 +23,26 @@ describe('MatImageGridLibService', () => {
 });
 
 class MyTestClass extends MatImageGridImageServiceBase {
-  private mockData: PigImageData[] = [
+  private mockData: MigImageData[] = [
     {
-      filename: '90000',
+      imageId: '90000',
       aspectRatio: 0.75,
-    } as PigImageData,
+    } as MigImageData,
   ];
   public override getPagedData(
     /* eslint-disable @typescript-eslint/no-unused-vars */
     imagesRange: RequestImagesRange,
-    sorts?: FieldSortDefinition<PigImageData>[],
-    filters?: FieldFilterDefinition<PigImageData>[],
+    sorts?: FieldSortDefinition<MigImageData>[],
+    filters?: FieldFilterDefinition<MigImageData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<PigImageData>> {
+  ): Observable<Page<MigImageData>> {
     const resultPage = {
       content: this.mockData,
       startImageIndex: 0,
       returnedElements: this.mockData.length,
       totalElements: this.mockData.length,
       totalFilteredElements: this.mockData.length,
-    } as Page<PigImageData>;
+    } as Page<MigImageData>;
     return of(resultPage);
   }
 }
