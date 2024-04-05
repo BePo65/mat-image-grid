@@ -22,7 +22,7 @@
     "build": "npm run build:lib && npm run build:demo",
     "build:prod": "npm run build:lib:prod && npm run build:demo:prod",
     "build:lib": "ng build mat-image-grid-lib --configuration development",
-    "build:lib:prod": "ng build mat-image-grid-lib --configuration production",
+    "build:lib:prod": "ng build mat-image-grid-lib --configuration production && cpy README.md dist/mat-image-grid-lib/",
     "build:demo": "ng build mat-image-grid-demo --delete-output-path --configuration development",
     "build:demo:prod": "ng build mat-image-grid-demo --delete-output-path --configuration production",
     "build:ghpages": "npm run build:prod && del-cli ghpages && cpy \"dist/mat-image-grid-demo/browser/**\" ghpages  && cpy \"dist/mat-image-grid-demo/3rdpartylicenses.txt\" ghpages --flat",
