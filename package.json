@@ -22,7 +22,7 @@
     "build": "npm run build:lib && npm run build:demo",
     "build:prod": "npm run build:lib:prod && npm run build:demo:prod",
     "build:lib": "ng build mat-image-grid-lib --configuration development",
-    "build:lib:prod": "ng build mat-image-grid-lib --configuration production && cpy README.md dist/mat-image-grid-lib/",
+    "build:lib:prod": "ng build mat-image-grid-lib --configuration production && npm run copy-doc-to-lib",
     "build:demo": "ng build mat-image-grid-demo --delete-output-path --configuration development",
     "build:demo:prod": "ng build mat-image-grid-demo --delete-output-path --configuration production",
     "build:ghpages": "npm run build:prod && del-cli ghpages && cpy \"dist/mat-image-grid-demo/browser/**\" ghpages  && cpy \"dist/mat-image-grid-demo/3rdpartylicenses.txt\" ghpages --flat",
@@ -30,7 +30,7 @@
     "start:debug": "ng serve --host=127.0.0.1",
     "unimported": "npx knip",
     "deprecated": "npx check-is-deprecated -g -m -f",
-    "copy-to-lib": "cpy README.md projects/mat-image-grid-lib/ && cpy assets/screenshot.jpg projects/mat-image-grid-lib/ && cpy CHANGELOG.md projects/mat-image-grid-lib/ ",
+    "copy-doc-to-lib": "cpy README.md dist/mat-image-grid-lib/ && cpy assets/screenshot.jpg dist/mat-image-grid-lib/ && cpy CHANGELOG.md dist/mat-image-grid-lib/ ",
     "init-changelog": "commit-and-tag-version -i CHANGELOG.md --same-file --prerelease pre --first-release --commit-all",
     "release": "commit-and-tag-version -i CHANGELOG.md --same-file --commit-all",
     "e2e": "start-server-and-test \"ng serve\" http://localhost:4200 \"npm run cypress:demo:run:e2e\"",
@@ -124,9 +124,6 @@
         "filename": "README.md",
         "updater": "tools/npm-scripts/readme-updater.js"
       }
-    ],
-    "scripts": {
-      "postchangelog": "npm run copy-to-lib && git add projects/mat-image-grid-lib/README.md && git add projects/mat-image-grid-lib/assets/screenshot.jpg && git add projects/mat-image-grid-lib/CHANGELOG.md"
-    }
+    ]
   }
 }
