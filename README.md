@@ -2,7 +2,7 @@
 
 # Mat-Image-Grid
 
-A fork of the [Progressive Image Grid](https://github.com/schlosser/pig.js/) adapted to Angular Material.
+An Angular material component showing images in a grid display. Based on the [Progressive Image Grid](https://github.com/schlosser/pig.js/) of Dan Schlosser adapted to Angular Material.
 
 ![Version](https://img.shields.io/badge/version-0.2.0-blue.svg?cacheSeconds=2592000)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)]
@@ -25,6 +25,7 @@ A fork of the [Progressive Image Grid](https://github.com/schlosser/pig.js/) ada
       </ul>
     </li>
     <li><a href="#mat-image-grid-demo">Mat-Image-Grid Demo</a></li>
+    <li><a href="#theming">Theming</a></li>
     <li>
       <a href="#api-reference">API Reference</a>
       <ul>
@@ -128,7 +129,7 @@ The definition of a parameter to filter a list of images. 'T' defines the type d
 
 ### Classes
 
-#### **MatImageGrid**
+#### MatImageGrid
 
 Component to create an angular material .....
 

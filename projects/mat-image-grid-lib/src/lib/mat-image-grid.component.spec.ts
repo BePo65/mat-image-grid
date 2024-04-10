@@ -1,3 +1,4 @@
+import { Injectable } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 
@@ -36,6 +37,7 @@ describe('MatImageGridLibComponent', () => {
   });
 });
 
+@Injectable()
 class MatImageGridMockupService extends MatImageGridImageServiceBase {
   public override getPagedData(
     imagesRange: RequestImagesRange,

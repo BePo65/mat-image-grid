@@ -6,6 +6,7 @@ import {
   EventEmitter,
   Inject,
   Input,
+  NgZone,
   OnDestroy,
   Output,
   Renderer2,
@@ -60,15 +61,15 @@ export class MatImageGridLibComponent<
   public loading$ = this.loadingSubject.asObservable();
 
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
-  private optimizedResize: OptimizedResize;
+  private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
   private inRAF = false;
   private lastWindowWidth = window.innerWidth;
   private latestYOffset = 0;
-  private minAspectRatio?: number;
+  private minAspectRatio: number | null = null;
   private onScroll = () => {};
-  private onscrollUnloadHandler?: UnloadHandler;
+  private onscrollUnloadHandler: UnloadHandler | null = null;
   private previousYOffset = 0;
   private scrollDirection = 'down';
   private totalHeight = 0;
@@ -76,13 +77,18 @@ export class MatImageGridLibComponent<
   constructor(
     @Inject(DOCUMENT) private readonly documentRef: Document,
     private renderer2: Renderer2,
+    private zone: NgZone,
     private matImageGridImageService: MatImageGridImageServiceBase<ServerData>,
-  ) {
-    this.optimizedResize = new OptimizedResize(documentRef, renderer2);
-  }
+  ) {}
 
   public ngAfterViewInit(): void {
     this.migContainerNative = this.migContainer.nativeElement;
+    this.optimizedResize = new OptimizedResize(
+      this.documentRef,
+      this.renderer2,
+      this.zone,
+      this.migContainerNative,
+    );
     this.getImageListFromServer();
   }
 
@@ -122,7 +128,7 @@ export class MatImageGridLibComponent<
   public disable() {
     if (this.onscrollUnloadHandler) {
       this.onscrollUnloadHandler();
-      this.onscrollUnloadHandler = undefined;
+      this.onscrollUnloadHandler = null;
     }
 
     this.optimizedResize.disable();
@@ -166,17 +172,8 @@ export class MatImageGridLibComponent<
     this.matImageGridImageService.getPagedData(imagesRange).subscribe({
       next: (serverResponse) => {
         this.disable();
-
-        // HACK measure elapsed time
-        const start = performance.now();
-
         this.setImageData(serverResponse.content);
         this.enable();
-
-        // HACK measure elapsed time
-        const end = performance.now();
-        console.log(`Execution time: ${end - start} ms`);
-
         this.numberOfImagesOnServer.emit(serverResponse.totalElements);
         this.numberOfLoadedImages.emit(serverResponse.returnedElements);
         this.loadingSubject.next(false);
