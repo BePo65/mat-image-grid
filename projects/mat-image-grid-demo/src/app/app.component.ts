@@ -31,19 +31,19 @@ export class AppComponent {
   }
 
   /**
-   * Get the URL for an image with the given filename & size.
+   * Get the URL for an image with the given ID & size.
    * Used by mat-image-grid 'urlForSize' parameter.
    * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
-   * @param filename - The filename of the image.
+   * @param imageId - The ID of the image (e.g. teh filename).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
   protected urlForSize = (
-    filename: string,
+    imageId: string,
     imageWidth: number,
     imageHeight: number,
   ) => {
-    return `${this.imagesBaseUrl}/${filename}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `${this.imagesBaseUrl}/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   };
 }

@@ -10,14 +10,14 @@ import {
   FieldFilterDefinition,
   Page,
 } from 'projects/mat-image-grid-lib/src';
-import { PigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/pig-image-data.interface';
+import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
 
 /**
  * Class to get a list of information about the images to display.
  */
 @Injectable()
-export class AppImagesService extends MatImageGridImageServiceBase {
-  private images: PigImageData[];
+export class AppImagesService extends MatImageGridImageServiceBase<MigImageData> {
+  private images: MigImageData[];
 
   public constructor() {
     super();
@@ -27,27 +27,27 @@ export class AppImagesService extends MatImageGridImageServiceBase {
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    sorts?: FieldSortDefinition<PigImageData>[],
-    filters?: FieldFilterDefinition<PigImageData>[],
+    sorts?: FieldSortDefinition<MigImageData>[],
+    filters?: FieldFilterDefinition<MigImageData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<PigImageData>> {
+  ): Observable<Page<MigImageData>> {
     const numberOfImages =
       imagesRange.numberOfImages === -1
         ? this.images.length
         : imagesRange.numberOfImages;
-    const pigImages = this.images.slice(
+    const migImages = this.images.slice(
       imagesRange.startImageIndex,
       imagesRange.startImageIndex + numberOfImages,
     );
     const simulatedResponseTime =
       Math.round((Math.random() * 2000 + 500) * 100) / 100;
     const resultPage = {
-      content: pigImages,
+      content: migImages,
       startImageIndex: imagesRange.startImageIndex,
-      returnedElements: pigImages.length,
+      returnedElements: migImages.length,
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
-    } as Page<PigImageData>;
+    } as Page<MigImageData>;
     return of(resultPage).pipe(delay(simulatedResponseTime));
   }
 }

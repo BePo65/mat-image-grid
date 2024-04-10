@@ -7,6 +7,8 @@ export * from './lib/mat-image-grid.service';
 
 export * from './lib/classes/progressive-image.class';
 
-export * from './lib/interfaces/pig-datastore-provider.interface';
-export * from './lib/interfaces/pig-image-data.interface';
-export * from './lib/interfaces/pig-image-configuration.interface';
+export * from './lib/interfaces/datastore-provider.interface';
+export * from './lib/interfaces/mig-image-data.interface';
+export * from './lib/interfaces/mig-image-configuration.interface';
+
+export * from './lib/interfaces/mig-common.types';

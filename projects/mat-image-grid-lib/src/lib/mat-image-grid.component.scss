@@ -17,3 +17,43 @@
 .mat-image-grid-loading-hide {
   visibility: hidden;
 }
+
+:host {
+  --mat-image-grid-ease-duration: 500ms;
+}
+
+.mat-image-grid-figure {
+  background-color: #d5d5d5;
+  contain: paint;
+  left: 0;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+}
+
+.mat-image-grid-full-image {
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  transition-duration: var(--mat-image-grid-ease-duration);
+  transition-property: opacity;
+  transition-timing-function: ease;
+  width: 100%;
+}
+
+.mat-image-grid-thumbnail {
+  height: 100%;
+  filter: blur(30px);
+  left: auto;
+  opacity: 0;
+  position: relative;
+  top: 0;
+  width: auto;
+}
+
+.mat-image-grid-loaded {
+  opacity: 1;
+}

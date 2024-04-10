@@ -1,18 +1,21 @@
+import { Renderer2 } from '@angular/core';
 import { Subject } from 'rxjs';
 
-import { ProgressiveImageClassNames } from '../interfaces/pig-class-names.interface';
-import { ProgressiveImageConfiguration } from '../interfaces/pig-image-configuration.interface';
-import { PigImageData } from '../interfaces/pig-image-data.interface';
-import { PigImageStyle } from '../interfaces/pig-Image-style.interface';
+import { UnloadHandler } from '../interfaces/mig-common.types';
+import { MigImageClassNames } from '../interfaces/mig-image-class-names.interface';
+import { MigImageConfiguration } from '../interfaces/mig-image-configuration.interface';
+import { MigImageData } from '../interfaces/mig-image-data.interface';
+import { MigImageStyle } from '../interfaces/mig-Image-style.interface';
+import { imageElementBase } from '../interfaces/progressive-image.interface';
 
 /**
  * This class manages a single image. It keeps track of the image's height,
  * width, and position in the grid. An instance of this class is associated
  * with a single image figure, which looks like this:
  *
- *   <figure class="pig-figure" style="transform: ...">
- *     <img class="pig-thumbnail pig-loaded" src="/path/to/thumbnail/image.jpg" />
- *     <img class="pig-loaded" src="/path/to/500px/image.jpg" />
+ *   <figure class="mat-image-grid-figure" style="transform: ...">
+ *     <img class="mat-image-grid-thumbnail mat-image-grid-loaded" src="/path/to/thumbnail/image.jpg" />
+ *     <img class="mat-image-grid-full-image mat-image-grid-loaded" src="/path/to/500px/image.jpg" />
  *   </figure>
  *
  * However, this element may or may not actually exist in the DOM. The actual
@@ -25,68 +28,73 @@ import { PigImageStyle } from '../interfaces/pig-Image-style.interface';
  * <figure> element is inserted into the page. Then, a very small thumbnail
  * is loaded, stretched out to the full size of the image.  This pixelated
  * image is then blurred using CSS filter: blur(). Then, the full image is
- * loaded, with opacity:0.  Once it has loaded, it is given the `pig-loaded`
- * class, and its opacity is set to 1.  This creates an effect where there is
- * first a blurred version of the image, and then it appears to come into
- * focus.
+ * loaded, with opacity:0.  Once it has loaded, it is given the
+ * `mat-image-grid-loaded` class, and its opacity is set to 1.  This creates
+ * an effect where there is first a blurred version of the image, and then it
+ * appears to come into focus.
  */
 export class ProgressiveImage {
   public aspectRatio: number;
-  public cssClassPrefix: string;
   public existsOnPage = false;
-  public style?: PigImageStyle;
+  public style?: MigImageStyle;
 
   private readonly onClickSubject = new Subject<string>();
   public onClick$ = this.onClickSubject.asObservable();
 
-  // Placeholder for 'subElement'
-  [key: string]: unknown;
+  protected elements = new Map<string, imageElementBase>();
 
-  protected filename: string;
+  protected imageId: string;
   protected index: number;
-  protected classNames: ProgressiveImageClassNames;
-  protected element?: HTMLElement;
+  protected classNames: MigImageClassNames;
 
-  private configuration: ProgressiveImageConfiguration;
+  private configuration: MigImageConfiguration;
+  private renderer: Renderer2;
+  private readonly mainElementsKey = 'main';
 
   /**
    * Creates an instance of ProgressiveImage.
+   * @param renderer2 - Angular class to modify DOM.
    * @param singleImageData - An array of metadata about each image.
    * @param index - Index of image in data source.
    * @param configuration - Object with the configuration data from the parent object.
    */
   constructor(
-    singleImageData: PigImageData,
+    renderer2: Renderer2,
+    singleImageData: MigImageData,
     index: number,
-    configuration: ProgressiveImageConfiguration,
+    configuration: MigImageConfiguration,
   ) {
+    this.renderer = renderer2;
     this.configuration = configuration;
-    this.cssClassPrefix = configuration.cssClassPrefix;
 
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;
-    this.filename = singleImageData.filename;
+    this.imageId = singleImageData.imageId;
     this.index = index;
 
     this.classNames = {
-      figure: `${this.cssClassPrefix}-figure`,
-      thumbnail: `${this.cssClassPrefix}-thumbnail`,
-      loaded: `${this.cssClassPrefix}-loaded`,
-    } as ProgressiveImageClassNames;
+      figure: 'mat-image-grid-figure',
+      fullImage: 'mat-image-grid-full-image',
+      thumbnail: 'mat-image-grid-thumbnail',
+      loaded: 'mat-image-grid-loaded',
+    } as MigImageClassNames;
   }
 
   /**
    * Load the image element associated with this ProgressiveImage into the DOM.
-   * This function will append the figure into the DOM, create and insert the
+   * This function will append the figure tag into the DOM, create and insert the
    * thumbnail, and create and insert the full image.
    */
   load() {
-    // Create a new image element, and insert it into the DOM. It doesn't
-    // matter the order of the figure elements, because all positioning
-    // is done using transforms.
+    // Create a new image element, and insert it into the DOM.
+    // The order of the figure elements don't matter, because
+    // all positioning is done using css transforms.
+    const mainElement = this.getMainElement();
+    this.renderer.appendChild(
+      this.configuration.container.nativeElement,
+      mainElement,
+    );
     this.existsOnPage = true;
-    this.updateStyles();
-    this.configuration.container.nativeElement.appendChild(this.getElement());
 
     // We run the rest of the function in a 100ms setTimeout so that if the
     // user is scrolling down the page very fast and hide() is called within
@@ -104,20 +112,26 @@ export class ProgressiveImage {
   }
 
   /**
-   * Removes the figure from the DOM, removes the thumbnail and full image, and
-   * deletes the this.thumbnail and this.fullImage properties off of the
-   * ProgressiveImage object.
+   * Removes the main element (<figure> tag) and all subelements (thumbnail and
+   * full image) from the DOM and this ProgressiveImage object.
    */
   hide() {
-    // Remove the images from the element, so that if a user is scrolling super
-    // fast, we won't try to load every image we scroll past.
-    if (this.getElement()) {
+    // Remove the sub elements from the main element, so that if a user is scrolling
+    // super fast, we won't try to load every image we scroll past.
+    const mainElement = this.elements.get(this.mainElementsKey);
+    if (mainElement) {
       this.removeAllSubElements();
-    }
 
-    // Remove the image from the DOM.
-    if (this.existsOnPage) {
-      this.configuration.container.nativeElement.removeChild(this.getElement());
+      mainElement.eventUnloadHandlers.forEach((unloadHandler: UnloadHandler) =>
+        unloadHandler(),
+      );
+
+      this.renderer.removeChild(
+        this.configuration.container.nativeElement,
+        mainElement.element,
+      );
+
+      this.elements.delete(this.mainElementsKey);
     }
 
     this.existsOnPage = false;
@@ -132,63 +146,96 @@ export class ProgressiveImage {
 
   /**
    * Event handler for the image clicked event (attached to the figure tag).
-   * The event handler must emit a value to the onClickSubject.
+   * The event handler emits a value to the onClickSubject.
    */
   imageClicked = () => {
-    this.onClickSubject.next(this.filename);
+    this.onClickSubject.next(this.imageId);
   };
 
   /**
-   * Get the DOM element associated with this ProgressiveImage. We default to
-   * using this.element, and we create it, if it doesn't exist.
-   * @returns The DOM element associated with this instance.
+   * Get the wrapper DOM element (<figure> tag) associated with this ProgressiveImage.
+   * We create it, if it doesn't exist. The DOM element is not added to the page.
+   * @returns The wrapper DOM element associated with this instance.
    */
-  protected getElement(): HTMLElement {
-    if (!this.element) {
-      this.element = document.createElement('figure');
-      this.element.className = this.classNames.figure;
+  protected getMainElement(): HTMLElement {
+    let figureElement = this.elements.get(this.mainElementsKey)?.element;
+    if (figureElement) {
+      this.updateStyles(figureElement);
+    } else {
+      const element = this.renderer.createElement('figure') as HTMLElement;
+      this.renderer.addClass(element, this.classNames.figure);
+      this.updateStyles(element);
+
+      const mainElement = {
+        element: element,
+        eventUnloadHandlers: [],
+      } as imageElementBase;
+
+      let figureClickUnloadHandler: UnloadHandler;
       if (this.configuration.withClickEvent) {
-        this.element.addEventListener('click', this.imageClicked);
+        figureClickUnloadHandler = this.renderer.listen(
+          element,
+          'click',
+          this.imageClicked,
+        );
+        mainElement.eventUnloadHandlers.push(figureClickUnloadHandler);
       }
-      this.updateStyles();
+
+      this.elements.set(this.mainElementsKey, mainElement);
+      figureElement = mainElement.element;
     }
 
-    return this.element;
+    return figureElement;
   }
 
   /**
    * Add an image as a subelement to the <figure> tag.
+   * @param mainElement - Main element of this image (<figure> tag)
    * @param subElementName - Name of the subelement
-   * @param filename - ID, used to access the image (e.g. the filename)
-   * @param height - Size of the image the image (e.g. this.pig.settings.thumbnailSize)
+   * @param imageId - ID, used to access the image (e.g. the filename)
+   * @param height - Size of the image the image (e.g. this.configuration.thumbnailSize)
    * @param aspectRatio - Aspect ratio of the image the image
    * @param className - Name of the class to be added to the new subelement (default value='' - i.e. no class added)
    */
   protected addImageAsSubElement(
+    mainElement: HTMLElement,
     subElementName: string,
-    filename: string,
+    imageId: string,
     height: number,
     aspectRatio: number,
     className = '',
   ) {
-    let subElement = this[subElementName] as HTMLImageElement;
-    if (!subElement) {
-      this[subElementName] = new Image();
-      subElement = this[subElementName] as HTMLImageElement;
-      const width = Math.round(aspectRatio * height);
-      subElement.src = this.configuration.urlForSize(filename, width, height);
-      if (className.length > 0) {
-        subElement.className = className;
-      }
-      subElement.onload = () => {
-        // We have to make sure thumbnail still exists, we may have already been
-        // deallocated if the user scrolls too fast.
-        if (subElement) {
-          subElement.className += ` ${this.classNames.loaded}`;
-        }
-      };
+    if (!this.elements.get(subElementName)) {
+      const element = this.renderer.createElement('img') as HTMLImageElement;
 
-      this.getElement().appendChild(subElement);
+      const width = Math.round(aspectRatio * height);
+      this.renderer.setAttribute(
+        element,
+        'src',
+        this.configuration.urlForSize(imageId, width, height),
+      );
+
+      if (className.length > 0) {
+        this.renderer.addClass(element, className);
+      }
+
+      const onloadHandlerUnload = this.renderer.listen(element, 'load', () => {
+        // We have to make sure thumbnail still exists, it may already have been
+        // deallocated if the user scrolls too fast.
+        if (this.elements.get(subElementName)) {
+          this.renderer.addClass(element, 'mat-image-grid-loaded');
+        }
+      });
+
+      const subElement = {
+        element: element,
+        eventUnloadHandlers: [],
+      } as imageElementBase;
+
+      subElement.eventUnloadHandlers.push(onloadHandlerUnload);
+      this.elements.set(subElementName, subElement);
+
+      this.renderer.appendChild(mainElement, element);
     }
   }
 
@@ -196,10 +243,13 @@ export class ProgressiveImage {
    * Add all subelements of the <figure> tag (default: 'thumbnail' and 'fullImage').
    */
   protected addAllSubElements() {
+    const mainElement = this.getMainElement();
+
     // Add thumbnail
     this.addImageAsSubElement(
+      mainElement,
       'thumbnail',
-      this.filename,
+      this.imageId,
       this.configuration.thumbnailSize,
       this.aspectRatio,
       this.classNames.thumbnail,
@@ -207,23 +257,31 @@ export class ProgressiveImage {
 
     // Add full image
     this.addImageAsSubElement(
+      mainElement,
       'fullImage',
-      this.filename,
+      this.imageId,
       this.configuration.getImageSize(this.configuration.lastWindowWidth),
       this.aspectRatio,
+      this.classNames.fullImage,
     );
   }
 
   /**
-   * Remove a subelement of the <figure> tag (e.g. an image element).
-   * @param subElementName - SubElement of the <figure> tag - (e.g. 'this.fullImage')
+   * Remove a subelement (e.g. an image) of the main element.
+   * @param mainElement - Main element of this image (<figure> tag)
+   * @param subElementName - Name of the subElement (e.g. 'fullImage')
    */
-  protected removeSubElement(subElementName: string) {
-    const subElement = this[subElementName] as HTMLImageElement;
+  protected removeSubElement(mainElement: HTMLElement, subElementName: string) {
+    const subElement = this.elements.get(subElementName);
     if (subElement) {
-      subElement.src = '';
-      this.getElement().removeChild(subElement);
-      delete this[subElementName];
+      const element = subElement.element;
+      subElement.eventUnloadHandlers.forEach((unloadHandler: UnloadHandler) =>
+        unloadHandler(),
+      );
+      this.renderer.setAttribute(element, 'src', '');
+
+      this.renderer.removeChild(mainElement, element);
+      this.elements.delete(subElementName);
     }
   }
 
@@ -232,24 +290,25 @@ export class ProgressiveImage {
    * and the event handler for the figure click event (if one exists).
    */
   protected removeAllSubElements() {
-    if (this.configuration.withClickEvent) {
-      this.element?.removeEventListener('click', this.imageClicked);
-    }
-
-    this.removeSubElement('thumbnail');
-    this.removeSubElement('fullImage');
+    const mainElement = this.getMainElement();
+    this.removeSubElement(mainElement, 'thumbnail');
+    this.removeSubElement(mainElement, 'fullImage');
   }
 
   /**
    * Updates the style attribute to reflect the style property of this object.
-   * The style property is used to position the image in the grid.
+   * The style property is used to position the main element in the grid.
+   * @param element - HTML element where to set the styles.
    */
-  protected updateStyles() {
+  protected updateStyles(element: HTMLElement) {
     if (this.style) {
-      this.getElement().style.transition = this.style.transition;
-      this.getElement().style.width = `${this.style.width}px`;
-      this.getElement().style.height = `${this.style.height}px`;
-      this.getElement().style.transform = `translate3d(${this.style.translateX}px, ${this.style.translateY}px, 0)`;
+      this.renderer.setStyle(element, 'width', `${this.style.width}px`);
+      this.renderer.setStyle(element, 'height', `${this.style.height}px`);
+      this.renderer.setStyle(
+        element,
+        'transform',
+        `translate3d(${this.style.translateX}px, ${this.style.translateY}px, 0)`,
+      );
     }
   }
 }

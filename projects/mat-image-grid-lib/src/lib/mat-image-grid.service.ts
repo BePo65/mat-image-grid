@@ -1,3 +1,4 @@
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
@@ -6,15 +7,16 @@ import {
   DataStoreProvider,
   Page,
   RequestImagesRange,
-} from './interfaces/pig-datastore-provider.interface';
-import { PigImageData } from './interfaces/pig-image-data.interface';
+} from './interfaces/datastore-provider.interface';
+import { MigImageData } from './interfaces/mig-image-data.interface';
 
 /**
  * Base class to get a list of information about the images to display.
- * @template T - class derived from PigImageData
+ * @template T - class derived from MigImageData
  */
+@Injectable()
 export abstract class MatImageGridImageServiceBase<
-  T extends PigImageData = PigImageData,
+  T extends MigImageData = MigImageData,
 > implements DataStoreProvider<T>
 {
   // eslint-disable-next-line jsdoc/require-returns-check
@@ -32,6 +34,6 @@ export abstract class MatImageGridImageServiceBase<
     filters?: FieldFilterDefinition<T>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
   ): Observable<Page<T>> {
-    throw new Error('Method "getImagesForPig" not implemented.');
+    throw new Error('Method "getPagedData" not implemented.');
   }
 }

@@ -1,11 +1,15 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
+  Inject,
   Input,
+  NgZone,
+  OnDestroy,
   Output,
+  Renderer2,
   ViewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
@@ -13,9 +17,16 @@ import { BehaviorSubject } from 'rxjs';
 
 import { OptimizedResize } from './classes/optimized-resize.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
-import { RequestImagesRange } from './interfaces/pig-datastore-provider.interface';
-import { ProgressiveImageConfiguration } from './interfaces/pig-image-configuration.interface';
-import { PigImageData } from './interfaces/pig-image-data.interface';
+import { RequestImagesRange } from './interfaces/datastore-provider.interface';
+import {
+  CreateMigImage,
+  GetImageSize,
+  GetMinAspectRatio,
+  UnloadHandler,
+  UrlForSize,
+} from './interfaces/mig-common.types';
+import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
+import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridImageServiceBase } from './mat-image-grid.service';
 
 @Component({
@@ -26,31 +37,22 @@ import { MatImageGridImageServiceBase } from './mat-image-grid.service';
   styleUrl: './mat-image-grid.component.scss',
 })
 export class MatImageGridLibComponent<
-  PigImage extends ProgressiveImage = ProgressiveImage,
-  ServerData extends PigImageData = PigImageData,
-> implements AfterViewInit
+    MigImage extends ProgressiveImage = ProgressiveImage,
+    ServerData extends MigImageData = MigImageData,
+  >
+  implements AfterViewInit, OnDestroy
 {
   @Input() primaryImageBufferHeight = 1000;
   @Input() secondaryImageBufferHeight = 300;
   @Input() spaceBetweenImages = 8;
-  @Input() transitionSpeed = 500;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
 
-  @Input({ required: true }) urlForSize: (
-    filename: string,
-    imageWidth: number,
-    imageHeight: number,
-  ) => string = this.urlForSizeDefault;
-  @Input() createPigImage: (
-    singleImageData: ServerData,
-    index: number,
-    configuration: ProgressiveImageConfiguration,
-  ) => PigImage = this.createPigImageDefault;
-  @Input() getMinAspectRatio: (lastWindowWidth: number) => number =
-    this.getMinAspectRatioDefault;
-  @Input() getImageSize: (lastWindowWidth: number) => number =
-    this.getImageSizeDefault;
+  @Input({ required: true }) urlForSize: UrlForSize = this.urlForSizeDefault;
+  @Input() createMigImage: CreateMigImage<ServerData, MigImage> =
+    this.createMigImageDefault;
+  @Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault;
+  @Input() getImageSize: GetImageSize = this.getImageSizeDefault;
   @Output() numberOfImagesOnServer = new EventEmitter<number>();
   @Output() numberOfLoadedImages = new EventEmitter<number>();
   @Output() imageClicked = new EventEmitter<string>();
@@ -58,37 +60,42 @@ export class MatImageGridLibComponent<
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  @ViewChild('pigContainer') private pigContainer!: ElementRef<HTMLDivElement>;
-  private optimizedResize: OptimizedResize;
-  private pigContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
-  private images: PigImage[] = [];
+  @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
+  private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
+  private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
+  private images: MigImage[] = [];
   private inRAF = false;
-  private isTransitioning = false;
   private lastWindowWidth = window.innerWidth;
   private latestYOffset = 0;
-  private minAspectRatio?: number;
-  private minAspectRatioRequiresTransition = false;
+  private minAspectRatio: number | null = null;
   private onScroll = () => {};
+  private onscrollUnloadHandler: UnloadHandler | null = null;
   private previousYOffset = 0;
   private scrollDirection = 'down';
   private totalHeight = 0;
 
-  // TODO can we drop this parameter with the help of view encapsulation?
-  private cssClassPrefix = 'pig';
-
-  // TODO how to inject matImageGridImageService with type matching ServerData?
   constructor(
+    @Inject(DOCUMENT) private readonly documentRef: Document,
+    private renderer2: Renderer2,
+    private zone: NgZone,
     private matImageGridImageService: MatImageGridImageServiceBase<ServerData>,
-  ) {
-    this.optimizedResize = new OptimizedResize();
-
-    // Inject our boilerplate CSS.
-    this.injectStyle(this.cssClassPrefix, this.transitionSpeed);
-  }
+  ) {}
 
   public ngAfterViewInit(): void {
-    this.pigContainerNative = this.pigContainer.nativeElement;
+    this.migContainerNative = this.migContainer.nativeElement;
+    this.optimizedResize = new OptimizedResize(
+      this.documentRef,
+      this.renderer2,
+      this.zone,
+      this.migContainerNative,
+    );
     this.getImageListFromServer();
+  }
+
+  ngOnDestroy(): void {
+    this.disable();
+    this.optimizedResize.dispose();
+    this.clearImageData();
   }
 
   /**
@@ -97,15 +104,19 @@ export class MatImageGridLibComponent<
    */
   public enable() {
     this.onScroll = this.getOnScroll();
-
-    this.pigContainerNative.addEventListener('scroll', this.onScroll);
+    this.onscrollUnloadHandler?.();
+    this.onscrollUnloadHandler = this.renderer2.listen(
+      this.migContainerNative,
+      'scroll',
+      this.onScroll,
+    );
 
     this.onScroll();
     this.computeLayout();
     this.doLayout();
 
     this.optimizedResize.add(() => {
-      this.lastWindowWidth = this.pigContainerNative.offsetWidth;
+      this.lastWindowWidth = this.migContainerNative.offsetWidth;
       this.computeLayout();
       this.doLayout();
     });
@@ -115,13 +126,17 @@ export class MatImageGridLibComponent<
    * Remove all scroll and resize listeners.
    */
   public disable() {
-    this.pigContainerNative.removeEventListener('scroll', this.onScroll);
+    if (this.onscrollUnloadHandler) {
+      this.onscrollUnloadHandler();
+      this.onscrollUnloadHandler = null;
+    }
+
     this.optimizedResize.disable();
   }
 
   /**
    * Convert list of images information from server to internal list of images information.
-   * This method must be called, while pig is disabled!
+   * This method must be called, while material-image-grid is disabled (with method 'disable()')!
    * @param imageData - list of Image details (information about each image)
    */
   public setImageData(imageData: ServerData[]): void {
@@ -130,7 +145,7 @@ export class MatImageGridLibComponent<
 
   /**
    * Clear internal ist of images information.
-   * This method must be called, while pig is disabled!
+   * This method must be called, while material-image-grid is disabled (with method 'disable()')!
    */
   public clearImageData(): void {
     this.images.forEach((image) => {
@@ -139,8 +154,8 @@ export class MatImageGridLibComponent<
       }
       image.dispose();
     });
-    this.images = this.parseImageData([]);
-    this.pigContainerNative.style.height = 'auto';
+
+    this.renderer2.setStyle(this.migContainerNative, 'height', 'auto');
   }
 
   /**
@@ -168,24 +183,24 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Creates new instances of the PigImage class for each of the images defined in `imageData`.
+   * Creates new instances of the MigImage class for each of the images defined in `imageData`.
    * @param imageData - An array of metadata about each image from the matImageGridImageService
-   * @returns An array of PigImage instances
+   * @returns An array of MigImage instances
    */
-  private parseImageData(imageData: ServerData[]): PigImage[] {
-    const progressiveImages: PigImage[] = [];
+  private parseImageData(imageData: ServerData[]): MigImage[] {
+    const progressiveImages: MigImage[] = [];
     const configurationParameters = {
-      cssClassPrefix: this.cssClassPrefix,
+      container: this.migContainer,
       thumbnailSize: this.thumbnailSize,
       lastWindowWidth: this.lastWindowWidth,
-      container: this.pigContainer,
       withClickEvent: this.withImageClickEvents,
       getImageSize: this.getImageSize,
       urlForSize: this.urlForSize,
-    } as ProgressiveImageConfiguration;
+    } as MigImageConfiguration;
 
     imageData.forEach((image, index) => {
-      const progressiveImage = this.createPigImage(
+      const progressiveImage = this.createMigImage(
+        this.renderer2,
         image,
         index,
         configurationParameters,
@@ -215,119 +230,24 @@ export class MatImageGridLibComponent<
     return offsetTop;
   }
 
-  // TODO injectStyle creates global classes to use for the created figure elements
-  // TODO can we create them in the scss of this component?
-  /**
-   * Inject global CSS needed to make the grid work in the <head></head>.
-   * @param classPrefix - The prefix associated with this library that should be prepended to classnames.
-   * @param transitionSpeed - Animation duration in milliseconds
-   */
-  private injectStyle(classPrefix: string, transitionSpeed: number) {
-    const css =
-      `.${classPrefix}-figure {` +
-      '  background-color: #D5D5D5;' +
-      '  overflow: hidden;' +
-      '  left: 0;' +
-      '  position: absolute;' +
-      '  top: 0;' +
-      '  margin: 0;' +
-      '  contain: paint;' +
-      '}' +
-      `.${classPrefix}-figure img {` +
-      '  left: 0;' +
-      '  position: absolute;' +
-      '  top: 0;' +
-      '  height: 100%;' +
-      '  width: 100%;' +
-      '  opacity: 0;' +
-      `  transition: ${(transitionSpeed / 1000).toString(10)}s ease opacity;` +
-      `  -webkit-transition: ${(transitionSpeed / 1000).toString(10)}s ease opacity;` +
-      '}' +
-      `.${classPrefix}-figure img.${classPrefix}-thumbnail {` +
-      '  -webkit-filter: blur(30px);' +
-      '  filter: blur(30px);' +
-      '  left: auto;' +
-      '  position: relative;' +
-      '  width: auto;' +
-      '}' +
-      `.${classPrefix}-figure img.${classPrefix}-loaded {` +
-      '  opacity: 1;' +
-      '}';
-
-    const head = document.head || document.getElementsByTagName('head')[0];
-    const style = document.createElement('style');
-    style.appendChild(document.createTextNode(css));
-    head.appendChild(style);
-  }
-
-  /**
-   * Because we may be transitioning a very large number of elements on a
-   * resize, and because we cannot reliably determine when all elements are
-   * done transitioning, we have to approximate the amount of time it will take
-   * for the browser to be expected to complete with a transition. This
-   * constant gives the scale factor to apply to the given transition time. For
-   * example, if transitionTimeoutScaleFactor is 1.5 and transition speed is
-   * given as 500ms, we will wait 750ms before assuming that we are actually
-   * done resizing.
-   * @returns {number} Time in milliseconds before we can consider a resize to
-   * !                 have been completed.
-   */
-  private getTransitionTimeout() {
-    const transitionTimeoutScaleFactor = 1.5;
-    return this.transitionSpeed * transitionTimeoutScaleFactor;
-  }
-
-  /**
-   * Gives the CSS property string to set for the transition value, depending
-   * on whether or not we are transitioning.
-   * @returns {string} A value for the `transition` CSS property.
-   */
-  private getTransitionString() {
-    if (this.isTransitioning) {
-      return `${(this.transitionSpeed / 1000).toString(10)}s transform ease`;
-    }
-
-    return 'none';
-  }
-
-  /**
-   * Computes the current value for `this.minAspectRatio`, using the
-   * `getMinAspectRatio` function defined in the settings. Then,
-   * `this.minAspectRatioRequiresTransition` will be set, depending on whether
-   * or not the value of this.minAspectRatio has changed.
-   */
-  private recomputeMinAspectRatio() {
-    const oldMinAspectRatio = this.minAspectRatio;
-    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
-
-    if (
-      oldMinAspectRatio !== null &&
-      oldMinAspectRatio !== this.minAspectRatio
-    ) {
-      this.minAspectRatioRequiresTransition = true;
-    } else {
-      this.minAspectRatioRequiresTransition = false;
-    }
-  }
-
   /**
    * This computes the layout of the entire grid, setting the height, width,
    * translateX, translateY, and transition values for each ProgressiveImage in
    * `this.images`. These styles are set on the ProgressiveImage.style property,
-   * but are not set on the DOM.
+   * but are not set in the DOM.
    *
    * This separation of concerns (computing layout and DOM manipulation) is
-   * paramount to the performance of the PIG. While we need to manipulate the
-   * DOM every time we scroll (adding or remove images, etc.), we only need to
-   * compute the layout of the PIG on load and on resize. Therefore, this
-   * function will compute the entire grid layout but will not manipulate the
+   * paramount to the performance of mat-image-grid. While we need to manipulate
+   * the DOM every time we scroll (adding or remove images, etc.), we only need
+   * to compute the layout of the mat-image-grid on load and on resize. Therefore,
+   * this function will compute the entire grid layout but will not manipulate the
    * DOM at all.
    *
-   * All DOM manipulation occurs in `_doLayout`.
+   * All DOM manipulation occurs in `doLayout`.
    */
   private computeLayout() {
     // Constants
-    const wrapperWidth = this.pigContainerNative.clientWidth;
+    const wrapperWidth = this.migContainerNative.clientWidth;
 
     // State
     let row: ProgressiveImage[] = []; // The list of images in the current row.
@@ -336,25 +256,7 @@ export class MatImageGridLibComponent<
     let rowAspectRatio = 0; // The aspect ratio of the row we are building
 
     // Compute the minimum aspect ratio that should be applied to the rows.
-    this.recomputeMinAspectRatio();
-
-    // If we are not currently transitioning, and our minAspectRatio has just
-    // changed, then we mark isTransitioning true. If this is the case, then
-    // `this._getTransitionString()` will ensure that each image has a value
-    // like "0.5s ease all". This will cause images to animate as they change
-    // position. (They need to change position because the minAspectRatio has
-    // changed.) Once we determine that the transition is probably over (using
-    // `this._getTransitionTimeout`) we unset `this.isTransitioning`, so that
-    // future calls to `_computeLayout` will set "transition: none".
-    if (!this.isTransitioning && this.minAspectRatioRequiresTransition) {
-      this.isTransitioning = true;
-      setTimeout(() => {
-        this.isTransitioning = false;
-      }, this.getTransitionTimeout());
-    }
-
-    // Get the valid-CSS transition string.
-    const transition = this.getTransitionString();
+    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
 
     // Loop through all our images, building them up into rows and computing
     // the working rowAspectRatio.
@@ -374,7 +276,6 @@ export class MatImageGridLibComponent<
         rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
 
         // Compute this row's height.
-
         const totalDesiredWidthOfImages =
           wrapperWidth - this.spaceBetweenImages * (row.length - 1);
         const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
@@ -385,7 +286,7 @@ export class MatImageGridLibComponent<
         //
         // NOTE: This does not manipulate the DOM, rather it just sets the
         //       style values on the ProgressiveImage instance. The DOM nodes
-        //       will be updated in _doLayout.
+        //       will be updated in doLayout.
         row.forEach((img) => {
           const imageWidth = rowHeight * img.aspectRatio;
 
@@ -395,7 +296,6 @@ export class MatImageGridLibComponent<
             height: rowHeight,
             translateX,
             translateY,
-            transition,
           };
 
           // The next image is this.settings.spaceBetweenImages pixels to the
@@ -416,14 +316,14 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Update the DOM to reflect the style values of each image in the PIG,
+   * Update the DOM to reflect the style values of each image in 'images',
    * adding or removing images appropriately.
    *
-   * PIG ensures that there are not too many images loaded into the DOM at once
-   * by maintaining a buffer region around the viewport in which images are
-   * allowed, removing all images below and above. Because all of our layout
-   * is computed using CSS transforms, removing an image above the buffer will
-   * not cause the gird to reshuffle.
+   * Mat-image-grid ensures that there are not too many images loaded into the
+   * DOM at once by maintaining a buffer region around the viewport in which
+   * images are allowed, removing all images below and above. Because all of
+   * our layout is computed using CSS transforms, removing an image above the
+   * buffer will not cause the grid to reshuffle.
    *
    * The primary buffer is the buffer in the direction of the user's scrolling.
    * (Below if they are scrolling down, above if they are scrolling up.) The
@@ -479,7 +379,11 @@ export class MatImageGridLibComponent<
    */
   private doLayout() {
     // Set the container height
-    this.pigContainerNative.style.height = `${this.totalHeight}px`;
+    this.renderer2.setStyle(
+      this.migContainerNative,
+      'height',
+      `${this.totalHeight}px`,
+    );
 
     // Get the top and bottom buffers heights.
     const bufferTop =
@@ -492,9 +396,9 @@ export class MatImageGridLibComponent<
         : this.primaryImageBufferHeight;
 
     // Now we compute the location of the top and bottom buffers:
-    const containerOffset = this.getOffsetTop(this.pigContainerNative);
+    const containerOffset = this.getOffsetTop(this.migContainerNative);
 
-    const scrollerHeight = this.pigContainerNative.offsetHeight;
+    const scrollerHeight = this.migContainerNative.offsetHeight;
 
     // This is the top of the top buffer. If the bottom of an image is above
     // this line, it will be removed.
@@ -516,10 +420,8 @@ export class MatImageGridLibComponent<
           minTranslateYPlusHeight ||
         imageTranslateYAsNumber > maxTranslateY
       ) {
-        // Hide Image
         image.hide();
       } else {
-        // Load Image
         image.load();
       }
     });
@@ -532,7 +434,7 @@ export class MatImageGridLibComponent<
   private getOnScroll() {
     /**
      * This function is called on scroll. It computes variables about the page
-     * position and scroll direction, and then calls a _doLayout guarded by a
+     * position and scroll direction, and then calls a doLayout guarded by a
      * window.requestAnimationFrame.
      *
      * We use the boolean variable _this.inRAF to ensure that we don't overload
@@ -541,13 +443,13 @@ export class MatImageGridLibComponent<
      */
     const onScroll = () => {
       // Compute the scroll direction using the latestYOffset and the previousYOffset
-      const newYOffset = this.pigContainerNative.scrollTop;
+      const newYOffset = this.migContainerNative.scrollTop;
       this.previousYOffset = this.latestYOffset || newYOffset;
       this.latestYOffset = newYOffset;
       this.scrollDirection =
         this.latestYOffset > this.previousYOffset ? 'down' : 'up';
 
-      // Call _this.doLayout, guarded by window.requestAnimationFrame
+      // Call this.doLayout, guarded by window.requestAnimationFrame
       if (!this.inRAF) {
         this.inRAF = true;
         window.requestAnimationFrame(() => {
@@ -561,40 +463,61 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Default implementation of the function that gets the URL for an image with the given filename & size.
-   * @param filename - The filename of the image.
+   * Get the transition duration in milliseconds.
+   * @param duration - duration as string with unit ('s' or 'ms')
+   * @returns duration in milliseconds
+   */
+  private durationToMs(duration: string): number {
+    const cleanedDuration = duration.trim();
+    const value = parseFloat(cleanedDuration);
+    let result = 0;
+    if (!isNaN(value)) {
+      if (cleanedDuration.endsWith('s') && !cleanedDuration.endsWith('ms')) {
+        result = value * 1000;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Default implementation of the function that gets the URL for an image with the given ID & size.
+   * @param imageId - The Id of the image (e.g. the filename).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
   private urlForSizeDefault(
     this: void,
-    filename: string,
+    imageId: string,
     imageWidth: number,
     imageHeight: number,
   ): string {
-    return `/${filename}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   }
 
   /**
-   * Create a new instance of the PigImage class.
-   * The PigImage class represents 1 image in the image grid.
+   * Create a new instance of the MigImage class.
+   * The MigImage class represents 1 image in the image grid.
+   * @param renderer - Renderer to be injected into ProgressiveImage constructor.
    * @param singleImageData - Data from the server describing the image.
    * @param index - Index of the image in the list of all images (0..n-1).
-   * @param configuration - Prefix of the css classes used for this image
-   * @returns New instance of the PigImage class.
+   * @param configuration - Configuration data for this image.
+   * @returns New instance of the MigImage class.
    */
-  private createPigImageDefault(
+  private createMigImageDefault(
     this: void,
+    renderer: Renderer2,
     singleImageData: ServerData,
     index: number,
-    configuration: ProgressiveImageConfiguration,
-  ): PigImage {
+    configuration: MigImageConfiguration,
+  ): MigImage {
     return new ProgressiveImage(
+      renderer,
       singleImageData,
       index,
       configuration,
-    ) as PigImage;
+    ) as MigImage;
   }
 
   /**
