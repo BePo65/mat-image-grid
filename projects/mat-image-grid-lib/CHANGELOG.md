@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.3.0](https://github.com/BePo65/mat-image-grid/compare/v0.2.0...v0.3.0) (2024-04-10)
+
+### Features
+
+- migrate pig to angular ([bb7fb94](https://github.com/BePo65/mat-image-grid/commit/bb7fb949770c58a32b819ce21d93145cf2493de3))
+- migrate pig to angular ([e1d6fd3](https://github.com/BePo65/mat-image-grid/commit/e1d6fd36ef3a5fa61faa51df4b41e49d2c951a63))
+- remove config element 'figureTagName' and stale variables ([4e18a68](https://github.com/BePo65/mat-image-grid/commit/4e18a682e2525233df76f786fb0035008adc18bf))
+
 ## [0.2.0](https://github.com/BePo65/mat-image-grid/compare/v0.1.0...v0.2.0) (2024-03-26)
 
 ### Features
