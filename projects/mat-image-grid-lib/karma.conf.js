@@ -22,6 +22,27 @@ module.exports = function (config) {
       dir: require('path').join(__dirname, '../../coverage/mat-image-grid-lib'),
       subdir: '.',
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
+      check: {
+        emitWarning: false,
+        global: {
+          statements: 85,
+          branches: 70,
+          functions: 80,
+          lines: 85,
+        },
+        each: {
+          statements: 85,
+          branches: 70,
+          functions: 80,
+          lines: 85,
+        },
+      },
+      watermarks: {
+        statements: [70, 80],
+        branches: [60, 70],
+        functions: [70, 80],
+        lines: [70, 80],
+      },
     },
     reporters: ['progress', 'kjhtml'],
     port: 9876,
@@ -31,5 +52,6 @@ module.exports = function (config) {
     browsers: ['Chrome'],
     singleRun: false,
     restartOnFileChange: true,
+    proxies: { '/base/src/testing-assets/': 'http://demosite.com/images/' },
   });
 };

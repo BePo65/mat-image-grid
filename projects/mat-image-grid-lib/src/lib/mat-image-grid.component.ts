@@ -463,24 +463,6 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Get the transition duration in milliseconds.
-   * @param duration - duration as string with unit ('s' or 'ms')
-   * @returns duration in milliseconds
-   */
-  private durationToMs(duration: string): number {
-    const cleanedDuration = duration.trim();
-    const value = parseFloat(cleanedDuration);
-    let result = 0;
-    if (!isNaN(value)) {
-      if (cleanedDuration.endsWith('s') && !cleanedDuration.endsWith('ms')) {
-        result = value * 1000;
-      }
-    }
-
-    return result;
-  }
-
-  /**
    * Default implementation of the function that gets the URL for an image with the given ID & size.
    * @param imageId - The Id of the image (e.g. the filename).
    * @param imageWidth - The width (in pixels) of the image.
