@@ -52,7 +52,6 @@
     "@angular/router": "^17.3.3",
     "@fontsource/material-icons": "^5.0.16",
     "@fontsource/roboto": "^5.0.12",
-    "lorem-ipsum": "^2.0.8",
     "rxjs": "~7.8.1",
     "tslib": "^2.6.2",
     "zone.js": "~0.14.4"
