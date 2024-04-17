@@ -46,6 +46,7 @@ export class ProgressiveImage {
   protected imageId: string;
   protected index: number;
   protected classNames: MigImageClassNames;
+  protected createSubelementDelayInMs = 100;
 
   private configuration: MigImageConfiguration;
   private renderer: Renderer2;
@@ -108,7 +109,7 @@ export class ProgressiveImage {
       }
 
       this.addAllSubElements();
-    }, 100);
+    }, this.createSubelementDelayInMs);
   }
 
   /**
