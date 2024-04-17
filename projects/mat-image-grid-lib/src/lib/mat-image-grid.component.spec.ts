@@ -26,7 +26,7 @@ import { MatImageGridImageServiceBase } from './mat-image-grid.service';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
-type figureCoordinates = { x: number; y: number };
+type FigureCoordinates = { x: number; y: number };
 
 const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
   'mig.mockup.service.config',
@@ -173,7 +173,7 @@ const figuresInFirstRow = (images: DebugElement[]) => {
     const coordinates = {
       x: parseInt(coordinatesArray[0]),
       y: parseInt(coordinatesArray[1]),
-    } as figureCoordinates;
+    } as FigureCoordinates;
     return coordinates.y === 0;
   });
 };
