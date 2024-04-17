@@ -22,7 +22,7 @@ import {
 } from './interfaces/datastore-provider.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridLibComponent } from './mat-image-grid.component';
-import { MatImageGridImageServiceBase } from './mat-image-grid.service';
+import { MatImageGridImageServiceBase } from './services/mat-image-grid.service';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 

@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class AppConfig {
-  // Server for images
+export class GlobalSettings {
+  // TODO Server for images is for simple-grid only!
   public imagesBaseUrl = 'https://picsum.photos/id';
 }

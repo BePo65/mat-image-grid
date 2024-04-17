@@ -7,8 +7,8 @@ import {
   DataStoreProvider,
   Page,
   RequestImagesRange,
-} from './interfaces/datastore-provider.interface';
-import { MigImageData } from './interfaces/mig-image-data.interface';
+} from '../interfaces/datastore-provider.interface';
+import { MigImageData } from '../interfaces/mig-image-data.interface';
 
 /**
  * Base class to get a list of information about the images to display.

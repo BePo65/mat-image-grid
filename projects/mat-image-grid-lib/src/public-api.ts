@@ -3,7 +3,7 @@
  */
 
 export * from './lib/mat-image-grid.component';
-export * from './lib/mat-image-grid.service';
+export * from './lib/services/mat-image-grid.service';
 
 export * from './lib/classes/progressive-image.class';
 

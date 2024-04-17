@@ -7,9 +7,9 @@ import {
   FieldSortDefinition,
   FieldFilterDefinition,
   Page,
-} from '../public-api';
+} from '../../public-api';
+import { MigImageData } from '../interfaces/mig-image-data.interface';
 
-import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridImageServiceBase } from './mat-image-grid.service';
 
 @Injectable({ providedIn: 'root' })

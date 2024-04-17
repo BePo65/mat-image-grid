@@ -1,28 +1,19 @@
 import { Component } from '@angular/core';
-import { MatTabsModule } from '@angular/material/tabs';
-import { RouterModule, RouterOutlet } from '@angular/router';
 
-import { AppImagesService } from './services/app-images.service';
-import { GlobalSettings } from './shared/global-settings';
+import { AppImagesService } from '../../services/app-images.service';
+import { GlobalSettings } from '../../shared/global-settings';
 
 import {
   MatImageGridImageServiceBase,
   MatImageGridLibComponent,
 } from 'projects/mat-image-grid-lib/src';
 
-type RouteTab = { title: string; route: string; index: number };
-
 @Component({
-  selector: 'app-root',
+  selector: 'app-simple-grid',
   standalone: true,
-  imports: [
-    MatImageGridLibComponent,
-    MatTabsModule,
-    RouterModule,
-    RouterOutlet,
-  ],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
+  imports: [MatImageGridLibComponent],
+  templateUrl: './simple-grid.component.html',
+  styleUrl: './simple-grid.component.scss',
   providers: [
     {
       provide: MatImageGridImageServiceBase,
@@ -30,18 +21,10 @@ type RouteTab = { title: string; route: string; index: number };
     },
   ],
 })
-export class AppComponent {
-  public title = 'Mat-Image-Grid-Demo';
-
-  protected tabs: RouteTab[] = [
-    { title: 'Simple Grid', route: '/simple-grid', index: 0 },
-    { title: 'Extended Grid', route: '/extended-grid', index: 1 },
-    { title: 'Large Dataset', route: '/large-dataset', index: 2 },
-  ];
-  protected activeTab = this.tabs[0].index;
-
+export class SimpleGridComponent {
   private imagesBaseUrl: string;
 
+  // TODO can we inject this config element through the route or a token?
   constructor(private settings: GlobalSettings) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
   }

@@ -27,7 +27,7 @@ import {
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
-import { MatImageGridImageServiceBase } from './mat-image-grid.service';
+import { MatImageGridImageServiceBase } from './services/mat-image-grid.service';
 
 @Component({
   selector: 'mat-image-grid',

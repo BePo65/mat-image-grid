@@ -10,6 +10,11 @@ import {
 } from 'projects/mat-image-grid-lib/src';
 import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
 
+// TODO used in large-dataset
+// TODO better: not to use a list with all entries, but keep only the algorithm
+/**
+ * Mockup service to simulate very large data source.
+ */
 @Injectable()
 export class AppImagesMockupService extends MatImageGridImageServiceBase {
   private images: MigImageData[] = [];

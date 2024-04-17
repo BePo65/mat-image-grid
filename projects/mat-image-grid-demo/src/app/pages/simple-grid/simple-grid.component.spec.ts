@@ -7,8 +7,9 @@ import {
 import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 
-import { AppComponent } from './app.component';
-import { GlobalSettings } from './shared/global-settings';
+import { GlobalSettings } from '../../shared/global-settings';
+
+import { SimpleGridComponent } from './simple-grid.component';
 
 import {
   FieldFilterDefinition,
@@ -25,9 +26,9 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
   'mig.mockup.service.config',
 );
 
-describe('AppComponent', () => {
-  let app: AppComponent;
-  let fixture: ComponentFixture<AppComponent>;
+describe('SimpleGridComponent', () => {
+  let app: SimpleGridComponent;
+  let fixture: ComponentFixture<SimpleGridComponent>;
   const WaitForSubelementsTimeMs = 120;
   const testImageServiceConfig = {
     numberOfImages: 200,
@@ -36,13 +37,13 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [SimpleGridComponent],
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true },
         { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
       ],
     })
-      .overrideComponent(AppComponent, {
+      .overrideComponent(SimpleGridComponent, {
         set: {
           providers: [
             {
@@ -56,31 +57,13 @@ describe('AppComponent', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AppComponent);
+    fixture = TestBed.createComponent(SimpleGridComponent);
     fixture.detectChanges();
     app = fixture.componentInstance;
   });
 
-  it('should create the app', () => {
+  it('should create the grid display', () => {
     expect(app).toBeTruthy();
-  });
-
-  it('should have a title property', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const app = fixture.componentInstance;
-
-    expect(app.title).toEqual('Mat-Image-Grid-Demo');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Mat-Image-Grid-Demo',
-    );
   });
 
   it('should have figure entries', () => {

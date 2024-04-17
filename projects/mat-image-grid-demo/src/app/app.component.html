@@ -3,13 +3,27 @@
     <h1 class="page-title">{{ title }}</h1>
     <div class="header-source">
       <span>Source on github: </span>
-      <a href="https://github.com/BePo65/mat-image-grid"
-        >BePo65/mat-image-grid</a
-      >
+      <a href="https://github.com/BePo65/mat-image-grid">
+        BePo65/mat-image-grid
+      </a>
     </div>
   </div>
   <div class="content-images mat-elevation-z8">
-    <mat-image-grid [urlForSize]="urlForSize"> loading... </mat-image-grid>
+    <nav mat-tab-nav-bar [tabPanel]="tabPanel" class="tab-row">
+      @for (tab of tabs; track tab.index) {
+        <a
+          mat-tab-link
+          [routerLink]="tab.route"
+          (click)="activeTab = tab.index"
+          [active]="activeTab === tab.index"
+        >
+          {{ tab.title }}
+        </a>
+      }
+    </nav>
+    <mat-tab-nav-panel #tabPanel>
+      <router-outlet></router-outlet>
+    </mat-tab-nav-panel>
   </div>
   <div class="footer">
     <span>Images from </span>
