@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
-import { RouterModule, RouterOutlet } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
 
@@ -9,12 +9,7 @@ type RouteTab = { title: string; route: string; index: number };
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    MatImageGridLibComponent,
-    MatTabsModule,
-    RouterModule,
-    RouterOutlet,
-  ],
+  imports: [MatImageGridLibComponent, MatTabsModule, RouterModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   providers: [],
