@@ -35,23 +35,24 @@ describe('SimpleGridComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SimpleGridComponent],
       providers: [
-        { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
         provideRouter([
-          { path: 'simple-grid', component: SimpleGridComponent },
+          {
+            path: 'simple-grid',
+            component: SimpleGridComponent,
+            providers: [
+              {
+                provide: IMAGE_SERVICE_CONFIG,
+                useValue: testImageServiceConfig,
+              },
+              {
+                provide: MatImageGridImageServiceBase,
+                useClass: MatImageGridMockupService,
+              },
+            ],
+          },
         ]),
       ],
-    })
-      .overrideComponent(SimpleGridComponent, {
-        set: {
-          providers: [
-            {
-              provide: MatImageGridImageServiceBase,
-              useClass: MatImageGridMockupService,
-            },
-          ],
-        },
-      })
-      .compileComponents();
+    }).compileComponents();
   });
 
   beforeEach(async () => {

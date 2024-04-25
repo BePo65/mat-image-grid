@@ -1,13 +1,8 @@
 import { Component } from '@angular/core';
 
-import { SimpleGridImagesService } from '../../services/simple-grid-images.service';
-
 import { SimpleGridSettings } from './simple-grid-settings.class';
 
-import {
-  MatImageGridImageServiceBase,
-  MatImageGridLibComponent,
-} from 'projects/mat-image-grid-lib/src';
+import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
 
 @Component({
   selector: 'app-simple-grid',
@@ -15,12 +10,6 @@ import {
   imports: [MatImageGridLibComponent],
   templateUrl: './simple-grid.component.html',
   styleUrl: './simple-grid.component.scss',
-  providers: [
-    {
-      provide: MatImageGridImageServiceBase,
-      useClass: SimpleGridImagesService,
-    },
-  ],
 })
 export class SimpleGridComponent {
   public componentType = 'SimpleGridComponent';
