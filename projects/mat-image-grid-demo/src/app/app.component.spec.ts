@@ -5,16 +5,12 @@ import {
   fakeAsync,
   tick,
 } from '@angular/core/testing';
-import {
-  Router,
-  RouterModule,
-  RouterOutlet,
-  provideRouter,
-} from '@angular/router';
+import { Router, RouterModule, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
-import { routes } from './app.routes';
+import { ExtendedGridComponent } from './pages/extended-grid/extended-grid.component';
+import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
 
 import {
@@ -44,24 +40,30 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, RouterModule, RouterOutlet, SimpleGridComponent],
-      providers: [provideRouter(routes)],
-    })
-      .overrideComponent(SimpleGridComponent, {
-        set: {
-          providers: [
-            {
-              provide: IMAGE_SERVICE_CONFIG,
-              useValue: simpleGridImageServiceConfig,
-            },
-            {
-              provide: MatImageGridImageServiceBase,
-              useClass: MatImageGridMockupService,
-            },
-          ],
-        },
-      })
-      .compileComponents();
+      // imports: [AppComponent, RouterModule, RouterOutlet, SimpleGridComponent],
+      imports: [AppComponent, RouterModule],
+      providers: [
+        provideRouter([
+          { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
+          {
+            path: 'simple-grid',
+            component: SimpleGridComponent,
+            providers: [
+              {
+                provide: IMAGE_SERVICE_CONFIG,
+                useValue: simpleGridImageServiceConfig,
+              },
+              {
+                provide: MatImageGridImageServiceBase,
+                useClass: MatImageGridMockupService,
+              },
+            ],
+          },
+          { path: 'extended-grid', component: ExtendedGridComponent },
+          { path: 'large-dataset', component: LargeDatasetComponent },
+        ]),
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {
