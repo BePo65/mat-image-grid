@@ -49,7 +49,6 @@ describe('MatImageGridLibComponent', () => {
           provide: MatImageGridImageServiceBase,
           useClass: MatImageGridMockupService,
         },
-        { provide: ComponentFixtureAutoDetect, useValue: true },
         { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
       ],
     }).compileComponents();

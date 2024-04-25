@@ -8,6 +8,7 @@ import {
   Input,
   NgZone,
   OnDestroy,
+  OnInit,
   Output,
   Renderer2,
   ViewChild,
@@ -92,7 +93,7 @@ export class MatImageGridLibComponent<
     this.getImageListFromServer();
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.disable();
     this.optimizedResize.dispose();
     this.clearImageData();
