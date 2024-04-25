@@ -1,6 +1,11 @@
 // -4px for loading indicator
 .images-grid {
-  height: calc(100% - 4px);
+  height: calc(
+    100% - max(
+        var(--mdc-linear-progress-track-height),
+        var(--mdc-linear-progress-active-indicator-height)
+      )
+  );
   overflow-y: scroll;
 }
 
