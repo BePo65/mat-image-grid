@@ -18,6 +18,9 @@
 }
 
 .content-images {
+  --app-root-tab-row-spacer: 0.2em;
+  --app-root-pages-panel-spacer: 4px;
+
   flex-grow: 1;
   margin: 0 1em 1.5em;
   overflow: auto;
@@ -34,5 +37,16 @@
 }
 
 .tab-row {
-  margin: 0 0 0.2em;
+  margin: 0 0 var(--app-root-tab-row-spacer);
+}
+
+.pages-panel {
+  display: inline-block;
+  height: calc(
+    100% - var(--mdc-secondary-navigation-tab-container-height) - var(
+        --app-root-tab-row-spacer
+      ) - var(--app-root-pages-panel-spacer)
+  );
+  margin: 0 0 0 var(--app-root-pages-panel-spacer);
+  width: calc(100% - 2 * var(--app-root-pages-panel-spacer));
 }
