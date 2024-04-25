@@ -14,8 +14,9 @@
 chrome-profiler-events*.json
 
 # cypress files
-**/cypress/videos
+**/cypress/downloads
 **/cypress/screenshots
+**/cypress/videos
 
 # IDEs and editors
 /.idea
