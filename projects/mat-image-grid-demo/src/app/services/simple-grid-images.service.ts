@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import EXAMPLE_DATA from './app-images.mock.data';
+import EXAMPLE_DATA from './simple-grid-images.mock.data';
 
 import {
   MatImageGridImageServiceBase,
@@ -13,10 +13,10 @@ import {
 import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
 
 /**
- * Class to get a list of information about the images to display.
+ * Class to get a list of information about the images to display in the SimpleGridComponent.
  */
 @Injectable()
-export class AppImagesService extends MatImageGridImageServiceBase<MigImageData> {
+export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigImageData> {
   private images: MigImageData[];
 
   public constructor() {

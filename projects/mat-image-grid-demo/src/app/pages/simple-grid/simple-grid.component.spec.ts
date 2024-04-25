@@ -1,14 +1,10 @@
 import { Injectable, Inject, InjectionToken } from '@angular/core';
-import {
-  ComponentFixture,
-  ComponentFixtureAutoDetect,
-  TestBed,
-} from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
-import { GlobalSettings } from '../../shared/global-settings';
-
+import { SimpleGridSettings } from './simple-grid-settings.class';
 import { SimpleGridComponent } from './simple-grid.component';
 
 import {
@@ -27,20 +23,22 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
 );
 
 describe('SimpleGridComponent', () => {
-  let app: SimpleGridComponent;
-  let fixture: ComponentFixture<SimpleGridComponent>;
+  let harness: RouterTestingHarness;
+
   const WaitForSubelementsTimeMs = 120;
   const testImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
-  const appConfig = new GlobalSettings();
+  const appConfig = new SimpleGridSettings();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SimpleGridComponent],
       providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true },
         { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
+        provideRouter([
+          { path: 'simple-grid', component: SimpleGridComponent },
+        ]),
       ],
     })
       .overrideComponent(SimpleGridComponent, {
@@ -56,20 +54,22 @@ describe('SimpleGridComponent', () => {
       .compileComponents();
   });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(SimpleGridComponent);
-    fixture.detectChanges();
-    app = fixture.componentInstance;
+  beforeEach(async () => {
+    harness = await RouterTestingHarness.create('/simple-grid');
   });
 
-  it('should create the grid display', () => {
-    expect(app).toBeTruthy();
+  it('should create component instance', () => {
+    const component = harness.routeDebugElement
+      ?.componentInstance as SimpleGridComponent;
+
+    expect(component).toBeDefined();
+    expect(component.componentType).toBe('SimpleGridComponent');
   });
 
   it('should have figure entries', () => {
-    const images = fixture.debugElement.queryAll(By.css('figure'));
+    const images = harness.routeNativeElement?.querySelectorAll('figure');
 
-    expect(images.length).toBe(testImageServiceConfig.numberOfImages);
+    expect(images).toHaveSize(testImageServiceConfig.numberOfImages);
   });
 
   it('should have img entries', async () => {
@@ -77,7 +77,8 @@ describe('SimpleGridComponent', () => {
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
     );
-    const images = fixture.debugElement.queryAll(By.css('img'));
+
+    const images = harness.routeNativeElement?.querySelectorAll('img');
 
     expect(images).toHaveSize(testImageServiceConfig.numberOfImages * 2);
   });
@@ -87,23 +88,25 @@ describe('SimpleGridComponent', () => {
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
     );
-    const thumbnailImages = fixture.debugElement.queryAll(
-      By.css('img.mat-image-grid-thumbnail'),
+
+    const thumbnailImages = harness.routeNativeElement?.querySelectorAll(
+      'img.mat-image-grid-thumbnail',
     );
 
     expect(thumbnailImages).toHaveSize(testImageServiceConfig.numberOfImages);
 
-    const thumbnailImages3 = thumbnailImages[2]
-      .nativeElement as HTMLImageElement;
+    if (thumbnailImages !== undefined) {
+      const thumbnailImages3 = thumbnailImages[2] as HTMLImageElement;
 
-    // Strip pure image file name from url
-    const src = thumbnailImages3.src;
-    const imageNameAndSize = src
-      .slice(appConfig.imagesBaseUrl.length + 1)
-      .split('/');
+      // Strip pure image file name from url
+      const src = thumbnailImages3.src;
+      const imageNameAndSize = src
+        .slice(appConfig.imagesBaseUrl.length + 1)
+        .split('/');
 
-    expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
-    expect(imageNameAndSize[0]).toBe('00002');
+      expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
+      expect(imageNameAndSize[0]).toBe('00002');
+    }
   });
 
   it('should have fullscreen image entries with src attribute', async () => {
@@ -111,23 +114,25 @@ describe('SimpleGridComponent', () => {
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
     );
-    const fullscreenImages = fixture.debugElement.queryAll(
-      By.css('img.mat-image-grid-full-image'),
+
+    const fullscreenImages = harness.routeNativeElement?.querySelectorAll(
+      'img.mat-image-grid-full-image',
     );
 
     expect(fullscreenImages).toHaveSize(testImageServiceConfig.numberOfImages);
 
-    const fullscreenImages5 = fullscreenImages[4]
-      .nativeElement as HTMLImageElement;
+    if (fullscreenImages !== undefined) {
+      const fullscreenImages5 = fullscreenImages[4] as HTMLImageElement;
 
-    // Strip pure image file name from url
-    const src = fullscreenImages5.src;
-    const imageNameAndSize = src
-      .slice(appConfig.imagesBaseUrl.length + 1)
-      .split('/');
+      // Strip pure image file name from url
+      const src = fullscreenImages5.src;
+      const imageNameAndSize = src
+        .slice(appConfig.imagesBaseUrl.length + 1)
+        .split('/');
 
-    expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
-    expect(imageNameAndSize[0]).toBe('00004');
+      expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
+      expect(imageNameAndSize[0]).toBe('00004');
+    }
   });
 });
 

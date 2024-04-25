@@ -1,22 +1,29 @@
 import { Injectable, Inject, InjectionToken } from '@angular/core';
 import {
   ComponentFixture,
-  ComponentFixtureAutoDetect,
   TestBed,
+  fakeAsync,
+  tick,
 } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
+import {
+  Router,
+  RouterModule,
+  RouterOutlet,
+  provideRouter,
+} from '@angular/router';
 import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
-import { GlobalSettings } from './shared/global-settings';
+import { routes } from './app.routes';
+import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
 
 import {
-  FieldFilterDefinition,
-  FieldSortDefinition,
   MatImageGridImageServiceBase,
-  MigImageData,
-  Page,
   RequestImagesRange,
+  FieldSortDefinition,
+  MigImageData,
+  FieldFilterDefinition,
+  Page,
 } from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
@@ -26,25 +33,27 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
 );
 
 describe('AppComponent', () => {
-  let app: AppComponent;
   let fixture: ComponentFixture<AppComponent>;
+  let router: Router;
+  let app: AppComponent;
+
   const WaitForSubelementsTimeMs = 120;
-  const testImageServiceConfig = {
+  const simpleGridImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
-  const appConfig = new GlobalSettings();
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true },
-        { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
-      ],
+      imports: [AppComponent, RouterModule, RouterOutlet, SimpleGridComponent],
+      providers: [provideRouter(routes)],
     })
-      .overrideComponent(AppComponent, {
+      .overrideComponent(SimpleGridComponent, {
         set: {
           providers: [
+            {
+              provide: IMAGE_SERVICE_CONFIG,
+              useValue: simpleGridImageServiceConfig,
+            },
             {
               provide: MatImageGridImageServiceBase,
               useClass: MatImageGridMockupService,
@@ -57,95 +66,91 @@ describe('AppComponent', () => {
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
+    router = TestBed.inject(Router);
     app = fixture.componentInstance;
+    router.initialNavigation();
   });
 
-  it('should create the app', () => {
-    expect(app).toBeTruthy();
+  it('should create app instance', () => {
+    expect(app).toBeDefined();
   });
 
   it('should have a title property', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const app = fixture.componentInstance;
-
     expect(app.title).toEqual('Mat-Image-Grid-Demo');
   });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+  it('should render header and footer', () => {
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
+    const appNative = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.querySelector('h1')?.textContent).toContain(
+    expect(appNative.querySelector('h1')?.textContent).toContain(
       'Mat-Image-Grid-Demo',
     );
+
+    expect(appNative.querySelector('.header-source')?.textContent).toContain(
+      'Source on github:',
+    );
+
+    expect(appNative.querySelector('.footer')?.textContent).toContain(
+      'Images from',
+    );
   });
 
-  it('should have figure entries', () => {
-    const images = fixture.debugElement.queryAll(By.css('figure'));
-
-    expect(images.length).toBe(testImageServiceConfig.numberOfImages);
+  it('should have initial route set', () => {
+    expect(router.url).toBe('/');
   });
 
-  it('should have img entries', async () => {
+  it('should navigate to simple-grid on empty route', fakeAsync(() => {
+    void router.navigate(['']);
+    tick();
+
+    expect(router.url).toBe('/simple-grid');
+  }));
+
+  it('should navigate to simple-grid', async () => {
+    await router.navigate(['simple-grid']);
+    fixture.detectChanges();
+
     // wait for ProgressiveImage to create all subelements
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
     );
-    const images = fixture.debugElement.queryAll(By.css('img'));
 
-    expect(images).toHaveSize(testImageServiceConfig.numberOfImages * 2);
+    const appNative = fixture.nativeElement as HTMLElement;
+    const mainElements = appNative.querySelectorAll('mat-image-grid');
+    const figureElements = appNative.querySelectorAll('figure');
+
+    expect(router.url).toBe('/simple-grid');
+    expect(mainElements).toHaveSize(1);
+    expect(figureElements).toHaveSize(
+      simpleGridImageServiceConfig.numberOfImages,
+    );
   });
 
-  it('should have thumbnail image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
-    const thumbnailImages = fixture.debugElement.queryAll(
-      By.css('img.mat-image-grid-thumbnail'),
-    );
+  it('should navigate to extended-grid', async () => {
+    await router.navigate(['extended-grid']);
+    fixture.detectChanges();
 
-    expect(thumbnailImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    const appNative = fixture.nativeElement as HTMLElement;
+    const contentElements = appNative.querySelectorAll('app-extended-grid p');
 
-    const thumbnailImages3 = thumbnailImages[2]
-      .nativeElement as HTMLImageElement;
-
-    // Strip pure image file name from url
-    const src = thumbnailImages3.src;
-    const imageNameAndSize = src
-      .slice(appConfig.imagesBaseUrl.length + 1)
-      .split('/');
-
-    expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
-    expect(imageNameAndSize[0]).toBe('00002');
+    expect(router.url).toBe('/extended-grid');
+    expect(contentElements).toHaveSize(1);
+    expect(contentElements[0].textContent).toBe('extended-grid works!');
   });
 
-  it('should have fullscreen image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
-    const fullscreenImages = fixture.debugElement.queryAll(
-      By.css('img.mat-image-grid-full-image'),
-    );
+  it('should navigate to large-dataset', fakeAsync(() => {
+    void router.navigate(['large-dataset']);
+    tick();
+    fixture.detectChanges();
 
-    expect(fullscreenImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    const appNative = fixture.nativeElement as HTMLElement;
+    const contentElements = appNative.querySelectorAll('app-large-dataset p');
 
-    const fullscreenImages5 = fullscreenImages[4]
-      .nativeElement as HTMLImageElement;
-
-    // Strip pure image file name from url
-    const src = fullscreenImages5.src;
-    const imageNameAndSize = src
-      .slice(appConfig.imagesBaseUrl.length + 1)
-      .split('/');
-
-    expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
-    expect(imageNameAndSize[0]).toBe('00004');
-  });
+    expect(router.url).toBe('/large-dataset');
+    expect(contentElements).toHaveSize(1);
+    expect(contentElements[0].textContent).toBe('large-dataset works!');
+  }));
 });
 
 @Injectable()

@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 
-import { AppImagesService } from '../../services/app-images.service';
-import { GlobalSettings } from '../../shared/global-settings';
+import { SimpleGridImagesService } from '../../services/simple-grid-images.service';
+
+import { SimpleGridSettings } from './simple-grid-settings.class';
 
 import {
   MatImageGridImageServiceBase,
@@ -17,15 +18,16 @@ import {
   providers: [
     {
       provide: MatImageGridImageServiceBase,
-      useClass: AppImagesService,
+      useClass: SimpleGridImagesService,
     },
   ],
 })
 export class SimpleGridComponent {
+  public componentType = 'SimpleGridComponent';
+
   private imagesBaseUrl: string;
 
-  // TODO can we inject this config element through the route or a token?
-  constructor(private settings: GlobalSettings) {
+  constructor(private settings: SimpleGridSettings) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
   }
 

@@ -1,33 +1,43 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 import { LargeDatasetComponent } from './large-dataset.component';
 
 describe('LargeDatasetComponent', () => {
-  let component: LargeDatasetComponent;
-  let fixture: ComponentFixture<LargeDatasetComponent>;
+  let harness: RouterTestingHarness;
 
-  beforeEach(waitForAsync(() => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
       imports: [LargeDatasetComponent],
+      providers: [
+        provideRouter([
+          { path: 'large-dataset', component: LargeDatasetComponent },
+        ]),
+      ],
     }).compileComponents();
-  }));
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LargeDatasetComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
+  beforeEach(async () => {
+    harness = await RouterTestingHarness.create('/large-dataset');
+  });
+
+  it('should create component instance', () => {
+    const component = harness.routeDebugElement
+      ?.componentInstance as LargeDatasetComponent;
+
     expect(component).toBeDefined();
   });
 
-  it('should render message', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
+  it('should render component message when created', () => {
+    const paragraphs = harness.routeNativeElement?.querySelectorAll('p');
 
-    expect(compiled.querySelector('p')?.textContent).toContain(
-      'large-dataset works!',
-    );
+    expect(paragraphs).toHaveSize(1);
+
+    if (paragraphs !== undefined) {
+      const content = paragraphs[0].textContent;
+
+      expect(content).toBe('large-dataset works!');
+    }
   });
 });
