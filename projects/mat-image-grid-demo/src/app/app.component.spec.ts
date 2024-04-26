@@ -70,7 +70,9 @@ describe('AppComponent', () => {
     fixture = TestBed.createComponent(AppComponent);
     router = TestBed.inject(Router);
     app = fixture.componentInstance;
-    router.initialNavigation();
+    fixture.ngZone?.run(() => {
+      router.initialNavigation();
+    });
   });
 
   it('should create app instance', () => {
@@ -102,18 +104,25 @@ describe('AppComponent', () => {
     expect(router.url).toBe('/');
   });
 
-  it('should navigate to simple-grid on empty route', fakeAsync(() => {
-    void router.navigate(['']);
-    tick();
+  it('should navigate to simple-grid on empty route', async () => {
+    const navigated = await fixture.ngZone?.run(() => router.navigate(['']));
 
-    expect(router.url).toBe('/simple-grid');
-  }));
+    expect(navigated).toBeTruthy();
 
-  it('should navigate to simple-grid', async () => {
-    await router.navigate(['simple-grid']);
     fixture.detectChanges();
 
+    expect(router.url).toBe('/simple-grid');
+  });
+
+  it('should navigate to simple-grid', async () => {
+    const navigated = await fixture.ngZone?.run(() =>
+      router.navigate(['simple-grid']),
+    );
+
+    expect(navigated).toBeTruthy();
+
     // wait for ProgressiveImage to create all subelements
+    fixture.detectChanges();
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
     );
@@ -130,9 +139,13 @@ describe('AppComponent', () => {
   });
 
   it('should navigate to extended-grid', async () => {
-    await router.navigate(['extended-grid']);
-    fixture.detectChanges();
+    const navigated = await fixture.ngZone?.run(() =>
+      router.navigate(['extended-grid']),
+    );
 
+    expect(navigated).toBeTruthy();
+
+    fixture.detectChanges();
     const appNative = fixture.nativeElement as HTMLElement;
     const contentElements = appNative.querySelectorAll('app-extended-grid p');
 
@@ -141,9 +154,13 @@ describe('AppComponent', () => {
     expect(contentElements[0].textContent).toBe('extended-grid works!');
   });
 
-  it('should navigate to large-dataset', fakeAsync(() => {
-    void router.navigate(['large-dataset']);
-    tick();
+  it('should navigate to large-dataset', async () => {
+    const navigated = await fixture.ngZone?.run(() =>
+      router.navigate(['large-dataset']),
+    );
+
+    expect(navigated).toBeTruthy();
+
     fixture.detectChanges();
 
     const appNative = fixture.nativeElement as HTMLElement;
@@ -152,7 +169,7 @@ describe('AppComponent', () => {
     expect(router.url).toBe('/large-dataset');
     expect(contentElements).toHaveSize(1);
     expect(contentElements[0].textContent).toBe('large-dataset works!');
-  }));
+  });
 });
 
 @Injectable()
