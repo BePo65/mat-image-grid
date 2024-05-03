@@ -35,7 +35,8 @@ export class AppComponent implements OnInit {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
         const activeRoute = this.tabs.find(
-          (routeDefinition) => routeDefinition.route === event.url,
+          (routeDefinition) =>
+            routeDefinition.route === event.urlAfterRedirects,
         );
         this.activeTab = activeRoute?.index ?? -1;
       }
