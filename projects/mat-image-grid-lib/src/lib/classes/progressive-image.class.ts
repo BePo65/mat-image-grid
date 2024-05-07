@@ -47,9 +47,9 @@ export class ProgressiveImage {
   protected index: number;
   protected classNames: MigImageClassNames;
   protected createSubelementDelayInMs = 100;
+  protected renderer: Renderer2;
 
   private configuration: MigImageConfiguration;
-  private renderer: Renderer2;
   private readonly mainElementsKey = 'main';
 
   /**

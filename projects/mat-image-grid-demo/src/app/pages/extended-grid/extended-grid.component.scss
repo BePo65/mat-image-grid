@@ -1,3 +1,18 @@
-p {
-  font-size: large;
+mat-image-grid {
+  --mat-image-grid-ease-duration: 1s;
+}
+
+.grid-header {
+  display: grid;
+  grid: 25px / 1fr 1fr;
+  margin: 0 0 4px;
+  padding: 0 0.5em;
+}
+
+.grid-option-show-details {
+  place-self: center start;
+}
+
+.grid-information {
+  place-self: center end;
 }

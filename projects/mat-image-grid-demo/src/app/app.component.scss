@@ -8,6 +8,7 @@
 
 .header {
   display: grid;
+  flex-grow: 0;
   grid-template-columns: max-content auto max-content;
   margin: 0.25em 0.5em 0.75em;
 }
@@ -21,8 +22,10 @@
   --app-root-tab-row-spacer: 0.2em;
   --app-root-pages-panel-spacer: 4px;
 
-  flex-grow: 1;
-  margin: 0 1em 1.5em;
+  display: flex;
+  flex: 1 0;
+  flex-flow: column;
+  margin: 0 1em 1em;
   overflow: auto;
 }
 
@@ -41,12 +44,9 @@
 }
 
 .pages-panel {
-  display: inline-block;
-  height: calc(
-    100% - var(--mdc-secondary-navigation-tab-container-height) - var(
-        --app-root-tab-row-spacer
-      ) - var(--app-root-pages-panel-spacer)
-  );
-  margin: 0 0 0 var(--app-root-pages-panel-spacer);
+  flex: 1 0;
+  margin: 0 0 var(--app-root-pages-panel-spacer)
+    var(--app-root-pages-panel-spacer);
+  overflow: hidden;
   width: calc(100% - 2 * var(--app-root-pages-panel-spacer));
 }

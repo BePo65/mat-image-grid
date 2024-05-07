@@ -1,0 +1,40 @@
+/* If ::ng-deep will bw deprecated, this style must be moved to the
+   global styles of the project (e.g. file 'styles.scss') and the main
+   selectors (':host ::ng-deep) must be adapted accordingly. If we want
+   to limit this styles to a specific instance of mat-image-grid, then
+   we could add the selector of a parent component to the selectors
+   (e.g. '.my-main-component .mat-image-grid-date').
+ */
+
+:host {
+  --mig-overlay-visible: visible;
+
+  /* stylelint-disable-next-line selector-pseudo-element-no-unknown */
+  ::ng-deep {
+    .mat-image-grid-date {
+      background-color: rgba(128 128 128 / 35%);
+      color: white;
+      font-size: 11px;
+      opacity: 0;
+      padding: 0 4px;
+      position: absolute;
+      top: 0;
+    }
+
+    .mat-image-grid-desc {
+      background-color: rgba(128 128 128 / 35%);
+      bottom: 0;
+      color: white;
+      font-size: 11px;
+      overflow: hidden;
+      padding: 0 4px;
+      opacity: 0;
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    .mat-image-grid-overlay {
+      visibility: var(--mig-overlay-visible);
+    }
+  }
+}

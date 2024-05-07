@@ -1,10 +1,5 @@
 import { Injectable, Inject, InjectionToken } from '@angular/core';
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  tick,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, RouterModule, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 

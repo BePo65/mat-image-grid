@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import SIMPLE_GRID_DATA from './simple-grid-images.mock.data';
+import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
+
+import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
 
 import {
   MatImageGridImageServiceBase,
@@ -10,27 +12,26 @@ import {
   FieldFilterDefinition,
   Page,
 } from 'projects/mat-image-grid-lib/src';
-import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
 
 /**
- * Class to get a list of information about the images to display in the SimpleGridComponent.
+ * Class to get a list of information about the images to display in the ExtendedGridComponent.
  */
 @Injectable()
-export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigImageData> {
-  private images: MigImageData[];
+export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigImageExtData> {
+  private images: MigImageExtData[];
 
   public constructor() {
     super();
-    this.images = SIMPLE_GRID_DATA.map((image) => image);
+    this.images = EXTENDED_GRID_DATA.map((image) => image as MigImageExtData);
   }
 
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    sorts?: FieldSortDefinition<MigImageData>[],
-    filters?: FieldFilterDefinition<MigImageData>[],
+    sorts?: FieldSortDefinition<MigImageExtData>[],
+    filters?: FieldFilterDefinition<MigImageExtData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<MigImageData>> {
+  ): Observable<Page<MigImageExtData>> {
     const numberOfImages =
       imagesRange.numberOfImages === -1
         ? this.images.length
@@ -47,7 +48,7 @@ export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigIma
       returnedElements: migImages.length,
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
-    } as Page<MigImageData>;
+    } as Page<MigImageExtData>;
     return of(resultPage).pipe(delay(simulatedResponseTime));
   }
 }
