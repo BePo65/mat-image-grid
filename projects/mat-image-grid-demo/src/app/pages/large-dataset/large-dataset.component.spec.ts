@@ -37,7 +37,9 @@ describe('LargeDatasetComponent', () => {
     if (paragraphs !== undefined) {
       const content = paragraphs[0].textContent;
 
-      expect(content).toBe('large-dataset works!');
+      expect(content).toContain(
+        'Placeholder for mat-image-grid with very large dataset',
+      );
     }
   });
 });

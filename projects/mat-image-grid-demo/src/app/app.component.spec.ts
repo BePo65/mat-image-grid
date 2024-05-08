@@ -188,7 +188,9 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/large-dataset');
     expect(contentElements).toHaveSize(1);
-    expect(contentElements[0].textContent).toBe('large-dataset works!');
+    expect(contentElements[0].textContent).toContain(
+      'Placeholder for mat-image-grid with very large dataset',
+    );
   });
 });
 
