@@ -1,4 +1,8 @@
-// -4px for loading indicator
+:host {
+  --mat-image-grid-ease-duration: 500ms;
+}
+
+/* Consider space for loading indicator ("mat-progress-bar" with class ".mdc-linear-progress") */
 .images-grid {
   height: calc(
     100% - max(
@@ -13,18 +17,12 @@
   position: relative;
 }
 
-// top: position below header row
-// z-index: as image-grid has z-index=100 (default)
 .mat-image-grid-loading-spinner {
   position: sticky;
 }
 
 .mat-image-grid-loading-hide {
   visibility: hidden;
-}
-
-:host {
-  --mat-image-grid-ease-duration: 500ms;
 }
 
 .mat-image-grid-figure {
