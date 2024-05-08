@@ -92,6 +92,8 @@ Configure the `mat-image-grid` in your application template and provide the nece
 
 Besides this, we need a service that extends `MatImageGridImageServiceBase` and provides a list with information about each image to display.
 
+In the html part of your project, the mat-image-grid control must be embedded in a container with a defined height that is filled by the control (e.g. by using css flex or grid).
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## Mat-Image-Grid Demo
