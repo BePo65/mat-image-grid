@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
 import { ExtendedGridComponent } from './pages/extended-grid/extended-grid.component';
+import { MigImageExtData } from './pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
 
@@ -32,6 +33,9 @@ describe('AppComponent', () => {
   const simpleGridImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
+  const extendedGridImageServiceConfig = {
+    numberOfImages: 200,
+  } as MigMockupServiceConfig;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -54,7 +58,20 @@ describe('AppComponent', () => {
               },
             ],
           },
-          { path: 'extended-grid', component: ExtendedGridComponent },
+          {
+            path: 'extended-grid',
+            component: ExtendedGridComponent,
+            providers: [
+              {
+                provide: IMAGE_SERVICE_CONFIG,
+                useValue: extendedGridImageServiceConfig,
+              },
+              {
+                provide: MatImageGridImageServiceBase,
+                useClass: MatImageGridExtendedMockupService,
+              },
+            ],
+          },
           { path: 'large-dataset', component: LargeDatasetComponent },
         ]),
       ],
@@ -140,13 +157,21 @@ describe('AppComponent', () => {
 
     expect(navigated).toBeTruthy();
 
+    // wait for ProgressiveImage to create all subelements
     fixture.detectChanges();
+    await new Promise((resolve) =>
+      setTimeout(resolve, WaitForSubelementsTimeMs),
+    );
+
     const appNative = fixture.nativeElement as HTMLElement;
-    const contentElements = appNative.querySelectorAll('app-extended-grid p');
+    const mainElements = appNative.querySelectorAll('mat-image-grid');
+    const figureElements = appNative.querySelectorAll('figure');
 
     expect(router.url).toBe('/extended-grid');
-    expect(contentElements).toHaveSize(1);
-    expect(contentElements[0].textContent).toBe('extended-grid works!');
+    expect(mainElements).toHaveSize(1);
+    expect(figureElements).toHaveSize(
+      extendedGridImageServiceConfig.numberOfImages,
+    );
   });
 
   it('should navigate to large-dataset', async () => {
@@ -207,6 +232,58 @@ class MatImageGridMockupService extends MatImageGridImageServiceBase {
         imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
       } as MigImageData;
+      resultPage.returnedElements = resultPage.content.push(entry);
+    }
+
+    resultPage.totalElements = resultPage.returnedElements;
+    resultPage.totalFilteredElements = resultPage.returnedElements;
+    return of(resultPage);
+  }
+}
+
+@Injectable()
+class MatImageGridExtendedMockupService extends MatImageGridImageServiceBase {
+  private entriesInDatastore = 0;
+
+  constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
+    super();
+    if (
+      typeof config.numberOfImages === 'number' &&
+      config.numberOfImages > 0
+    ) {
+      this.entriesInDatastore = config.numberOfImages;
+    }
+  }
+
+  public override getPagedData(
+    imagesRange: RequestImagesRange,
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    sorts?: FieldSortDefinition<MigImageExtData>[],
+    filters?: FieldFilterDefinition<MigImageExtData>[],
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+  ): Observable<Page<MigImageExtData>> {
+    const resultPage = {
+      content: [],
+      startImageIndex: imagesRange.startImageIndex,
+      returnedElements: 0,
+      totalElements: 0,
+      totalFilteredElements: 0,
+    } as Page<MigImageExtData>;
+    const numberOfImages =
+      imagesRange.numberOfImages === -1
+        ? this.entriesInDatastore
+        : Math.min(
+            imagesRange.startImageIndex + imagesRange.numberOfImages,
+            this.entriesInDatastore,
+          ) - imagesRange.startImageIndex;
+    for (let i = 0; i < numberOfImages; i++) {
+      const entry = {
+        imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
+        aspectRatio: 1.3,
+        imageDate: new Date(2024, 2, i + 1).toISOString(),
+        description: `description ${i + 1}`,
+        toursId: i + 1,
+      } as MigImageExtData;
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 

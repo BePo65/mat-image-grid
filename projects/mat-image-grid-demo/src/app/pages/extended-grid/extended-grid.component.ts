@@ -25,6 +25,8 @@ import {
   ],
 })
 export class ExtendedGridComponent {
+  public componentType = 'ExtendedGridComponent';
+
   protected showImageDetails = true;
   protected showImageDetailsStyle = 'visible';
 
