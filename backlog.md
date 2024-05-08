@@ -1,3 +1,2 @@
-- add more demo pages to show how to extend displayed images
-- add mockup for images
+- add mockup for images (as the base for mocking unlimited number of images)
 - make pig get image data from a paged data store not as an array with data of all images
