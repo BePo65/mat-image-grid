@@ -174,8 +174,10 @@ export class MatImageGridLibComponent<
         this.disable();
         this.setImageData(serverResponse.content);
         this.enable();
-        this.numberOfImagesOnServer.emit(serverResponse.totalElements);
-        this.numberOfLoadedImages.emit(serverResponse.returnedElements);
+        setTimeout(() => {
+          this.numberOfImagesOnServer.emit(serverResponse.totalElements);
+          this.numberOfLoadedImages.emit(serverResponse.returnedElements);
+        }, 0);
         this.loadingSubject.next(false);
       },
       error: (err: Error) => console.error(err.message),
