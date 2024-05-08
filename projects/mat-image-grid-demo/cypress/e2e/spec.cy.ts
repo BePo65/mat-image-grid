@@ -25,15 +25,12 @@ describe('Test demo application', () => {
     cy.get('img').should('have.length', 200 * 2);
   });
 
-  it('contains text in tab "Extended Grid"', () => {
+  it('contains figures and images in tab "Extended Grid"', () => {
     cy.visit('/extended-grid');
 
     cy.get('[data-tab-id="1"]').should('have.class', 'mdc-tab--active');
-    cy.get('app-extended-grid')
-      .find('p')
-      .should('have.length', 1)
-      .invoke('text')
-      .should('equal', 'extended-grid works!');
+    cy.get('figure').should('have.length', 200);
+    cy.get('img').should('have.length', 200 * 2);
   });
 
   it('contains text in tab "Large Dataset"', () => {
@@ -44,6 +41,9 @@ describe('Test demo application', () => {
       .find('p')
       .should('have.length', 1)
       .invoke('text')
-      .should('equal', 'large-dataset works!');
+      .should(
+        'contain',
+        'Placeholder for mat-image-grid with very large dataset',
+      );
   });
 });
