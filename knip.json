@@ -8,7 +8,8 @@
     "projects/mat-image-grid-demo/cypress/e2e/*.ts",
     "projects/mat-image-grid-lib/karma.conf.js",
     "projects/mat-image-grid-demo/karma.conf.js",
-    "tools/npm-scripts/readme-updater.js"
+    "tools/npm-scripts/readme-updater.js",
+    "tools/create-mockup-extended-grid.mjs"
   ],
   "ignore": ["projects/mat-image-grid-demo/cypress/support/*.ts"],
   "ignoreDependencies": [
