@@ -121,6 +121,10 @@ The definition of a parameter to filter a list of images. 'T' defines the type d
 | --mat-image-grid-ease-duration: 500ms; | The time used as `transition-duration` for moving the full image. |
 |                                        |                                                                   |
 
+### Angular Material
+
+The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' component) and makes it necessary to activate a theme in the application using mat-image-grid (e.g. by inserting `@import '@angular/material/prebuilt-themes/deeppurple-amber.css';` into the 'styles.scss' file of the application).
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## API Reference
