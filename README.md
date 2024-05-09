@@ -4,7 +4,7 @@
 
 An Angular material component showing images in a grid display. Based on the [Progressive Image Grid](https://github.com/schlosser/pig.js/) of Dan Schlosser adapted to Angular Material.
 
-![Version](https://img.shields.io/badge/version-0.4.0-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-0.4.1-blue.svg?cacheSeconds=2592000)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)]
 ![Angular version](https://img.shields.io/github/package-json/dependency-version/bepo65/mat-image-grid/@angular/core?color=red&label=Angular&logo=angular&logoColor=red)
 ![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/bepo65/mat-image-grid/@angular/material?color=red&label=Angular-Material&logo=angular&logoColor=red)

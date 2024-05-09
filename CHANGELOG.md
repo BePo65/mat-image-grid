@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.1](https://github.com/BePo65/mat-image-grid/compare/v0.4.0...v0.4.1) (2024-05-09)
+
+### Features
+
+- **demo:** add route for non existing routes ([7c57c02](https://github.com/BePo65/mat-image-grid/commit/7c57c024a012fad33469f446ba20e2aba067e359))
+
+### Bug Fixes
+
+- apply unsubscribe pattern ([c5faa69](https://github.com/BePo65/mat-image-grid/commit/c5faa698fbc031ce41bc362cbb3257edb1f8658b))
+- base-href added for publishing to ghpages ([fcd3656](https://github.com/BePo65/mat-image-grid/commit/fcd3656cc7b16d5f6a0a42be68d9c137eacfb324))
+
 ## [0.4.0](https://github.com/BePo65/mat-image-grid/compare/v0.3.0...v0.4.0) (2024-05-08)
 
 ### Features
