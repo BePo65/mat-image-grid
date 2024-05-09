@@ -13,7 +13,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
 
 import { OptimizedResize } from './classes/optimized-resize.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
@@ -73,6 +73,7 @@ export class MatImageGridLibComponent<
   private previousYOffset = 0;
   private scrollDirection = 'down';
   private totalHeight = 0;
+  private readonly unsubscribe$ = new Subject<void>();
 
   constructor(
     @Inject(DOCUMENT) private readonly documentRef: Document,
@@ -96,6 +97,8 @@ export class MatImageGridLibComponent<
     this.disable();
     this.optimizedResize.dispose();
     this.clearImageData();
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   /**
@@ -169,19 +172,22 @@ export class MatImageGridLibComponent<
     } as RequestImagesRange;
 
     setTimeout(() => this.loadingSubject.next(true), 0);
-    this.matImageGridImageService.getPagedData(imagesRange).subscribe({
-      next: (serverResponse) => {
-        this.disable();
-        this.setImageData(serverResponse.content);
-        this.enable();
-        setTimeout(() => {
-          this.numberOfImagesOnServer.emit(serverResponse.totalElements);
-          this.numberOfLoadedImages.emit(serverResponse.returnedElements);
-        }, 0);
-        this.loadingSubject.next(false);
-      },
-      error: (err: Error) => console.error(err.message),
-    });
+    this.matImageGridImageService
+      .getPagedData(imagesRange)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe({
+        next: (serverResponse) => {
+          this.disable();
+          this.setImageData(serverResponse.content);
+          this.enable();
+          setTimeout(() => {
+            this.numberOfImagesOnServer.emit(serverResponse.totalElements);
+            this.numberOfLoadedImages.emit(serverResponse.returnedElements);
+          }, 0);
+          this.loadingSubject.next(false);
+        },
+        error: (err: Error) => console.error(err.message),
+      });
   }
 
   /**

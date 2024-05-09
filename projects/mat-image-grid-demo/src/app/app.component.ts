@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatTabsModule } from '@angular/material/tabs';
 import {
   NavigationEnd,
@@ -6,6 +6,7 @@ import {
   RouterOutlet,
   RouterLink,
 } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
 
@@ -19,8 +20,10 @@ type RouteTab = { title: string; route: string; index: number };
   styleUrl: './app.component.scss',
   providers: [],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   public title = 'Mat-Image-Grid-Demo';
+
+  private readonly unsubscribe$ = new Subject<void>();
 
   protected tabs: RouteTab[] = [
     { title: 'Simple Grid', route: '/simple-grid', index: 0 },
@@ -32,7 +35,7 @@ export class AppComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.router.events.subscribe((event) => {
+    this.router.events.pipe(takeUntil(this.unsubscribe$)).subscribe((event) => {
       if (event instanceof NavigationEnd) {
         const activeRoute = this.tabs.find(
           (routeDefinition) =>
@@ -41,5 +44,10 @@ export class AppComponent implements OnInit {
         this.activeTab = activeRoute?.index ?? -1;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 }
