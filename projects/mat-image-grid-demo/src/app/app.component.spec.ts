@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { ExtendedGridComponent } from './pages/extended-grid/extended-grid.component';
 import { MigImageExtData } from './pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.component';
+import { PageNotFoundComponent } from './pages/not-found/not-found.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
 
 import {
@@ -43,7 +44,6 @@ describe('AppComponent', () => {
       imports: [AppComponent, RouterModule],
       providers: [
         provideRouter([
-          { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
           {
             path: 'simple-grid',
             component: SimpleGridComponent,
@@ -73,6 +73,8 @@ describe('AppComponent', () => {
             ],
           },
           { path: 'large-dataset', component: LargeDatasetComponent },
+          { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
+          { path: '**', component: PageNotFoundComponent },
         ]),
       ],
     }).compileComponents();
@@ -191,6 +193,23 @@ describe('AppComponent', () => {
     expect(contentElements[0].textContent).toContain(
       'Placeholder for mat-image-grid with very large dataset',
     );
+  });
+
+  it('should navigate to page-not-found on non-existing route', async () => {
+    const navigated = await fixture.ngZone?.run(() =>
+      router.navigate(['non-existing-route']),
+    );
+
+    expect(navigated).toBeTruthy();
+
+    fixture.detectChanges();
+
+    const appNative = fixture.nativeElement as HTMLElement;
+    const contentElements = appNative.querySelectorAll('.page-content h2');
+
+    expect(router.url).toBe('/non-existing-route');
+    expect(contentElements).toHaveSize(1);
+    expect(contentElements[0].textContent).toContain('Page not found');
   });
 });
 

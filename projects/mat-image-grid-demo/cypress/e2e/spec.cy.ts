@@ -46,4 +46,14 @@ describe('Test demo application', () => {
         'Placeholder for mat-image-grid with very large dataset',
       );
   });
+
+  it('contains text in tab for non-existing route', () => {
+    cy.visit('/non-existing-route');
+
+    cy.get('.page-content')
+      .find('h2')
+      .should('have.length', 1)
+      .invoke('text')
+      .should('contain', 'Page not found');
+  });
 });
