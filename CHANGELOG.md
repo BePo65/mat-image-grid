@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.2](https://github.com/BePo65/mat-image-grid/compare/v0.4.1...v0.4.2) (2024-05-11)
+
+### Features
+
+- set page title in route ([460a09d](https://github.com/BePo65/mat-image-grid/commit/460a09d66be26f31cb2483430c644e77f3ad32f2))
+
 ## [0.4.1](https://github.com/BePo65/mat-image-grid/compare/v0.4.0...v0.4.1) (2024-05-09)
 
 ### Features
