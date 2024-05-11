@@ -13,6 +13,7 @@ export const routes: Routes = [
   {
     path: 'simple-grid',
     component: SimpleGridComponent,
+    title: 'MatImageGrid Demo - Simple Grid',
     providers: [
       {
         provide: MatImageGridImageServiceBase,
@@ -23,6 +24,7 @@ export const routes: Routes = [
   {
     path: 'extended-grid',
     component: ExtendedGridComponent,
+    title: 'MatImageGrid Demo - Extended Grid',
     providers: [
       {
         provide: MatImageGridImageServiceBase,
@@ -30,7 +32,16 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: 'large-dataset', component: LargeDatasetComponent, providers: [] },
+  {
+    path: 'large-dataset',
+    component: LargeDatasetComponent,
+    title: 'MatImageGrid Demo - Large Dataset',
+    providers: [],
+  },
   { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
-  { path: '**', component: PageNotFoundComponent },
+  {
+    path: '**',
+    component: PageNotFoundComponent,
+    title: 'MatImageGrid Demo - Page not found',
+  },
 ];
