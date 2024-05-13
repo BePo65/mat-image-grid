@@ -24,7 +24,7 @@ export class SimpleGridComponent {
    * Get the URL for an image with the given ID & size.
    * Used by mat-image-grid 'urlForSize' parameter.
    * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
-   * @param imageId - The ID of the image (e.g. teh filename).
+   * @param imageId - The ID of the image (e.g. the filename).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
