@@ -1,2 +1,2 @@
-- add mockup for images (as the base for mocking unlimited number of images)
+- add separate function to get url for thumbnails (to enable returning dataUrl as part of server data)
 - make pig get image data from a paged data store not as an array with data of all images
