@@ -94,7 +94,7 @@ describe('AppComponent', () => {
   });
 
   it('should have a title property', () => {
-    expect(app.title).toEqual('Mat-Image-Grid-Demo');
+    expect(app.title).toEqual('MatImageGrid Demo');
   });
 
   it('should render header and footer', () => {
@@ -102,7 +102,7 @@ describe('AppComponent', () => {
     const appNative = fixture.nativeElement as HTMLElement;
 
     expect(appNative.querySelector('h1')?.textContent).toContain(
-      'Mat-Image-Grid-Demo',
+      'MatImageGrid Demo',
     );
 
     expect(appNative.querySelector('.header-source')?.textContent).toContain(

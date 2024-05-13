@@ -1,7 +1,7 @@
 describe('Test demo application', () => {
   it('contains header', () => {
     cy.visit('/');
-    cy.contains('Mat-Image-Grid-Demo');
+    cy.contains('MatImageGrid Demo');
     cy.contains('Source on github:');
   });
 
