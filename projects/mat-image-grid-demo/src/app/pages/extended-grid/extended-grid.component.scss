@@ -4,12 +4,13 @@ mat-image-grid {
 
 .grid-header {
   display: grid;
-  grid: 25px / 1fr 1fr;
+  grid: 25px / 200px 200px 1fr;
   margin: 0 0 4px;
   padding: 0 0.5em;
 }
 
-.grid-option-show-details {
+.grid-option-show-details,
+.grid-option-show-full-screen {
   place-self: center start;
 }
 

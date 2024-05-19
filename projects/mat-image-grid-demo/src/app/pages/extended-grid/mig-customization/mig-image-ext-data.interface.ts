@@ -18,4 +18,9 @@ export interface MigImageExtData extends MigImageData {
    * ID of the tour this image is assigned to
    */
   toursId: number;
+
+  /**
+   * Thumbnail image as DataURL
+   */
+  thumbnailDataUrl: string;
 }

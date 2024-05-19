@@ -4,4 +4,5 @@ export interface MigImageExtClassNames extends MigImageClassNames {
   dateTaken: string;
   imageDescription: string;
   imageOverlay: string;
+  fullImageVisibility: string;
 }

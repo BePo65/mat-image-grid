@@ -224,25 +224,25 @@ class MatImageGridMockupService extends MatImageGridImageServiceBase {
 
 @Component({
   template:
-    '<mat-image-grid [urlForSize]="urlForSize"> loading... </mat-image-grid>',
+    '<mat-image-grid [urlForImage]="urlForImage"> loading... </mat-image-grid>',
 })
 class MatImageGridTestComponent {
   private imagesBaseUrl = 'http://demosite.com/images';
 
   /**
-   * Get the URL for an image with the given ID & size.
-   * Used by mat-image-grid 'urlForSize' parameter.
+   * Get the URL for an image with the given image data & dimensions.
+   * Used by mat-image-grid 'urlForImage' parameter.
    * This demo uses an url like 'https://00201?w=800&h=600'.
-   * @param imageId - The ID of the image (e.g. the filename).
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
-  protected urlForSize = (
-    imageId: string,
+  protected urlForImage = (
+    singleImageData: MigImageData,
     imageWidth: number,
     imageHeight: number,
   ) => {
-    return `${this.imagesBaseUrl}/test-image.jpg?image=${imageId}&w=${imageWidth.toString(10)}&h=${imageHeight.toString(10)}`;
+    return `${this.imagesBaseUrl}/test-image.jpg?image=${singleImageData.imageId}&w=${imageWidth.toString(10)}&h=${imageHeight.toString(10)}`;
   };
 }

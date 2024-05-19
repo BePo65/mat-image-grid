@@ -1,10 +1,18 @@
 <div class="grid-header">
   <div class="grid-option-show-details">
     <mat-slide-toggle
-      class="with-footer-toggle"
+      class="toggle-option"
       [checked]="showImageDetails"
       (change)="onShowImageDetails($event)"
       >With image details</mat-slide-toggle
+    >
+  </div>
+  <div class="grid-option-show-full-screen">
+    <mat-slide-toggle
+      class="toggle-option"
+      [checked]="showImageFullScreen"
+      (change)="onShowFullScreenImage($event)"
+      >With full screen image</mat-slide-toggle
     >
   </div>
   <div class="grid-information">
@@ -16,9 +24,11 @@
 <mat-image-grid
   #mig
   [withImageClickEvents]="true"
-  [urlForSize]="urlForSize"
+  [urlForImage]="urlForImage"
+  [urlForThumbnail]="urlForThumbnail"
   [createMigImage]="createMigImage"
   [style.--mig-overlay-visible]="showImageDetailsStyle"
+  [style.--mig-full-screen-visible]="showImageFullScreenStyle"
 >
   loading...
 </mat-image-grid>

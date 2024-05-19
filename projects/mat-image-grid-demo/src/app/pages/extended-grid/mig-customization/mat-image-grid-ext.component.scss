@@ -8,6 +8,7 @@
 
 :host {
   --mig-overlay-visible: visible;
+  --mig-full-screen-visible: hidden;
 
   /* stylelint-disable-next-line selector-pseudo-element-no-unknown */
   ::ng-deep {
@@ -35,6 +36,10 @@
 
     .mat-image-grid-overlay {
       visibility: var(--mig-overlay-visible);
+    }
+
+    .mat-image-grid-full-image-visibility {
+      visibility: var(--mig-full-screen-visible);
     }
   }
 }

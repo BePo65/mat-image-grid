@@ -2,7 +2,10 @@ import { Component } from '@angular/core';
 
 import { SimpleGridSettings } from './simple-grid-settings.class';
 
-import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
+import {
+  MatImageGridLibComponent,
+  MigImageData,
+} from 'projects/mat-image-grid-lib/src';
 
 @Component({
   selector: 'app-simple-grid',
@@ -21,19 +24,19 @@ export class SimpleGridComponent {
   }
 
   /**
-   * Get the URL for an image with the given ID & size.
-   * Used by mat-image-grid 'urlForSize' parameter.
+   * Get the URL for an image with the given image data & dimensions.
+   * Used by mat-image-grid 'urlForImage' parameter.
    * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
-   * @param imageId - The ID of the image (e.g. the filename).
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
-  protected urlForSize = (
-    imageId: string,
+  protected urlForImage = (
+    singleImageData: MigImageData,
     imageWidth: number,
     imageHeight: number,
   ) => {
-    return `${this.imagesBaseUrl}/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `${this.imagesBaseUrl}/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   };
 }

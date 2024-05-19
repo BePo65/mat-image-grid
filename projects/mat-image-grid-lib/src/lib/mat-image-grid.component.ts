@@ -23,7 +23,7 @@ import {
   GetImageSize,
   GetMinAspectRatio,
   UnloadHandler,
-  UrlForSize,
+  UrlForImageFromDimensions,
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
@@ -48,7 +48,10 @@ export class MatImageGridLibComponent<
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
 
-  @Input({ required: true }) urlForSize: UrlForSize = this.urlForSizeDefault;
+  @Input({ required: true })
+  urlForImage: UrlForImageFromDimensions<ServerData> = this.urlForSizeDefault;
+  @Input() urlForThumbnail: UrlForImageFromDimensions<ServerData> =
+    this.urlForImage;
   @Input() createMigImage: CreateMigImage<ServerData, MigImage> =
     this.createMigImageDefault;
   @Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault;
@@ -203,7 +206,8 @@ export class MatImageGridLibComponent<
       lastWindowWidth: this.lastWindowWidth,
       withClickEvent: this.withImageClickEvents,
       getImageSize: this.getImageSize,
-      urlForSize: this.urlForSize,
+      urlForImage: this.urlForImage,
+      urlForThumbnail: this.urlForThumbnail,
     } as MigImageConfiguration;
 
     imageData.forEach((image, index) => {
@@ -471,19 +475,19 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Default implementation of the function that gets the URL for an image with the given ID & size.
-   * @param imageId - The Id of the image (e.g. the filename).
+   * Default implementation of the function that gets the URL for an image with the given data & dimensions.
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
   private urlForSizeDefault(
     this: void,
-    imageId: string,
+    singleImageData: MigImageData,
     imageWidth: number,
     imageHeight: number,
   ): string {
-    return `/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   }
 
   /**

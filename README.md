@@ -76,17 +76,17 @@ npm install @bepo65/mat-image-grid
 Configure the `mat-image-grid` in your application template and provide the necessary settings.
 
 ```html
-<mat-image-grid [urlForSize]="urlForSize"> loading... </mat-image-grid>
+<mat-image-grid [urlForImage]="UrlForImage"> loading... </mat-image-grid>
 ```
 
 ```typescript
-  protected urlForSize = (
-    imageId: string,
+  protected UrlForImage = (
+    singleImageData: MigImageData,
     imageWidth: number,
     imageHeight: number,
   ) => {
     // In this demo we use an url like 'https://picsum.photos/id/201/800/600'
-    return `https://picsum.photos/id/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `https://picsum.photos/id/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   };
 ```
 
@@ -141,22 +141,23 @@ Component to create an angular material .....
 
 ##### **Properties**
 
-| Name                                                                                         | Description                                                                                                               |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `@Input() primaryImageBufferHeight: number`                                                  | Height (in 'px') of the image buffer in current scroll direction (default = 1000).                                        |
-| `@Input() secondaryImageBufferHeight: number`                                                | Height (in 'px') of the image buffer in opposition to the current scroll direction (default = 300).                       |
-| `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                 |
-| `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                          |
-| `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                             |
-| `@Input() urlForSize: UrlForSize = this.urlForSizeDefault`                                   | Callback for getting the url for an image with the given ID and size (default: url = '/ID/width/height').                 |
-| `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class). |
-| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).              |
-| `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).   |
-| `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                             |
-| `@Output() numberOfLoadedImages: EventEmitter<number>`                                       | Observable emitting the number of images currently loaded.                                                                |
-| `imageClicked: EventEmitter<Observable<string>>`                                             | Observable emitting the ID of the image, when clicking the image.                                                         |
-| `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                 |
-|                                                                                              |                                                                                                                           |
+| Name                                                                                         | Description                                                                                                                     |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `@Input() primaryImageBufferHeight: number`                                                  | Height (in 'px') of the image buffer in current scroll direction (default = 1000).                                              |
+| `@Input() secondaryImageBufferHeight: number`                                                | Height (in 'px') of the image buffer in opposition to the current scroll direction (default = 300).                             |
+| `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                       |
+| `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                                |
+| `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                                   |
+| `@Input() urlForImage: UrlForImageFromDimensions = this.urlForSizeDefault`                   | Callback for getting the url for an image based on the given server data and size (default: url = '/ID/width/height').          |
+| `@Input() urlForThumbnail: UrlForImageFromDimensions = this.urlForImage`                     | Callback for getting the url for a thumbnail image based on the given server data and size (default: url = '/ID/width/height'). |
+| `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class).       |
+| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).                    |
+| `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).         |
+| `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                                   |
+| `@Output() numberOfLoadedImages: EventEmitter<number>`                                       | Observable emitting the number of images currently loaded.                                                                      |
+| `imageClicked: EventEmitter<Observable<string>>`                                             | Observable emitting the ID of the image, when clicking the image.                                                               |
+| `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                       |
+|                                                                                              |                                                                                                                                 |
 
 ##### **Injectables**
 
@@ -219,15 +220,16 @@ This interface defines the parameters of a configuration object for creating a n
 
 ##### **Properties**
 
-| Name                                    | Description                                           |
-| --------------------------------------- | ----------------------------------------------------- |
-| `container: ElementRef<HTMLDivElement>` | The array of the requested images data.               |
-| `thumbnailSize: number`                 | The number of images in 'content'.                    |
-| `lastWindowWidth: number`               | The number of images after filtering.                 |
-| `withClickEvent?: boolean`              | The number of images after filtering.                 |
-| `getImageSize: GetImageSize`            | Get the URL of an image with the given ID and height. |
-| `urlForSize: UrlForSize`                | Get the URL of an image with the given ID and height. |
-|                                         |                                                       |
+| Name                                         | Description                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `container: ElementRef<HTMLDivElement>`      | The array of the requested images data.                                                                      |
+| `thumbnailSize: number`                      | The number of images in 'content'.                                                                           |
+| `lastWindowWidth: number`                    | The number of images after filtering.                                                                        |
+| `withClickEvent?: boolean`                   | The number of images after filtering.                                                                        |
+| `getImageSize: GetImageSize`                 | Get the size (height) of an image based on the last computed width of the images container.                  |
+| `urlForImage: UrlForImageFromDimensions`     | Get the URL of an image based on the given server data (e.g. the imageId) and the image dimensions.          |
+| `urlForThumbnail: UrlForImageFromDimensions` | Get the URL of a thumbnail image based on the given server data (e.g. the imageId) and the image dimensions. |
+|                                              |                                                                                                              |
 
 #### RequestImagesRange
 
@@ -332,19 +334,19 @@ The definition of a parameter defining the direction of a sort.
 | type SortDirection = 'asc' \| 'desc'; |
 |                                       |
 
-#### UrlForSize
+#### UrlForImageFromDimensions
 
-The definition of a function that gets the url of an image from the id, width and height of an image.
+The definition of a function that gets the url of an image from the server data, the width and the height of an image.
 
-|                     |                                                             |
-| ------------------- | ----------------------------------------------------------- |
-| **Parameters**      |
-| imageId: string     | The ID of the image (from MigImageData; e.g. the filename). |
-| imageWidth: number  | The width (in pixels) of the image.                         |
-| imageHeight: number | The height (in pixels) of the image.                        |
-| **Returns**         |
-| string              | The URL of the image.                                       |
-|                     |                                                             |
+|                               |                                                            |
+| ----------------------------- | ---------------------------------------------------------- |
+| **Parameters**                |
+| singleImageData: MigImageData | The properties of one image (e.g. containing the imageId). |
+| imageWidth: number            | The width (in pixels) of the image.                        |
+| imageHeight: number           | The height (in pixels) of the image.                       |
+| **Returns**                   |
+| string                        | The URL of the image.                                      |
+|                               |                                                            |
 
 #### UnloadHandler
 

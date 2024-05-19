@@ -1,2 +1,2 @@
-- add separate function to get url for thumbnails (to enable returning dataUrl as part of server data)
+- check image-click function
 - make pig get image data from a paged data store not as an array with data of all images

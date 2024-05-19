@@ -28,7 +28,9 @@ export class ExtendedGridComponent {
   public componentType = 'ExtendedGridComponent';
 
   protected showImageDetails = true;
+  protected showImageFullScreen = true;
   protected showImageDetailsStyle = 'visible';
+  protected showImageFullScreenStyle = 'visible';
 
   private imagesBaseUrl: string;
 
@@ -37,20 +39,38 @@ export class ExtendedGridComponent {
   }
 
   /**
-   * Get the URL for an image with the given ID & size.
-   * Used by mat-image-grid 'urlForSize' parameter.
+   * Get the URL for an image with the given image data & dimensions.
+   * Used by mat-image-grid 'urlForImage' parameter.
    * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
-   * @param imageId - The ID of the image (e.g. the filename).
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
-  protected urlForSize = (
-    imageId: string,
+  protected urlForImage = (
+    singleImageData: MigImageExtData,
     imageWidth: number,
     imageHeight: number,
   ) => {
-    return `${this.imagesBaseUrl}/${imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+    return `${this.imagesBaseUrl}/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
+  };
+
+  /**
+   * Get the URL for a thumbnail image with the given image data & dimensions.
+   * Used by mat-image-grid 'urlForThumbnail' parameter.
+   * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
+   * @param singleImageData - The properties of one thumbnail (e.g. containing the imageId).
+   * @param imageWidth - The width (in pixels) of the thumbnail.
+   * @param imageHeight - The height (in pixels) of the thumbnail.
+   * @returns The URL of the thumbnail with the given size.
+   */
+  protected urlForThumbnail = (
+    singleImageData: MigImageExtData,
+    imageWidth: number, // eslint-disable-line @typescript-eslint/no-unused-vars
+    imageHeight: number, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) => {
+    const url = singleImageData.thumbnailDataUrl;
+    return url;
   };
 
   /**
@@ -85,6 +105,18 @@ export class ExtendedGridComponent {
       this.showImageDetailsStyle = 'visible';
     } else {
       this.showImageDetailsStyle = 'hidden';
+    }
+  }
+
+  /**
+   * Event handler for the slide toggle setting the 'showImageFullScreenStyle' property.
+   * @param event - source and new value of the slide toggle
+   */
+  protected onShowFullScreenImage(event: MatSlideToggleChange): void {
+    if (event.checked) {
+      this.showImageFullScreenStyle = 'visible';
+    } else {
+      this.showImageFullScreenStyle = 'hidden';
     }
   }
 

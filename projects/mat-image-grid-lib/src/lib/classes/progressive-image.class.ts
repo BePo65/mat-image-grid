@@ -43,8 +43,7 @@ export class ProgressiveImage {
 
   protected elements = new Map<string, imageElementBase>();
 
-  protected imageId: string;
-  protected index: number;
+  protected singleImageData: MigImageData;
   protected classNames: MigImageClassNames;
   protected createSubelementDelayInMs = 100;
   protected renderer: Renderer2;
@@ -67,11 +66,8 @@ export class ProgressiveImage {
   ) {
     this.renderer = renderer2;
     this.configuration = configuration;
-
-    // Instance information
+    this.singleImageData = singleImageData;
     this.aspectRatio = singleImageData.aspectRatio;
-    this.imageId = singleImageData.imageId;
-    this.index = index;
 
     this.classNames = {
       figure: 'mat-image-grid-figure',
@@ -150,7 +146,7 @@ export class ProgressiveImage {
    * The event handler emits a value to the onClickSubject.
    */
   imageClicked = () => {
-    this.onClickSubject.next(this.imageId);
+    this.onClickSubject.next(this.singleImageData.imageId);
   };
 
   /**
@@ -193,28 +189,18 @@ export class ProgressiveImage {
    * Add an image as a subelement to the <figure> tag.
    * @param mainElement - Main element of this image (<figure> tag)
    * @param subElementName - Name of the subelement
-   * @param imageId - ID, used to access the image (e.g. the filename)
-   * @param height - Size of the image the image (e.g. this.configuration.thumbnailSize)
-   * @param aspectRatio - Aspect ratio of the image the image
    * @param className - Name of the class to be added to the new subelement (default value='' - i.e. no class added)
+   * @param src - source string of image element (default value = '')
    */
   protected addImageAsSubElement(
     mainElement: HTMLElement,
     subElementName: string,
-    imageId: string,
-    height: number,
-    aspectRatio: number,
     className = '',
+    src = '',
   ) {
     if (!this.elements.get(subElementName)) {
       const element = this.renderer.createElement('img') as HTMLImageElement;
-
-      const width = Math.round(aspectRatio * height);
-      this.renderer.setAttribute(
-        element,
-        'src',
-        this.configuration.urlForSize(imageId, width, height),
-      );
+      this.renderer.setAttribute(element, 'src', src);
 
       if (className.length > 0) {
         this.renderer.addClass(element, className);
@@ -247,23 +233,25 @@ export class ProgressiveImage {
     const mainElement = this.getMainElement();
 
     // Add thumbnail
+    let height = this.configuration.thumbnailSize;
+    let width = Math.round(this.aspectRatio * height);
     this.addImageAsSubElement(
       mainElement,
       'thumbnail',
-      this.imageId,
-      this.configuration.thumbnailSize,
-      this.aspectRatio,
       this.classNames.thumbnail,
+      this.configuration.urlForThumbnail(this.singleImageData, width, height),
     );
 
     // Add full image
+    height = this.configuration.getImageSize(
+      this.configuration.lastWindowWidth,
+    );
+    width = Math.round(this.aspectRatio * height);
     this.addImageAsSubElement(
       mainElement,
       'fullImage',
-      this.imageId,
-      this.configuration.getImageSize(this.configuration.lastWindowWidth),
-      this.aspectRatio,
       this.classNames.fullImage,
+      this.configuration.urlForImage(this.singleImageData, width, height),
     );
   }
 

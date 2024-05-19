@@ -35,6 +35,7 @@ export class ProgressiveImageExt extends ProgressiveImage {
       dateTaken: 'mat-image-grid-date',
       imageDescription: 'mat-image-grid-desc',
       imageOverlay: 'mat-image-grid-overlay',
+      fullImageVisibility: 'mat-image-grid-full-image-visibility',
     } as MigImageExtClassNames;
   }
 
@@ -98,6 +99,10 @@ export class ProgressiveImageExt extends ProgressiveImage {
     const fullImage = this.elements.get('fullImage');
     if (fullImage) {
       fullImage.element.title = this.imageDescription;
+      this.renderer.addClass(
+        fullImage.element,
+        this.classNames.fullImageVisibility,
+      );
 
       // Add event handler to full size image, as we must show custom fields, when image is loaded.
       const onloadHandlerUnload = this.renderer.listen(

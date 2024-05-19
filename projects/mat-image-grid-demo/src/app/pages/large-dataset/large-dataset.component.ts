@@ -1,6 +1,9 @@
 import { Component, Renderer2 } from '@angular/core';
 
-import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
+import {
+  MatImageGridLibComponent,
+  MigImageData,
+} from 'projects/mat-image-grid-lib/src';
 
 @Component({
   selector: 'app-large-dataset',
@@ -62,22 +65,22 @@ export class LargeDatasetComponent {
   constructor(private renderer: Renderer2) {}
 
   /**
-   * Get the URL for an image with the given ID & size.
-   * Used by mat-image-grid 'urlForSize' parameter.
+   * Get the URL for an image with the given image data & dimensions.
+   * Used by mat-image-grid 'urlForImage' parameter.
    * This demo generates images src as dataUrl.
-   * @param imageId - The ID of the image (e.g. the filename).
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
-  protected urlForSize = (
-    imageId: string,
+  protected urlForImage = (
+    singleImageData: MigImageData,
     imageWidth: number,
     imageHeight: number,
   ) => {
-    const colorIndex = this.hashString(imageId) % 10;
+    const colorIndex = this.hashString(singleImageData.imageId) % 10;
     return this.createImageAsDataUrl(
-      imageId,
+      singleImageData.imageId,
       imageWidth,
       imageHeight,
       this.imageColors[colorIndex].background,

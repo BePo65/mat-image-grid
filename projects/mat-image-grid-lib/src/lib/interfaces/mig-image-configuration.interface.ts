@@ -1,6 +1,7 @@
 import { ElementRef } from '@angular/core';
 
-import { GetImageSize, UrlForSize } from './mig-common.types';
+import { GetImageSize, UrlForImageFromDimensions } from './mig-common.types';
+import { MigImageData } from './mig-image-data.interface';
 
 export interface MigImageConfiguration {
   container: ElementRef<HTMLDivElement>;
@@ -8,5 +9,6 @@ export interface MigImageConfiguration {
   lastWindowWidth: number;
   withClickEvent?: boolean;
   getImageSize: GetImageSize;
-  urlForSize: UrlForSize;
+  urlForImage: UrlForImageFromDimensions<MigImageData>;
+  urlForThumbnail: UrlForImageFromDimensions<MigImageData>;
 }

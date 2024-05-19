@@ -9,14 +9,14 @@ export type UnloadHandler = () => void;
 
 /**
  * Configuration parameter for mat-image-grid component.
- * Gets an image url from the id, width and height of an image.
- * @param imageId - The Id of the image (e.g. the filename).
+ * Gets an image url from the image data from the server, width and height of an image.
+ * @param singleImageData - The properties of one image (e.g. the imageId).
  * @param imageWidth - The width (in pixels) of the image.
  * @param imageHeight - The height (in pixels) of the image.
  * @returns The URL of the image with the given size.
  */
-export type UrlForSize = (
-  imageId: string,
+export type UrlForImageFromDimensions<M extends MigImageData> = (
+  singleImageData: M,
   imageWidth: number,
   imageHeight: number,
 ) => string;
