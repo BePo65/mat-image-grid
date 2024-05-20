@@ -36,7 +36,12 @@ export const routes: Routes = [
     path: 'large-dataset',
     component: LargeDatasetComponent,
     title: 'MatImageGrid Demo - Large Dataset',
-    providers: [],
+    providers: [
+      {
+        provide: MatImageGridImageServiceBase,
+        useClass: SimpleGridImagesService,
+      },
+    ],
   },
   { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
   {
