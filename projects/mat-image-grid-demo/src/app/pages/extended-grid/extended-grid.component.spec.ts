@@ -99,14 +99,9 @@ describe('ExtendedGridComponent', () => {
     if (thumbnailImages !== undefined) {
       const thumbnailImages3 = thumbnailImages[2] as HTMLImageElement;
 
-      // Strip pure image file name from url
-      const src = thumbnailImages3.src;
-      const imageNameAndSize = src
-        .slice(appConfig.imagesBaseUrl.length + 1)
-        .split('/');
-
-      expect(src.startsWith(appConfig.imagesBaseUrl)).toBeTrue();
-      expect(imageNameAndSize[0]).toBe('00002');
+      expect(
+        thumbnailImages3.src.startsWith('data:image/jpeg;base64,'),
+      ).toBeTrue();
     }
   });
 
@@ -140,6 +135,8 @@ describe('ExtendedGridComponent', () => {
 @Injectable()
 class MatImageGridExtendedMockupService extends MatImageGridImageServiceBase {
   private entriesInDatastore = 0;
+  private dummyImage =
+    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAUABQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAUG/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AoQGJRwAAAAAH/9k=';
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
     super();
@@ -179,6 +176,7 @@ class MatImageGridExtendedMockupService extends MatImageGridImageServiceBase {
         imageDate: new Date(2024, 2, i + 1).toISOString(),
         description: `description ${i + 1}`,
         toursId: i + 1,
+        thumbnailDataUrl: this.dummyImage,
       } as MigImageExtData;
       resultPage.returnedElements = resultPage.content.push(entry);
     }

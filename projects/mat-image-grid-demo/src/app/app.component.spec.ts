@@ -72,7 +72,20 @@ describe('AppComponent', () => {
               },
             ],
           },
-          { path: 'large-dataset', component: LargeDatasetComponent },
+          {
+            path: 'large-dataset',
+            component: LargeDatasetComponent,
+            providers: [
+              {
+                provide: IMAGE_SERVICE_CONFIG,
+                useValue: simpleGridImageServiceConfig,
+              },
+              {
+                provide: MatImageGridImageServiceBase,
+                useClass: MatImageGridMockupService,
+              },
+            ],
+          },
           { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
           { path: '**', component: PageNotFoundComponent },
         ]),
@@ -186,12 +199,13 @@ describe('AppComponent', () => {
     fixture.detectChanges();
 
     const appNative = fixture.nativeElement as HTMLElement;
-    const contentElements = appNative.querySelectorAll('app-large-dataset p');
+    const mainElements = appNative.querySelectorAll('app-large-dataset');
+    const figureElements = appNative.querySelectorAll('figure');
 
     expect(router.url).toBe('/large-dataset');
-    expect(contentElements).toHaveSize(1);
-    expect(contentElements[0].textContent).toContain(
-      'Placeholder for mat-image-grid with very large dataset',
+    expect(mainElements).toHaveSize(1);
+    expect(figureElements).toHaveSize(
+      extendedGridImageServiceConfig.numberOfImages,
     );
   });
 

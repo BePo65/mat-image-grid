@@ -89,10 +89,14 @@ describe('MatImageGridLibComponent', () => {
       .nativeElement as HTMLImageElement;
 
     // Strip pure image file name from url
+    // Example of url: "http://demosite.com/images/test-image.jpg?image=00002&w=26&h=20"
     const srcQuery = thumbnailImages3.src.split('?', 2)[1];
-    const src = srcQuery.split('&', 1)[0].split('=', 2)[1];
+    const queryElements = srcQuery.split('&');
+    const src = queryElements[0].split('=')[1];
+    const height = queryElements[2].split('=')[1];
 
     expect(src).toBe('00002');
+    expect(height).toBe('20');
   });
 
   it('should have fullscreen image entries with src attribute', async () => {
