@@ -42,6 +42,22 @@ export class MatImageGridLibComponent<
   >
   implements AfterViewInit, OnDestroy
 {
+  /**
+   * Default implementation of the function that gets the URL for a thumbnail image with the given data & dimensions.
+   * This is a arrow function as it uses the 'this' context of the instance.
+   * @param singleImageData - The properties of one image (e.g. containing the imageId).
+   * @param imageWidth - The width (in pixels) of the image.
+   * @param imageHeight - The height (in pixels) of the image.
+   * @returns The URL of the image with the given size.
+   */
+  private urlForThumbnailDefault = (
+    singleImageData: ServerData,
+    imageWidth: number,
+    imageHeight: number,
+  ): string => {
+    return this.urlForImage(singleImageData, imageWidth, imageHeight);
+  };
+
   @Input() primaryImageBufferHeight = 1000;
   @Input() secondaryImageBufferHeight = 300;
   @Input() spaceBetweenImages = 8;
@@ -49,9 +65,9 @@ export class MatImageGridLibComponent<
   @Input() withImageClickEvents = false;
 
   @Input({ required: true })
-  urlForImage: UrlForImageFromDimensions<ServerData> = this.urlForSizeDefault;
+  urlForImage: UrlForImageFromDimensions<ServerData> = this.urlForImageDefault;
   @Input() urlForThumbnail: UrlForImageFromDimensions<ServerData> =
-    this.urlForImage;
+    this.urlForThumbnailDefault;
   @Input() createMigImage: CreateMigImage<ServerData, MigImage> =
     this.createMigImageDefault;
   @Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault;
@@ -481,9 +497,9 @@ export class MatImageGridLibComponent<
    * @param imageHeight - The height (in pixels) of the image.
    * @returns The URL of the image with the given size.
    */
-  private urlForSizeDefault(
+  private urlForImageDefault(
     this: void,
-    singleImageData: MigImageData,
+    singleImageData: ServerData,
     imageWidth: number,
     imageHeight: number,
   ): string {
