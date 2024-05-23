@@ -33,18 +33,12 @@ describe('Test demo application', () => {
     cy.get('img').should('have.length', 200 * 2);
   });
 
-  it('contains text in tab "Large Dataset"', () => {
+  it('contains figures and images in tab "Large Dataset"', () => {
     cy.visit('/large-dataset');
 
     cy.get('[data-tab-id="2"]').should('have.class', 'mdc-tab--active');
-    cy.get('app-large-dataset')
-      .find('p')
-      .should('have.length', 1)
-      .invoke('text')
-      .should(
-        'contain',
-        'Placeholder for mat-image-grid with very large dataset',
-      );
+    cy.get('figure').should('have.length', 200);
+    cy.get('img').should('have.length', 200 * 2);
   });
 
   it('contains text in tab for non-existing route', () => {

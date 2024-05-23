@@ -9,7 +9,7 @@ import {
   imageElementBase,
 } from 'projects/mat-image-grid-lib/src';
 
-export class ProgressiveImageExt extends ProgressiveImage {
+export class ProgressiveImageExt extends ProgressiveImage<MigImageExtData> {
   public imageDateTaken: string;
   public imageDescription: string;
 

@@ -33,7 +33,7 @@ export type UrlForImageFromDimensions<M extends MigImageData> = (
  */
 export type CreateMigImage<
   M extends MigImageData,
-  P extends ProgressiveImage,
+  P extends ProgressiveImage<M>,
 > = (
   renderer: Renderer2,
   singleImageData: M,

@@ -155,7 +155,7 @@ Component to create an angular material .....
 | `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).         |
 | `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                                   |
 | `@Output() numberOfLoadedImages: EventEmitter<number>`                                       | Observable emitting the number of images currently loaded.                                                                      |
-| `imageClicked: EventEmitter<Observable<string>>`                                             | Observable emitting the ID of the image, when clicking the image.                                                               |
+| `imageClicked: EventEmitter<Observable<ServerData>>`                                         | Observable emitting the image data from the server, when clicking the image.                                                    |
 | `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                       |
 |                                                                                              |                                                                                                                                 |
 

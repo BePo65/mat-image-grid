@@ -33,17 +33,17 @@ import { imageElementBase } from '../interfaces/progressive-image.interface';
  * an effect where there is first a blurred version of the image, and then it
  * appears to come into focus.
  */
-export class ProgressiveImage {
+export class ProgressiveImage<ServerData extends MigImageData> {
   public aspectRatio: number;
   public existsOnPage = false;
   public style?: MigImageStyle;
 
-  private readonly onClickSubject = new Subject<string>();
+  private readonly onClickSubject = new Subject<ServerData>();
   public onClick$ = this.onClickSubject.asObservable();
 
   protected elements = new Map<string, imageElementBase>();
 
-  protected singleImageData: MigImageData;
+  protected singleImageData: ServerData;
   protected classNames: MigImageClassNames;
   protected createSubelementDelayInMs = 100;
   protected renderer: Renderer2;
@@ -60,7 +60,7 @@ export class ProgressiveImage {
    */
   constructor(
     renderer2: Renderer2,
-    singleImageData: MigImageData,
+    singleImageData: ServerData,
     index: number,
     configuration: MigImageConfiguration,
   ) {
@@ -149,7 +149,7 @@ export class ProgressiveImage {
    * The event handler emits a value to the onClickSubject.
    */
   imageClicked = () => {
-    this.onClickSubject.next(this.singleImageData.imageId);
+    this.onClickSubject.next(this.singleImageData);
   };
 
   /**

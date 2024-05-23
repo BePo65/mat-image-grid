@@ -120,8 +120,14 @@ export class ExtendedGridComponent {
     }
   }
 
-  protected pigImageOnClick = (filename: string): void => {
-    // TODO window.open(`http://localhost:4200/tours/photos/${filename}`, '_blank');
-    alert(`Image '${filename}' clicked`);
+  protected pigImageOnClick = ($event: MigImageExtData): void => {
+    const viewportWidth =
+      window.innerWidth ||
+      document.documentElement.clientWidth ||
+      document.getElementsByTagName('body')[0].clientWidth;
+    const width = viewportWidth;
+    const height = Math.round(width / $event.aspectRatio);
+    const url = `${this.imagesBaseUrl}/${$event.imageId}/${width.toString(10)}/${height.toString(10)}`;
+    window.open(url, '_blank');
   };
 }

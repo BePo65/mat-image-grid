@@ -37,8 +37,9 @@ import { MatImageGridImageServiceBase } from './services/mat-image-grid.service'
   styleUrl: './mat-image-grid.component.scss',
 })
 export class MatImageGridLibComponent<
-    MigImage extends ProgressiveImage = ProgressiveImage,
     ServerData extends MigImageData = MigImageData,
+    MigImage extends
+      ProgressiveImage<ServerData> = ProgressiveImage<ServerData>,
   >
   implements AfterViewInit, OnDestroy
 {
@@ -74,7 +75,7 @@ export class MatImageGridLibComponent<
   @Input() getImageSize: GetImageSize = this.getImageSizeDefault;
   @Output() numberOfImagesOnServer = new EventEmitter<number>();
   @Output() numberOfLoadedImages = new EventEmitter<number>();
-  @Output() imageClicked = new EventEmitter<string>();
+  @Output() imageClicked = new EventEmitter<ServerData>();
 
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
@@ -286,7 +287,7 @@ export class MatImageGridLibComponent<
     const wrapperWidth = this.migContainerNative.clientWidth;
 
     // State
-    let row: ProgressiveImage[] = []; // The list of images in the current row.
+    let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
     let translateX = 0; // The current translateX value that we are at
     let translateY = 0; // The current translateY value that we are at
     let rowAspectRatio = 0; // The aspect ratio of the row we are building
@@ -296,56 +297,59 @@ export class MatImageGridLibComponent<
 
     // Loop through all our images, building them up into rows and computing
     // the working rowAspectRatio.
-    [].forEach.call(this.images, (image: ProgressiveImage, index) => {
-      rowAspectRatio += image.aspectRatio;
-      row.push(image);
+    [].forEach.call(
+      this.images,
+      (image: ProgressiveImage<ServerData>, index) => {
+        rowAspectRatio += image.aspectRatio;
+        row.push(image);
 
-      // When the rowAspectRatio exceeds the minimum acceptable aspect ratio,
-      // or when we're out of images, we say that we have all the images we
-      // need for this row, and compute the style values for each of these
-      // images.
-      if (
-        rowAspectRatio >= (this.minAspectRatio || 0) ||
-        index + 1 === this.images.length
-      ) {
-        // Make sure that the last row also has a reasonable height
-        rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
+        // When the rowAspectRatio exceeds the minimum acceptable aspect ratio,
+        // or when we're out of images, we say that we have all the images we
+        // need for this row, and compute the style values for each of these
+        // images.
+        if (
+          rowAspectRatio >= (this.minAspectRatio || 0) ||
+          index + 1 === this.images.length
+        ) {
+          // Make sure that the last row also has a reasonable height
+          rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
 
-        // Compute this row's height.
-        const totalDesiredWidthOfImages =
-          wrapperWidth - this.spaceBetweenImages * (row.length - 1);
-        const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+          // Compute this row's height.
+          const totalDesiredWidthOfImages =
+            wrapperWidth - this.spaceBetweenImages * (row.length - 1);
+          const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
 
-        // For each image in the row, compute the width, height, translateX,
-        // and translateY values, and set them (and the transition value we
-        // found above) on each image.
-        //
-        // NOTE: This does not manipulate the DOM, rather it just sets the
-        //       style values on the ProgressiveImage instance. The DOM nodes
-        //       will be updated in doLayout.
-        row.forEach((img) => {
-          const imageWidth = rowHeight * img.aspectRatio;
+          // For each image in the row, compute the width, height, translateX,
+          // and translateY values, and set them (and the transition value we
+          // found above) on each image.
+          //
+          // NOTE: This does not manipulate the DOM, rather it just sets the
+          //       style values on the ProgressiveImage instance. The DOM nodes
+          //       will be updated in doLayout.
+          row.forEach((img) => {
+            const imageWidth = rowHeight * img.aspectRatio;
 
-          // This is NOT DOM manipulation.
-          img.style = {
-            width: imageWidth,
-            height: rowHeight,
-            translateX,
-            translateY,
-          };
+            // This is NOT DOM manipulation.
+            img.style = {
+              width: imageWidth,
+              height: rowHeight,
+              translateX,
+              translateY,
+            };
 
-          // The next image is this.settings.spaceBetweenImages pixels to the
-          // right of this image.
-          translateX += imageWidth + this.spaceBetweenImages;
-        });
+            // The next image is this.settings.spaceBetweenImages pixels to the
+            // right of this image.
+            translateX += imageWidth + this.spaceBetweenImages;
+          });
 
-        // Reset our state variables for next row.
-        row = [];
-        rowAspectRatio = 0;
-        translateY += rowHeight + this.spaceBetweenImages;
-        translateX = 0;
-      }
-    });
+          // Reset our state variables for next row.
+          row = [];
+          rowAspectRatio = 0;
+          translateY += rowHeight + this.spaceBetweenImages;
+          translateX = 0;
+        }
+      },
+    );
 
     // No space below the last image
     this.totalHeight = translateY - this.spaceBetweenImages;
