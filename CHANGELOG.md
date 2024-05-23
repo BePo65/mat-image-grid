@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.3](https://github.com/BePo65/mat-image-grid/compare/v0.4.2...v0.4.3) (2024-05-23)
+
+### Features
+
+- **demo:** add demo for large dataset - step 1 (generate images) ([915b8d9](https://github.com/BePo65/mat-image-grid/commit/915b8d9ad797b76741e7bc1244ade48998fc8f5d))
+- **demo:** simulate images (without using a web server) ([6ef75cb](https://github.com/BePo65/mat-image-grid/commit/6ef75cbb5d6d7e1f7670e07a5a2d4bce07b14ab1))
+- make image click event emit image data from server ([fd3b2c7](https://github.com/BePo65/mat-image-grid/commit/fd3b2c7f55f255603ff269a4aaaf4808b8a511ab))
+- optionally show thumbnails from DataURL in serverdata ([5e544a4](https://github.com/BePo65/mat-image-grid/commit/5e544a47978170ad1c32ba7b0c89e06f082ac94c))
+
+### Bug Fixes
+
+- 'imageClicked' event now emitted in mat-image-grid component ([1826216](https://github.com/BePo65/mat-image-grid/commit/1826216e6c400d9949a7a9c002f6f6854a2f6237))
+- adapt tests to current sructure of program ([328910f](https://github.com/BePo65/mat-image-grid/commit/328910fc2bba9b032a35935f868800cf556b053e))
+- **lib:** make urlForThumbnail call urlForImage as default ([02f5473](https://github.com/BePo65/mat-image-grid/commit/02f547315717e4692b5327ea491d863e0e4ca2e1))
+
 ## [0.4.2](https://github.com/BePo65/mat-image-grid/compare/v0.4.1...v0.4.2) (2024-05-11)
 
 ### Features
