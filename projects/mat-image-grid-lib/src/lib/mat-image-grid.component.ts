@@ -233,6 +233,14 @@ export class MatImageGridLibComponent<
         index,
         configurationParameters,
       );
+
+      if (this.withImageClickEvents) {
+        progressiveImage.onClick$
+          .pipe(takeUntil(this.unsubscribe$))
+          // .subscribe(this.imageClicked);
+          .subscribe((imageData) => this.imageClicked.next(imageData));
+      }
+
       progressiveImages.push(progressiveImage);
     });
 

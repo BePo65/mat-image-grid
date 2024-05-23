@@ -121,6 +121,7 @@ export class ExtendedGridComponent {
   }
 
   protected pigImageOnClick = (filename: string): void => {
-    window.open(`http://localhost:4200/tours/photos/${filename}`, '_blank');
+    // TODO window.open(`http://localhost:4200/tours/photos/${filename}`, '_blank');
+    alert(`Image '${filename}' clicked`);
   };
 }

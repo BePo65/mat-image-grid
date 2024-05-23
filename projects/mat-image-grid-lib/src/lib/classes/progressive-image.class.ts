@@ -139,6 +139,9 @@ export class ProgressiveImage {
    */
   dispose() {
     this.onClickSubject.complete();
+    if (this.existsOnPage) {
+      this.hide();
+    }
   }
 
   /**
@@ -216,10 +219,9 @@ export class ProgressiveImage {
 
       const subElement = {
         element: element,
-        eventUnloadHandlers: [],
+        eventUnloadHandlers: [onloadHandlerUnload],
       } as imageElementBase;
 
-      subElement.eventUnloadHandlers.push(onloadHandlerUnload);
       this.elements.set(subElementName, subElement);
 
       this.renderer.appendChild(mainElement, element);

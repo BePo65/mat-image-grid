@@ -29,6 +29,7 @@
   [createMigImage]="createMigImage"
   [style.--mig-overlay-visible]="showImageDetailsStyle"
   [style.--mig-full-screen-visible]="showImageFullScreenStyle"
+  (imageClicked)="pigImageOnClick($event)"
 >
   loading...
 </mat-image-grid>
