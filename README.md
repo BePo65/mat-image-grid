@@ -41,6 +41,7 @@ An Angular material component showing images in a grid display. Based on the [Pr
       </ul>
     </li>
     <li><a href="#license">License</a></li>
+    <li><a href="#hints">Hints</a></li>
   </ol>
 </details>
 <!-- END TABLE OF CONTENTS -->
@@ -428,5 +429,13 @@ Distributed under the MIT License. See `LICENSE` for more information.
 This project uses the fonts '[Roboto](https://fonts.google.com/specimen/Roboto/about)' and '[Material Icons](https://github.com/google/material-design-icons)' from the [Google Fonts Library](https://fonts.google.com/) that are licensed under the [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt).
 
 This project uses icons from the [Google Material Icons Library](https://fonts.google.com/icons) that are licensed under the [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt).
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- HINTS -->
+
+## Hints
+
+As `eslint` V9 requires a fundamental change to the configuration files, the update will be done in a later version.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
