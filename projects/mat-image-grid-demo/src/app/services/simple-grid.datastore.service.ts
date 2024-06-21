@@ -1,37 +1,37 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
-
-import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
-
 import {
-  MatImageGridImageServiceBase,
   RequestImagesRange,
   FieldSortDefinition,
   FieldFilterDefinition,
-  Page,
-} from 'projects/mat-image-grid-lib/src';
+} from '../interfaces/datastore-provider.interface';
+
+import { AppDatastoreServiceBase } from './app.datastore.base.service';
+import SIMPLE_GRID_DATA from './simple-grid-images.mock.data';
+
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 /**
- * Class to get a list of information about the images to display in the ExtendedGridComponent.
+ * Class to get a list of information about the images to display in the LargeDatasetComponent.
  */
 @Injectable()
-export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigImageExtData> {
-  private images: MigImageExtData[];
+export class SimpleGridDatastoreService extends AppDatastoreServiceBase<MigImageData> {
+  private images: MigImageData[];
 
   public constructor() {
     super();
-    this.images = EXTENDED_GRID_DATA.map((image) => image as MigImageExtData);
+    this.images = SIMPLE_GRID_DATA.map((image) => image);
   }
 
+  // TODO add 'sorts?: FieldSortDefinition<MigImageData>[]' and 'filters?: FieldFilterDefinition<MigImageData>[]'
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
-    sorts?: FieldSortDefinition<MigImageExtData>[],
-    filters?: FieldFilterDefinition<MigImageExtData>[],
+    sorts?: FieldSortDefinition<MigImageData>[],
+    filters?: FieldFilterDefinition<MigImageData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<MigImageExtData>> {
+  ): Observable<Page<MigImageData>> {
     const numberOfImages =
       imagesRange.numberOfImages === -1
         ? this.images.length
@@ -48,7 +48,8 @@ export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigI
       returnedElements: migImages.length,
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
-    } as Page<MigImageExtData>;
+    } as Page<MigImageData>;
+
     return of(resultPage).pipe(delay(simulatedResponseTime));
   }
 }

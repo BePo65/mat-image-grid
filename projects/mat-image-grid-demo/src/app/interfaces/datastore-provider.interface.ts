@@ -1,6 +1,8 @@
 import { SortDirection } from '@angular/material/sort';
 import { Observable } from 'rxjs';
 
+import { Page } from 'projects/mat-image-grid-lib/src';
+
 type UnionKeys<T> = T extends T ? keyof T : never;
 type StrictUnionHelper<T, TAll> = T extends T
   ? T & Partial<Record<Exclude<UnionKeys<TAll>, keyof T>, undefined>>
@@ -52,18 +54,6 @@ export type FieldFilterDefinition<T> = StrictUnion<
 export interface RequestImagesRange {
   startImageIndex: number;
   numberOfImages: number;
-}
-
-/**
- * Interface defining the properties of a page of images returned from the datastore.
- * @template T - type defining the data of a table image
- */
-export interface Page<T> {
-  content: T[];
-  startImageIndex: number;
-  returnedElements: number;
-  totalElements: number;
-  totalFilteredElements: number;
 }
 
 /**

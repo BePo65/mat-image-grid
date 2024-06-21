@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
+
+import { AppDataSource } from '../../app.data-source.class';
+import { SimpleGridDatastoreService } from '../../services/simple-grid.datastore.service';
 
 import { SimpleGridSettings } from './simple-grid-settings.class';
 
@@ -14,13 +17,30 @@ import {
   templateUrl: './simple-grid.component.html',
   styleUrl: './simple-grid.component.scss',
 })
-export class SimpleGridComponent {
+export class SimpleGridComponent implements AfterViewInit, OnDestroy {
   public componentType = 'SimpleGridComponent';
+
+  @ViewChild(MatImageGridLibComponent)
+  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
+
+  protected simpleDataSource: AppDataSource<MigImageData>;
 
   private imagesBaseUrl: string;
 
-  constructor(private settings: SimpleGridSettings) {
+  constructor(
+    private datastore: SimpleGridDatastoreService,
+    private settings: SimpleGridSettings,
+  ) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
+    this.simpleDataSource = new AppDataSource(this.datastore);
+  }
+
+  ngAfterViewInit(): void {
+    this.imageGrid.enable();
+  }
+
+  ngOnDestroy(): void {
+    this.imageGrid.disable();
   }
 
   /**

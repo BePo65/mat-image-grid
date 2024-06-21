@@ -5,17 +5,18 @@ import {
   FieldFilterDefinition,
   FieldSortDefinition,
   DataStoreProvider,
-  Page,
   RequestImagesRange,
 } from '../interfaces/datastore-provider.interface';
-import { MigImageData } from '../interfaces/mig-image-data.interface';
+
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 /**
  * Base class to get a list of information about the images to display.
  * @template T - class derived from MigImageData
  */
+// todo rename to data store
 @Injectable()
-export abstract class MatImageGridImageServiceBase<
+export abstract class AppDatastoreServiceBase<
   T extends MigImageData = MigImageData,
 > implements DataStoreProvider<T>
 {

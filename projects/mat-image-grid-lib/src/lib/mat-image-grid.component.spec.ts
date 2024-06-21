@@ -10,15 +10,17 @@ import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 
 import 'zone.js/testing';
+// TODO datastore -> dataSource
 import {
   FieldFilterDefinition,
   FieldSortDefinition,
   Page,
   RequestImagesRange,
-} from './interfaces/datastore-provider.interface';
+} from '../../../mat-image-grid-demo/src/app/interfaces/datastore-provider.interface';
+import { AppDatastoreServiceBase } from '../../../mat-image-grid-demo/src/app/services/app.datastore.base.service';
+
 import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridLibComponent } from './mat-image-grid.component';
-import { MatImageGridImageServiceBase } from './services/mat-image-grid.service';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -42,7 +44,7 @@ describe('MatImageGridLibComponent', () => {
       imports: [MatImageGridLibComponent],
       providers: [
         {
-          provide: MatImageGridImageServiceBase,
+          provide: AppDatastoreServiceBase,
           useClass: MatImageGridMockupService,
         },
         { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
@@ -178,7 +180,7 @@ const figuresInFirstRow = (images: DebugElement[]) => {
 };
 
 @Injectable()
-class MatImageGridMockupService extends MatImageGridImageServiceBase {
+class MatImageGridMockupService extends AppDatastoreServiceBase {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {

@@ -6,14 +6,14 @@ import {
   RequestImagesRange,
   FieldSortDefinition,
   FieldFilterDefinition,
-  Page,
-} from '../../public-api';
-import { MigImageData } from '../interfaces/mig-image-data.interface';
+} from '../interfaces/datastore-provider.interface';
 
-import { MatImageGridImageServiceBase } from './mat-image-grid.service';
+import { AppDatastoreServiceBase } from './app.datastore.base.service';
+
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 @Injectable({ providedIn: 'root' })
-class MatImageGridTestService extends MatImageGridImageServiceBase {
+class MatImageGridTestService extends AppDatastoreServiceBase {
   private mockData: MigImageData[] = [
     {
       imageId: '90000',
@@ -69,7 +69,7 @@ class MatImageGridTestService extends MatImageGridImageServiceBase {
 }
 
 @Injectable({ providedIn: 'root' })
-class MatImageGridErrorTestService extends MatImageGridImageServiceBase {}
+class MatImageGridErrorTestService extends AppDatastoreServiceBase {}
 
 describe('MatImageGridLibService', () => {
   it('should be created', () => {
@@ -80,7 +80,7 @@ describe('MatImageGridLibService', () => {
 
   it('should retrieve number of entries the datastore', inject(
     [MatImageGridTestService],
-    (imageService: MatImageGridImageServiceBase) => {
+    (imageService: AppDatastoreServiceBase) => {
       const requestedRange = {
         startImageIndex: 0,
         numberOfImages: 0,
@@ -97,7 +97,7 @@ describe('MatImageGridLibService', () => {
 
   it('should retrieve first entry in the datastore', inject(
     [MatImageGridTestService],
-    (imageService: MatImageGridImageServiceBase) => {
+    (imageService: AppDatastoreServiceBase) => {
       const requestedRange = {
         startImageIndex: 0,
         numberOfImages: 1,
@@ -118,7 +118,7 @@ describe('MatImageGridLibService', () => {
 
   it('should retrieve last 2 entries in the datastore', inject(
     [MatImageGridTestService],
-    (imageService: MatImageGridImageServiceBase) => {
+    (imageService: AppDatastoreServiceBase) => {
       const requestedRange = {
         startImageIndex: 3,
         numberOfImages: 2,
@@ -145,7 +145,7 @@ describe('MatImageGridLibService', () => {
 
   it('should not throw retrieving non existing entries in the datastore', inject(
     [MatImageGridTestService],
-    (imageService: MatImageGridImageServiceBase) => {
+    (imageService: AppDatastoreServiceBase) => {
       const requestedRange = {
         startImageIndex: 4,
         numberOfImages: 10,
@@ -168,7 +168,7 @@ describe('MatImageGridLibService', () => {
 describe('MatImageGridLibService without getPagedData', () => {
   it('should throw retrieving number of entries the datastore', inject(
     [MatImageGridErrorTestService],
-    (imageService: MatImageGridImageServiceBase) => {
+    (imageService: AppDatastoreServiceBase) => {
       expect(() => {
         const requestedRange = {
           startImageIndex: 0,
