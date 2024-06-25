@@ -1,12 +1,12 @@
 <mat-progress-bar
   [ngClass]="{
-    'mat-image-grid-loading-hide': (loading$ | async) === false
+    'mat-image-grid-loading-hide': (loading$ | async) === false,
   }"
   class="mat-image-grid-loading-spinner"
   color="primary"
   mode="indeterminate"
 >
 </mat-progress-bar>
-<div class="images-grid">
-  <div #migContainer class="images-container"></div>
+<div #migContainer class="images-container">
+  <div #migGrid class="images-grid"></div>
 </div>

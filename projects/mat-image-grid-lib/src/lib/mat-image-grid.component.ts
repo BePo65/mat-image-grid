@@ -86,8 +86,10 @@ export class MatImageGridLibComponent<
   public loading$ = this.loadingSubject.asObservable();
 
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('migGrid') private migGrid!: ElementRef<HTMLDivElement>;
   private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
+  private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
   private inRAF = false;
   private lastWindowWidth = window.innerWidth;
@@ -114,6 +116,7 @@ export class MatImageGridLibComponent<
 
   public ngAfterViewInit(): void {
     this.migContainerNative = this.migContainer.nativeElement;
+    this.migGridNative = this.migGrid.nativeElement;
     this.optimizedResize = new OptimizedResize(
       this.documentRef,
       this.renderer2,
@@ -198,7 +201,7 @@ export class MatImageGridLibComponent<
       image.dispose();
     });
 
-    this.renderer2.setStyle(this.migContainerNative, 'height', 'auto');
+    this.renderer2.setStyle(this.migGridNative, 'height', 'auto');
   }
 
   /**
@@ -234,7 +237,7 @@ export class MatImageGridLibComponent<
   private parseImageData(imageData: ServerData[]): MigImage[] {
     const progressiveImages: MigImage[] = [];
     const configurationParameters = {
-      container: this.migContainer,
+      container: this.migGrid,
       thumbnailSize: this.thumbnailSize,
       lastWindowWidth: this.lastWindowWidth,
       withClickEvent: this.withImageClickEvents,
@@ -437,7 +440,7 @@ export class MatImageGridLibComponent<
   private doLayout() {
     // Set the container height
     this.renderer2.setStyle(
-      this.migContainerNative,
+      this.migGridNative,
       'height',
       `${this.totalHeight}px`,
     );
