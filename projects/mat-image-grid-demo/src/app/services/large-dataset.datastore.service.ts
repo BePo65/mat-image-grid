@@ -36,10 +36,13 @@ export class LargeDatasetDatastoreService extends AppDatastoreServiceBase<MigIma
         : imagesRange.numberOfImages;
 
     const migImages = new Array(numberOfImagesToLoad) as MigImageData[];
+    const randomizeFactorA = 1664525;
+    const randomizeFactorC = 1013904223;
     for (let i = 0; i < migImages.length; ++i) {
+      const aspectRatioBase = (i * randomizeFactorA + randomizeFactorC) % 38;
       migImages[i] = {
         imageId: (i + 1).toString(),
-        aspectRatio: (Math.log1p(i) % 1) + 0.5,
+        aspectRatio: (Math.log10(aspectRatioBase + 1) % 1) + 0.5,
       } as MigImageData;
     }
 
