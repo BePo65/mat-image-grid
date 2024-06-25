@@ -449,8 +449,8 @@ export class MatImageGridLibComponent<
         : this.secondaryImageBufferHeight;
     const bufferBottom =
       this.scrollDirection === 'down'
-        ? this.secondaryImageBufferHeight
-        : this.primaryImageBufferHeight;
+        ? this.primaryImageBufferHeight
+        : this.secondaryImageBufferHeight;
 
     // Now we compute the location of the top and bottom buffers:
     const containerOffset = this.getOffsetTop(this.migContainerNative);
