@@ -8,8 +8,8 @@ import {
 } from '../interfaces/datastore-provider.interface';
 import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 
-import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
 import { AppDatastoreServiceBase } from './app.datastore.base.service';
+import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
 
 import { Page } from 'projects/mat-image-grid-lib/src';
 

@@ -30,10 +30,17 @@ export class LargeDatasetDatastoreService extends AppDatastoreServiceBase<MigIma
     filters?: FieldFilterDefinition<MigImageData>[],
     /* eslint-enable @typescript-eslint/no-unused-vars */
   ): Observable<Page<MigImageData>> {
-    const numberOfImagesToLoad =
+    let numberOfImagesToLoad =
       imagesRange.numberOfImages === -1
         ? this.numberOfImages
         : imagesRange.numberOfImages;
+
+    // Prevent to return images that are not in the (simulated) data set
+    const indexOfLastImageToLoad =
+      imagesRange.startImageIndex + numberOfImagesToLoad - 1;
+    if (indexOfLastImageToLoad >= this.numberOfImages) {
+      numberOfImagesToLoad -= indexOfLastImageToLoad - this.numberOfImages + 1;
+    }
 
     const migImages = new Array(numberOfImagesToLoad) as MigImageData[];
     const randomizeFactorA = 1664525;
@@ -41,7 +48,7 @@ export class LargeDatasetDatastoreService extends AppDatastoreServiceBase<MigIma
     for (let i = 0; i < migImages.length; ++i) {
       const aspectRatioBase = (i * randomizeFactorA + randomizeFactorC) % 38;
       migImages[i] = {
-        imageId: (i + 1).toString(),
+        imageId: (imagesRange.startImageIndex + i + 1).toString(),
         aspectRatio: (Math.log10(aspectRatioBase + 1) % 1) + 0.5,
       } as MigImageData;
     }
