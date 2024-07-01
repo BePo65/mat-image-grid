@@ -4,16 +4,17 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
+import {
+  RequestImagesRange,
+  FieldSortDefinition,
+  FieldFilterDefinition,
+} from '../../interfaces/datastore-provider.interface';
+import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
+import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
+
 import { LargeDatasetComponent } from './large-dataset.component';
 
-import {
-  FieldFilterDefinition,
-  FieldSortDefinition,
-  MatImageGridImageServiceBase,
-  MigImageData,
-  Page,
-  RequestImagesRange,
-} from 'projects/mat-image-grid-lib/src';
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -43,7 +44,7 @@ describe('LargeDatasetComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: MatImageGridImageServiceBase,
+                provide: LargeDatasetDatastoreService,
                 useClass: MatImageGridLargeDatasetMockupService,
               },
             ],
@@ -62,6 +63,7 @@ describe('LargeDatasetComponent', () => {
       ?.componentInstance as LargeDatasetComponent;
 
     expect(component).toBeDefined();
+    expect(component.componentType).toBe('LargeDatasetComponent');
   });
 
   it('should have figure entries', () => {
@@ -125,7 +127,7 @@ describe('LargeDatasetComponent', () => {
 });
 
 @Injectable()
-class MatImageGridLargeDatasetMockupService extends MatImageGridImageServiceBase {
+class MatImageGridLargeDatasetMockupService extends AppDatastoreServiceBase<MigImageData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
