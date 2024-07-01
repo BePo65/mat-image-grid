@@ -1,4 +1,13 @@
-import { Component, Renderer2 } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  Renderer2,
+  ViewChild,
+} from '@angular/core';
+
+import { AppDataSource } from '../../app.data-source.class';
+import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
 
 import {
   MatImageGridLibComponent,
@@ -12,8 +21,13 @@ import {
   templateUrl: './large-dataset.component.html',
   styleUrl: './large-dataset.component.scss',
 })
-export class LargeDatasetComponent {
+export class LargeDatasetComponent implements AfterViewInit, OnDestroy {
   public componentType = 'LargeDatasetComponent';
+
+  @ViewChild(MatImageGridLibComponent)
+  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
+
+  protected largeDataSource: AppDataSource<MigImageData>;
 
   private imageColors = [
     {
@@ -60,9 +74,23 @@ export class LargeDatasetComponent {
 
   /**
    * Creates an instance of ProgressiveImage.
+   * @param datastore - Datastore to request images data from
    * @param renderer - Angular class to modify DOM.
    */
-  constructor(private renderer: Renderer2) {}
+  constructor(
+    private datastore: LargeDatasetDatastoreService,
+    private renderer: Renderer2,
+  ) {
+    this.largeDataSource = new AppDataSource(this.datastore);
+  }
+
+  ngAfterViewInit(): void {
+    this.imageGrid.enable();
+  }
+
+  ngOnDestroy(): void {
+    this.imageGrid.disable();
+  }
 
   /**
    * Get the URL for an image with the given image data & dimensions.

@@ -1,55 +1,50 @@
+import { CollectionViewer } from '@angular/cdk/collections';
 import {
+  AfterViewInit,
   Component,
   DebugElement,
   Inject,
-  Injectable,
   InjectionToken,
+  OnDestroy,
+  ViewChild,
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, first, of } from 'rxjs';
 
 import 'zone.js/testing';
-import {
-  FieldFilterDefinition,
-  FieldSortDefinition,
-  Page,
-  RequestImagesRange,
-} from './interfaces/datastore-provider.interface';
+
+import { DataSourcePaged, Page } from '../public-api';
+
 import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridLibComponent } from './mat-image-grid.component';
-import { MatImageGridImageServiceBase } from './services/mat-image-grid.service';
 
-type MigMockupServiceConfig = { numberOfImages: number };
+type DemoComponentConfig = { numberOfImages: number };
 
 type FigureCoordinates = { x: number; y: number };
 
-const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
-  'mig.mockup.service.config',
+const DEMO_COMPONENT_CONFIG = new InjectionToken<DemoComponentConfig>(
+  'demo.component.config',
 );
 
 describe('MatImageGridLibComponent', () => {
-  let component: MatImageGridTestComponent;
-  let fixture: ComponentFixture<MatImageGridTestComponent>;
+  let component: DemoMigComponent;
+  let fixture: ComponentFixture<DemoMigComponent>;
   const WaitForSubelementsTimeMs = 120;
   const testImageServiceConfig = {
     numberOfImages: 50,
-  } as MigMockupServiceConfig;
+  } as DemoComponentConfig;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [MatImageGridTestComponent],
+      declarations: [DemoMigComponent],
       imports: [MatImageGridLibComponent],
       providers: [
-        {
-          provide: MatImageGridImageServiceBase,
-          useClass: MatImageGridMockupService,
-        },
-        { provide: IMAGE_SERVICE_CONFIG, useValue: testImageServiceConfig },
+        { provide: DEMO_COMPONENT_CONFIG, useValue: testImageServiceConfig },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MatImageGridTestComponent);
+    fixture = TestBed.createComponent(DemoMigComponent);
     fixture.detectChanges();
     component = fixture.componentInstance;
   });
@@ -177,12 +172,28 @@ const figuresInFirstRow = (images: DebugElement[]) => {
   });
 };
 
-@Injectable()
-class MatImageGridMockupService extends MatImageGridImageServiceBase {
+/**
+ * Class to get a list of information about the images to display in the demo pages.
+ */
+export class DemoDataSource<T extends MigImageData> extends DataSourcePaged<T> {
   private entriesInDatastore = 0;
+  private readonly emptyPage = {
+    content: [] as T[],
+    startImageIndex: 0,
+    returnedElements: 0,
+    totalElements: 0,
+    totalFilteredElements: 0,
+  } as Page<T>;
 
-  constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
+  /** Stream emitting data to render. */
+  private readonly _data: BehaviorSubject<Page<T>>;
+  private collectionViewerSubscription!: Subscription;
+
+  public constructor(
+    @Inject(DEMO_COMPONENT_CONFIG) config: DemoComponentConfig,
+  ) {
     super();
+    this._data = new BehaviorSubject<Page<T>>(this.emptyPage);
     if (
       typeof config.numberOfImages === 'number' &&
       config.numberOfImages > 0
@@ -191,32 +202,44 @@ class MatImageGridMockupService extends MatImageGridImageServiceBase {
     }
   }
 
-  public override getPagedData(
-    imagesRange: RequestImagesRange,
-    /* eslint-disable @typescript-eslint/no-unused-vars */
-    sorts?: FieldSortDefinition<MigImageData>[],
-    filters?: FieldFilterDefinition<MigImageData>[],
-    /* eslint-enable @typescript-eslint/no-unused-vars */
-  ): Observable<Page<MigImageData>> {
+  override connect(collectionViewer: CollectionViewer): Observable<Page<T>> {
+    this.collectionViewerSubscription = collectionViewer.viewChange.subscribe(
+      (listRange) => {
+        const numberOfRequestedImages = Math.max(
+          listRange.end - listRange.start,
+          0,
+        );
+
+        this.getPagedData(listRange.start, numberOfRequestedImages)
+          .pipe(first())
+          .subscribe((page: Page<T>) => this._data.next(page));
+      },
+    );
+    return this._data.asObservable();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  override disconnect(collectionViewer: CollectionViewer): void {
+    this.collectionViewerSubscription.unsubscribe();
+  }
+
+  private getPagedData(start: number, count: number): Observable<Page<T>> {
     const resultPage = {
       content: [],
-      startImageIndex: imagesRange.startImageIndex,
+      startImageIndex: start,
       returnedElements: 0,
       totalElements: 0,
       totalFilteredElements: 0,
-    } as Page<MigImageData>;
+    } as Page<T>;
     const numberOfImages =
-      imagesRange.numberOfImages === -1
+      count === -1
         ? this.entriesInDatastore
-        : Math.min(
-            imagesRange.startImageIndex + imagesRange.numberOfImages,
-            this.entriesInDatastore,
-          ) - imagesRange.startImageIndex;
+        : Math.min(start + count, this.entriesInDatastore) - start;
     for (let i = 0; i < numberOfImages; i++) {
       const entry = {
-        imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
+        imageId: `${(start + i).toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
-      } as MigImageData;
+      } as T;
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 
@@ -228,10 +251,29 @@ class MatImageGridMockupService extends MatImageGridImageServiceBase {
 
 @Component({
   template:
-    '<mat-image-grid [urlForImage]="urlForImage"> loading... </mat-image-grid>',
+    '<mat-image-grid [dataSource]="testDataSource" [urlForImage]="urlForImage"> loading... </mat-image-grid>',
 })
-class MatImageGridTestComponent {
+class DemoMigComponent implements AfterViewInit, OnDestroy {
+  @ViewChild(MatImageGridLibComponent)
+  protected imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
+
+  protected testDataSource: DemoDataSource<MigImageData>;
+
   private imagesBaseUrl = 'http://demosite.com/images';
+
+  constructor(
+    @Inject(DEMO_COMPONENT_CONFIG) dataSourceConfig: DemoComponentConfig,
+  ) {
+    this.testDataSource = new DemoDataSource(dataSourceConfig);
+  }
+
+  ngAfterViewInit(): void {
+    this.imageGrid.enable();
+  }
+
+  ngOnDestroy(): void {
+    this.imageGrid.disable();
+  }
 
   /**
    * Get the URL for an image with the given image data & dimensions.

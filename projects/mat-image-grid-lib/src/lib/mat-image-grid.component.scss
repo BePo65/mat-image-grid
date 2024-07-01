@@ -3,7 +3,7 @@
 }
 
 /* Consider space for loading indicator ("mat-progress-bar" with class ".mdc-linear-progress") */
-.images-grid {
+.images-container {
   height: calc(
     100% - max(
         var(--mdc-linear-progress-track-height),
@@ -13,7 +13,7 @@
   overflow-y: scroll;
 }
 
-.images-container {
+.images-grid {
   position: relative;
 }
 

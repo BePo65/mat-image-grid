@@ -1,1 +1,3 @@
 - make pig get image data from a paged data store not as an array with data of all images
+- do not use angular zone for fast events
+- use CdkVirtualScrollableElement for scroll events (getOnScroll)

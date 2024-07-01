@@ -1,3 +1,4 @@
+import { CollectionViewer, ListRange } from '@angular/cdk/collections';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   AfterViewInit,
@@ -13,11 +14,14 @@ import {
   ViewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { BehaviorSubject, Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, takeUntil } from 'rxjs';
 
 import { OptimizedResize } from './classes/optimized-resize.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
-import { RequestImagesRange } from './interfaces/datastore-provider.interface';
+import {
+  DataSourcePaged,
+  Page,
+} from './interfaces/data-source-paged.interface';
 import {
   CreateMigImage,
   GetImageSize,
@@ -27,7 +31,6 @@ import {
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
-import { MatImageGridImageServiceBase } from './services/mat-image-grid.service';
 
 @Component({
   selector: 'mat-image-grid',
@@ -41,11 +44,12 @@ export class MatImageGridLibComponent<
     MigImage extends
       ProgressiveImage<ServerData> = ProgressiveImage<ServerData>,
   >
-  implements AfterViewInit, OnDestroy
+  implements AfterViewInit, OnDestroy, CollectionViewer
 {
   /**
    * Default implementation of the function that gets the URL for a thumbnail image with the given data & dimensions.
    * This is a arrow function as it uses the 'this' context of the instance.
+   * This method is located here so that it can be used as a default value for 'urlForThumbnail'.
    * @param singleImageData - The properties of one image (e.g. containing the imageId).
    * @param imageWidth - The width (in pixels) of the image.
    * @param imageHeight - The height (in pixels) of the image.
@@ -65,6 +69,7 @@ export class MatImageGridLibComponent<
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
 
+  @Input({ required: true }) dataSource!: DataSourcePaged<ServerData>; // Do not use before ngAfterViewInit
   @Input({ required: true })
   urlForImage: UrlForImageFromDimensions<ServerData> = this.urlForImageDefault;
   @Input() urlForThumbnail: UrlForImageFromDimensions<ServerData> =
@@ -81,8 +86,10 @@ export class MatImageGridLibComponent<
   public loading$ = this.loadingSubject.asObservable();
 
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('migGrid') private migGrid!: ElementRef<HTMLDivElement>;
   private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
+  private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
   private inRAF = false;
   private lastWindowWidth = window.innerWidth;
@@ -95,25 +102,40 @@ export class MatImageGridLibComponent<
   private totalHeight = 0;
   private readonly unsubscribe$ = new Subject<void>();
 
+  /** Emits when new data is available. */
+  private dataStream!: Observable<Page<ServerData>>; // Do not use before AfterViewInit
+
+  /** Emits when the rendered view of the data changes. */
+  readonly viewChange = new Subject<ListRange>();
+
   constructor(
     @Inject(DOCUMENT) private readonly documentRef: Document,
     private renderer2: Renderer2,
     private zone: NgZone,
-    private matImageGridImageService: MatImageGridImageServiceBase<ServerData>,
   ) {}
 
   public ngAfterViewInit(): void {
     this.migContainerNative = this.migContainer.nativeElement;
+    this.migGridNative = this.migGrid.nativeElement;
     this.optimizedResize = new OptimizedResize(
       this.documentRef,
       this.renderer2,
       this.zone,
       this.migContainerNative,
     );
-    this.getImageListFromServer();
+
+    // TODO change to getting only the first chunk of data for filling the viewport
+    // TODO shouldn't we fetch data on scroll event?!
+    // HACK this.getImageListFromServer();
+    // TODO enable() should be called in demo project!
+    // this.enable(); // HACK caused by loading data in scroll event
+    this.dataStream = this.dataSource.connect(this);
+    // HACK read all entries from data source
+    this.viewChange.next({ start: 0, end: 9999 });
   }
 
   public ngOnDestroy(): void {
+    this.dataSource.disconnect(this);
     this.disable();
     this.optimizedResize.dispose();
     this.clearImageData();
@@ -134,9 +156,10 @@ export class MatImageGridLibComponent<
       this.onScroll,
     );
 
-    this.onScroll();
-    this.computeLayout();
-    this.doLayout();
+    // TODO get only data required bei current view
+    if (this.images.length === 0) {
+      this.getImageListFromServer();
+    }
 
     this.optimizedResize.add(() => {
       this.lastWindowWidth = this.migContainerNative.offsetWidth;
@@ -178,7 +201,7 @@ export class MatImageGridLibComponent<
       image.dispose();
     });
 
-    this.renderer2.setStyle(this.migContainerNative, 'height', 'auto');
+    this.renderer2.setStyle(this.migGridNative, 'height', 'auto');
   }
 
   /**
@@ -186,28 +209,24 @@ export class MatImageGridLibComponent<
    * Emit total and filtered number of elements; indicate loading.
    */
   private getImageListFromServer() {
-    const imagesRange = {
-      startImageIndex: 0,
-      numberOfImages: -1,
-    } as RequestImagesRange;
-
     setTimeout(() => this.loadingSubject.next(true), 0);
-    this.matImageGridImageService
-      .getPagedData(imagesRange)
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe({
-        next: (serverResponse) => {
-          this.disable();
-          this.setImageData(serverResponse.content);
-          this.enable();
-          setTimeout(() => {
-            this.numberOfImagesOnServer.emit(serverResponse.totalElements);
-            this.numberOfLoadedImages.emit(serverResponse.returnedElements);
-          }, 0);
-          this.loadingSubject.next(false);
-        },
-        error: (err: Error) => console.error(err.message),
-      });
+    this.dataStream.pipe(takeUntil(this.unsubscribe$)).subscribe({
+      next: (serverResponse) => {
+        // HACK this.disable();
+        this.setImageData(serverResponse.content);
+        // HACK this.enable();
+        // HACK use the following lines to show new data
+        this.computeLayout();
+        this.doLayout();
+        this.onScroll();
+        setTimeout(() => {
+          this.numberOfImagesOnServer.emit(serverResponse.totalElements);
+          this.numberOfLoadedImages.emit(serverResponse.returnedElements);
+        }, 0);
+        this.loadingSubject.next(false);
+      },
+      error: (err: Error) => console.error(err.message),
+    });
   }
 
   /**
@@ -218,7 +237,7 @@ export class MatImageGridLibComponent<
   private parseImageData(imageData: ServerData[]): MigImage[] {
     const progressiveImages: MigImage[] = [];
     const configurationParameters = {
-      container: this.migContainer,
+      container: this.migGrid,
       thumbnailSize: this.thumbnailSize,
       lastWindowWidth: this.lastWindowWidth,
       withClickEvent: this.withImageClickEvents,
@@ -245,6 +264,7 @@ export class MatImageGridLibComponent<
       progressiveImages.push(progressiveImage);
     });
 
+    // at this point the images do not yet have an (absolute) position
     return progressiveImages;
   }
 
@@ -420,7 +440,7 @@ export class MatImageGridLibComponent<
   private doLayout() {
     // Set the container height
     this.renderer2.setStyle(
-      this.migContainerNative,
+      this.migGridNative,
       'height',
       `${this.totalHeight}px`,
     );
@@ -432,8 +452,8 @@ export class MatImageGridLibComponent<
         : this.secondaryImageBufferHeight;
     const bufferBottom =
       this.scrollDirection === 'down'
-        ? this.secondaryImageBufferHeight
-        : this.primaryImageBufferHeight;
+        ? this.primaryImageBufferHeight
+        : this.secondaryImageBufferHeight;
 
     // Now we compute the location of the top and bottom buffers:
     const containerOffset = this.getOffsetTop(this.migContainerNative);
@@ -445,7 +465,7 @@ export class MatImageGridLibComponent<
     const minTranslateYPlusHeight =
       this.latestYOffset - containerOffset - bufferTop;
 
-    // This is the bottom of the bottom buffer.  If the top of an image is
+    // This is the bottom of the bottom buffer. If the top of an image is
     // below this line, it will be removed.
     const maxTranslateY =
       this.latestYOffset - containerOffset + scrollerHeight + bufferBottom;
@@ -472,6 +492,8 @@ export class MatImageGridLibComponent<
    * @returns Our optimized onScroll handler that we should attach.
    */
   private getOnScroll() {
+    // TODO can we use angular material CdkVirtualScrollableElement like in CdkVirtualScrollViewport:223?
+
     /**
      * This function is called on scroll. It computes variables about the page
      * position and scroll direction, and then calls a doLayout guarded by a
@@ -482,24 +504,28 @@ export class MatImageGridLibComponent<
      * in the middle of doing one.
      */
     const onScroll = () => {
-      // Compute the scroll direction using the latestYOffset and the previousYOffset
-      const newYOffset = this.migContainerNative.scrollTop;
-      this.previousYOffset = this.latestYOffset || newYOffset;
-      this.latestYOffset = newYOffset;
-      this.scrollDirection =
-        this.latestYOffset > this.previousYOffset ? 'down' : 'up';
-
-      // Call this.doLayout, guarded by window.requestAnimationFrame
-      if (!this.inRAF) {
-        this.inRAF = true;
-        window.requestAnimationFrame(() => {
-          this.doLayout();
-          this.inRAF = false;
-        });
-      }
+      this.showContent();
     };
 
     return onScroll;
+  }
+
+  private showContent() {
+    // Compute the scroll direction using the latestYOffset and the previousYOffset
+    const newYOffset = this.migContainerNative.scrollTop;
+    this.previousYOffset = this.latestYOffset || newYOffset;
+    this.latestYOffset = newYOffset;
+    this.scrollDirection =
+      this.latestYOffset > this.previousYOffset ? 'down' : 'up';
+
+    // Call this.doLayout, guarded by window.requestAnimationFrame
+    if (!this.inRAF) {
+      this.inRAF = true;
+      window.requestAnimationFrame(() => {
+        this.doLayout();
+        this.inRAF = false;
+      });
+    }
   }
 
   /**

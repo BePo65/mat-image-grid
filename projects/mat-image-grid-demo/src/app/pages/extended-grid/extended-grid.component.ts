@@ -1,9 +1,18 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, Renderer2 } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  Renderer2,
+  ViewChild,
+} from '@angular/core';
 import {
   MatSlideToggleChange,
   MatSlideToggle,
 } from '@angular/material/slide-toggle';
+
+import { AppDataSource } from '../../app.data-source.class';
+import { ExtendedGridDatastoreService } from '../../services/extended-grid.datastore.service';
 
 import { ExtendedGridSettings } from './extended-grid-settings.class';
 import { MigImageExtData } from './mig-customization/mig-image-ext-data.interface';
@@ -24,9 +33,13 @@ import {
     './mig-customization/mat-image-grid-ext.component.scss',
   ],
 })
-export class ExtendedGridComponent {
+export class ExtendedGridComponent implements AfterViewInit, OnDestroy {
   public componentType = 'ExtendedGridComponent';
 
+  @ViewChild(MatImageGridLibComponent)
+  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
+
+  protected extendedDataSource: AppDataSource<MigImageExtData>;
   protected showImageDetails = true;
   protected showImageFullScreen = true;
   protected showImageDetailsStyle = 'visible';
@@ -34,8 +47,20 @@ export class ExtendedGridComponent {
 
   private imagesBaseUrl: string;
 
-  constructor(private settings: ExtendedGridSettings) {
+  constructor(
+    private datastore: ExtendedGridDatastoreService,
+    private settings: ExtendedGridSettings,
+  ) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
+    this.extendedDataSource = new AppDataSource(this.datastore);
+  }
+
+  ngAfterViewInit(): void {
+    this.imageGrid.enable();
+  }
+
+  ngOnDestroy(): void {
+    this.imageGrid.disable();
   }
 
   /**

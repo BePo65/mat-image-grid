@@ -4,20 +4,22 @@ import { Router, RouterModule, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
+import {
+  RequestImagesRange,
+  FieldSortDefinition,
+  FieldFilterDefinition,
+} from './interfaces/datastore-provider.interface';
 import { ExtendedGridComponent } from './pages/extended-grid/extended-grid.component';
 import { MigImageExtData } from './pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.component';
 import { PageNotFoundComponent } from './pages/not-found/not-found.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
+import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
+import { ExtendedGridDatastoreService } from './services/extended-grid.datastore.service';
+import { LargeDatasetDatastoreService } from './services/large-dataset.datastore.service';
+import { SimpleGridDatastoreService } from './services/simple-grid.datastore.service';
 
-import {
-  MatImageGridImageServiceBase,
-  RequestImagesRange,
-  FieldSortDefinition,
-  MigImageData,
-  FieldFilterDefinition,
-  Page,
-} from 'projects/mat-image-grid-lib/src';
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -53,7 +55,7 @@ describe('AppComponent', () => {
                 useValue: simpleGridImageServiceConfig,
               },
               {
-                provide: MatImageGridImageServiceBase,
+                provide: SimpleGridDatastoreService,
                 useClass: MatImageGridMockupService,
               },
             ],
@@ -67,7 +69,7 @@ describe('AppComponent', () => {
                 useValue: extendedGridImageServiceConfig,
               },
               {
-                provide: MatImageGridImageServiceBase,
+                provide: ExtendedGridDatastoreService,
                 useClass: MatImageGridExtendedMockupService,
               },
             ],
@@ -81,7 +83,7 @@ describe('AppComponent', () => {
                 useValue: simpleGridImageServiceConfig,
               },
               {
-                provide: MatImageGridImageServiceBase,
+                provide: LargeDatasetDatastoreService,
                 useClass: MatImageGridMockupService,
               },
             ],
@@ -142,6 +144,7 @@ describe('AppComponent', () => {
   });
 
   it('should navigate to simple-grid', async () => {
+    const numberOfRenderedImages = 16;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['simple-grid']),
     );
@@ -160,12 +163,11 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/simple-grid');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(
-      simpleGridImageServiceConfig.numberOfImages,
-    );
+    expect(figureElements).toHaveSize(numberOfRenderedImages);
   });
 
   it('should navigate to extended-grid', async () => {
+    const numberOfRenderedImages = 16;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['extended-grid']),
     );
@@ -184,12 +186,11 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/extended-grid');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(
-      extendedGridImageServiceConfig.numberOfImages,
-    );
+    expect(figureElements).toHaveSize(numberOfRenderedImages);
   });
 
   it('should navigate to large-dataset', async () => {
+    const numberOfRenderedImages = 36;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['large-dataset']),
     );
@@ -204,9 +205,7 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/large-dataset');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(
-      extendedGridImageServiceConfig.numberOfImages,
-    );
+    expect(figureElements).toHaveSize(numberOfRenderedImages);
   });
 
   it('should navigate to page-not-found on non-existing route', async () => {
@@ -228,7 +227,7 @@ describe('AppComponent', () => {
 });
 
 @Injectable()
-class MatImageGridMockupService extends MatImageGridImageServiceBase {
+class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
@@ -277,7 +276,7 @@ class MatImageGridMockupService extends MatImageGridImageServiceBase {
 }
 
 @Injectable()
-class MatImageGridExtendedMockupService extends MatImageGridImageServiceBase {
+class MatImageGridExtendedMockupService extends AppDatastoreServiceBase<MigImageExtData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {

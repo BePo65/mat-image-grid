@@ -1,22 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import SIMPLE_GRID_DATA from './simple-grid-images.mock.data';
-
 import {
-  MatImageGridImageServiceBase,
   RequestImagesRange,
   FieldSortDefinition,
   FieldFilterDefinition,
-  Page,
-} from 'projects/mat-image-grid-lib/src';
-import { MigImageData } from 'projects/mat-image-grid-lib/src/lib/interfaces/mig-image-data.interface';
+} from '../interfaces/datastore-provider.interface';
+
+import { AppDatastoreServiceBase } from './app.datastore.base.service';
+import SIMPLE_GRID_DATA from './simple-grid-images.mock.data';
+
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 /**
- * Class to get a list of information about the images to display in the SimpleGridComponent.
+ * Class to get a list of information about the images to display in the LargeDatasetComponent.
  */
 @Injectable()
-export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigImageData> {
+export class SimpleGridDatastoreService extends AppDatastoreServiceBase<MigImageData> {
   private images: MigImageData[];
 
   public constructor() {
@@ -24,6 +24,7 @@ export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigIma
     this.images = SIMPLE_GRID_DATA.map((image) => image);
   }
 
+  // TODO add 'sorts?: FieldSortDefinition<MigImageData>[]' and 'filters?: FieldFilterDefinition<MigImageData>[]'
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -48,6 +49,7 @@ export class SimpleGridImagesService extends MatImageGridImageServiceBase<MigIma
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
     } as Page<MigImageData>;
+
     return of(resultPage).pipe(delay(simulatedResponseTime));
   }
 }

@@ -1,23 +1,23 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
-
-import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
-
 import {
-  MatImageGridImageServiceBase,
   RequestImagesRange,
   FieldSortDefinition,
   FieldFilterDefinition,
-  Page,
-} from 'projects/mat-image-grid-lib/src';
+} from '../interfaces/datastore-provider.interface';
+import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
+
+import { AppDatastoreServiceBase } from './app.datastore.base.service';
+import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
+
+import { Page } from 'projects/mat-image-grid-lib/src';
 
 /**
  * Class to get a list of information about the images to display in the ExtendedGridComponent.
  */
 @Injectable()
-export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigImageExtData> {
+export class ExtendedGridDatastoreService extends AppDatastoreServiceBase<MigImageExtData> {
   private images: MigImageExtData[];
 
   public constructor() {
@@ -25,6 +25,7 @@ export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigI
     this.images = EXTENDED_GRID_DATA.map((image) => image as MigImageExtData);
   }
 
+  // TODO add 'sorts?: FieldSortDefinition<MigImageData>[]' and 'filters?: FieldFilterDefinition<MigImageData>[]'
   public override getPagedData(
     imagesRange: RequestImagesRange,
     /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -49,6 +50,7 @@ export class ExtendedGridImagesService extends MatImageGridImageServiceBase<MigI
       totalElements: this.images.length,
       totalFilteredElements: this.images.length,
     } as Page<MigImageExtData>;
+
     return of(resultPage).pipe(delay(simulatedResponseTime));
   }
 }
