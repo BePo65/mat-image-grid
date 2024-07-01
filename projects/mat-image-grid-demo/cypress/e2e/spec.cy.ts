@@ -18,27 +18,33 @@ describe('Test demo application', () => {
   });
 
   it('contains figures and images in tab "Simple Grid"', () => {
+    const numberOfFigures = 9;
+
     cy.visit('/simple-grid');
 
     cy.get('[data-tab-id="0"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', 200);
-    cy.get('img').should('have.length', 200 * 2);
+    cy.get('figure').should('have.length', numberOfFigures);
+    cy.get('img').should('have.length', numberOfFigures * 2);
   });
 
   it('contains figures and images in tab "Extended Grid"', () => {
+    const numberOfFigures = 9;
+
     cy.visit('/extended-grid');
 
     cy.get('[data-tab-id="1"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', 200);
-    cy.get('img').should('have.length', 200 * 2);
+    cy.get('figure').should('have.length', numberOfFigures);
+    cy.get('img').should('have.length', numberOfFigures * 2);
   });
 
   it('contains figures and images in tab "Large Dataset"', () => {
+    const numberOfFigures = 15;
+
     cy.visit('/large-dataset');
 
     cy.get('[data-tab-id="2"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', 200);
-    cy.get('img').should('have.length', 200 * 2);
+    cy.get('figure').should('have.length', numberOfFigures);
+    cy.get('img').should('have.length', numberOfFigures * 2);
   });
 
   it('contains text in tab for non-existing route', () => {
