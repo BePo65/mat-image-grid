@@ -20,6 +20,8 @@ export interface Page<T> {
 export abstract class DataSourcePaged<T> {
   /**
    * Connects a collection viewer (such as a mat-image-grid) to this data source.
+   * The viewChange observable of the CollectionViewer should return no images, when
+   * the 'end' property of the ListRange is less than 0.
    * @param collectionViewer - The component that exposes a view over the data provided by this data source.
    * @returns Observable that emits a new value when the data changes.
    */
