@@ -44,6 +44,7 @@ export class ProgressiveImage<ServerData extends MigImageData> {
   protected elements = new Map<string, imageElementBase>();
 
   protected singleImageData: ServerData;
+  protected imageIndex: number;
   protected classNames: MigImageClassNames;
   protected createSubelementDelayInMs = 100;
   protected renderer: Renderer2;
@@ -68,6 +69,7 @@ export class ProgressiveImage<ServerData extends MigImageData> {
     this.configuration = configuration;
     this.singleImageData = singleImageData;
     this.aspectRatio = singleImageData.aspectRatio;
+    this.imageIndex = index;
 
     this.classNames = {
       figure: 'mat-image-grid-figure',
@@ -165,6 +167,11 @@ export class ProgressiveImage<ServerData extends MigImageData> {
       const element = this.renderer.createElement('figure') as HTMLElement;
       this.renderer.addClass(element, this.classNames.figure);
       this.updateStyles(element);
+      this.renderer.setAttribute(
+        element,
+        'data-image-index',
+        this.imageIndex.toString(),
+      );
 
       const mainElement = {
         element: element,
