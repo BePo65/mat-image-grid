@@ -144,7 +144,7 @@ export class MatImageGridLibComponent<
   private dataFromDataSourceImages!: Observable<serverDataImages<ServerData>>; // Do not use before AfterViewInit
 
   /* request new data from server when range changes only */
-  private requestFromServer: Subject<ListRange>;
+  private requestDataFromServer$!: Subject<ListRange>;
 
   private loadingService: LoadingService;
 
@@ -153,8 +153,61 @@ export class MatImageGridLibComponent<
     private renderer2: Renderer2,
     private zone: NgZone,
   ) {
-    this.requestFromServer = new Subject<ListRange>();
-    this.requestFromServer
+    this.initRequestSubject();
+    this.loadingService = new LoadingService();
+    this.loading$ = this.loadingService.loading$.pipe(delay(0));
+  }
+
+  public ngOnInit(): void {
+    this.dataFromDataSource = this.dataSource.connect(this);
+    this.initDataFromDataSourceTotals();
+    this.initDataFromDataSourceImages();
+  }
+
+  public ngAfterViewInit(): void {
+    this.averageHeightOfRow = new FloatingAverage(
+      25,
+      this.getImageSize(this.lastWindowWidth),
+    );
+
+    const defaultAspectRatioForRow = this.getMinAspectRatio(
+      this.lastWindowWidth,
+    );
+    const defaultAspectRatioForImage = 0.75;
+    this.averageImagesPerRow = new FloatingAverage(
+      25,
+      defaultAspectRatioForRow / defaultAspectRatioForImage,
+    );
+
+    this.migContainerNative = this.migContainer.nativeElement;
+    this.migGridNative = this.migGrid.nativeElement;
+    this.optimizedResize = new OptimizedResize(
+      this.documentRef,
+      this.renderer2,
+      this.zone,
+      this.migContainerNative,
+    );
+
+    this.fillViewport();
+    this.setUiEventHandlers();
+  }
+
+  public ngOnDestroy(): void {
+    this.dataSource.disconnect(this);
+    this.optimizedResize.dispose();
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
+    this.disable();
+    this.clearImageData();
+  }
+
+  /**
+   * Initialize requestDataFromServer$.
+   * Remove duplicate requests and set loading indicator.
+   */
+  private initRequestSubject() {
+    this.requestDataFromServer$ = new Subject<ListRange>();
+    this.requestDataFromServer$
       .pipe(
         takeUntil(this.unsubscribe$),
         distinctUntilChanged((previous: ListRange, current: ListRange) => {
@@ -167,14 +220,9 @@ export class MatImageGridLibComponent<
         this.loadingService.startRequest();
         this.viewChange.next(range);
       });
-
-    this.loadingService = new LoadingService();
-    this.loading$ = this.loadingService.loading$.pipe(delay(0));
   }
 
-  public ngOnInit(): void {
-    this.dataFromDataSource = this.dataSource.connect(this);
-
+  private initDataFromDataSourceTotals() {
     this.dataFromDataSourceTotals = this.dataFromDataSource.pipe(
       takeUntil(this.unsubscribe$),
       filter((entry) => entry.totalElements !== 0),
@@ -197,7 +245,9 @@ export class MatImageGridLibComponent<
       error: (err: Error) =>
         console.error(`dataFromDataSourceTotals: '${err.message}'`),
     });
+  }
 
+  private initDataFromDataSourceImages() {
     this.dataFromDataSourceImages = this.dataFromDataSource.pipe(
       takeUntil(this.unsubscribe$),
       map((serverResponse) => {
@@ -251,45 +301,6 @@ export class MatImageGridLibComponent<
         error: (err: Error) =>
           console.error(`dataFromDataSourceImages: '${err.message}'`),
       });
-  }
-
-  public ngAfterViewInit(): void {
-    this.averageHeightOfRow = new FloatingAverage(
-      25,
-      this.getImageSize(this.lastWindowWidth),
-    );
-
-    const defaultAspectRatioForRow = this.getMinAspectRatio(
-      this.lastWindowWidth,
-    );
-    const defaultAspectRatioForImage = 0.75;
-    this.averageImagesPerRow = new FloatingAverage(
-      25,
-      defaultAspectRatioForRow / defaultAspectRatioForImage,
-    );
-
-    this.migContainerNative = this.migContainer.nativeElement;
-    this.migGridNative = this.migGrid.nativeElement;
-    this.optimizedResize = new OptimizedResize(
-      this.documentRef,
-      this.renderer2,
-      this.zone,
-      this.migContainerNative,
-    );
-
-    // Load images from the datastore
-    this.fillViewport();
-
-    this.setUiEventHandlers();
-  }
-
-  public ngOnDestroy(): void {
-    this.dataSource.disconnect(this);
-    this.optimizedResize.dispose();
-    this.unsubscribe$.next();
-    this.unsubscribe$.complete();
-    this.disable();
-    this.clearImageData();
   }
 
   /**
@@ -746,7 +757,7 @@ export class MatImageGridLibComponent<
       indexEndExclusive > indexStart &&
       (indexStart < imagesAvailable || imagesAvailable === 0)
     ) {
-      this.requestFromServer.next({
+      this.requestDataFromServer$.next({
         start: indexStart,
         end: indexEndExclusive,
       });
