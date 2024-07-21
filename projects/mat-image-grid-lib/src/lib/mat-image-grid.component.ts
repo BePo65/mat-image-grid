@@ -1,4 +1,5 @@
 import { CollectionViewer, ListRange } from '@angular/cdk/collections';
+import { CdkScrollable, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   AfterViewInit,
@@ -18,10 +19,14 @@ import { MatProgressBar } from '@angular/material/progress-bar';
 import {
   Observable,
   Subject,
+  animationFrameScheduler,
+  asapScheduler,
+  auditTime,
   delay,
   distinctUntilChanged,
   filter,
   map,
+  startWith,
   takeUntil,
   tap,
 } from 'rxjs';
@@ -38,7 +43,6 @@ import {
   CreateMigImage,
   GetImageSize,
   GetMinAspectRatio,
-  UnloadHandler,
   UrlForImageFromDimensions,
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
@@ -54,10 +58,20 @@ type serverDataImages<T> = {
   returnedElements: number;
 };
 
+/**
+ * Scheduler to be used for scroll events. Needs to fall back to
+ * something that doesn't rely on requestAnimationFrame on environments
+ * that don't support it (e.g. server-side rendering).
+ */
+const SCROLL_SCHEDULER =
+  typeof requestAnimationFrame !== 'undefined'
+    ? animationFrameScheduler
+    : asapScheduler;
+
 @Component({
   selector: 'mat-image-grid',
   standalone: true,
-  imports: [CommonModule, MatProgressBar],
+  imports: [CommonModule, MatProgressBar, ScrollingModule],
   templateUrl: './mat-image-grid.component.html',
   styleUrl: './mat-image-grid.component.scss',
 })
@@ -114,11 +128,11 @@ export class MatImageGridLibComponent<
 
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('migGrid') private migGrid!: ElementRef<HTMLDivElement>;
+  @ViewChild(CdkScrollable) private scrollable!: CdkScrollable;
   private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
-  private inRAF = false;
   private lastWindowWidth = window.innerWidth;
   private latestYOffset = 0;
   private minAspectRatio: number | null = null;
@@ -135,8 +149,6 @@ export class MatImageGridLibComponent<
   } as ServerDataTotals;
 
   private readonly unsubscribe$ = new Subject<void>();
-  private onScroll = () => {};
-  private onscrollUnloadHandler: UnloadHandler | null = null;
 
   /** Emits when new data is available. */
   private dataFromDataSource!: Observable<Page<ServerData>>; // Do not use before AfterViewInit
@@ -151,7 +163,7 @@ export class MatImageGridLibComponent<
   constructor(
     @Inject(DOCUMENT) private readonly documentRef: Document,
     private renderer2: Renderer2,
-    private zone: NgZone,
+    private ngZone: NgZone,
   ) {
     this.initRequestSubject();
     this.loadingService = new LoadingService();
@@ -162,6 +174,29 @@ export class MatImageGridLibComponent<
     this.dataFromDataSource = this.dataSource.connect(this);
     this.initDataFromDataSourceTotals();
     this.initDataFromDataSourceImages();
+
+    // It's still too early to measure the viewport at this point. Deferring with a promise allows
+    // the Viewport to be rendered with the correct size before we measure. We run this outside the
+    // zone to avoid causing more change detection cycles. We handle the change detection loop
+    // ourselves instead.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.ngZone.runOutsideAngular(() =>
+      Promise.resolve().then(() => {
+        this.scrollable
+          .elementScrolled()
+          .pipe(
+            // Start off with a fake scroll event so we properly detect our initial position.
+            startWith(null),
+
+            // Collect multiple events into one until the next animation frame. This way if
+            // there are multiple scroll events in the same frame we only need to recheck
+            // our layout once.
+            auditTime(0, SCROLL_SCHEDULER),
+            takeUntil(this.unsubscribe$),
+          )
+          .subscribe(() => this.onContentScrolled());
+      }),
+    );
   }
 
   public ngAfterViewInit(): void {
@@ -181,14 +216,15 @@ export class MatImageGridLibComponent<
 
     this.migContainerNative = this.migContainer.nativeElement;
     this.migGridNative = this.migGrid.nativeElement;
+
+    // TODO is there an equivalent to cdkScrollable?
     this.optimizedResize = new OptimizedResize(
       this.documentRef,
       this.renderer2,
-      this.zone,
+      this.ngZone,
       this.migContainerNative,
     );
 
-    this.fillViewport();
     this.setUiEventHandlers();
   }
 
@@ -217,7 +253,7 @@ export class MatImageGridLibComponent<
         }),
       )
       .subscribe((range) => {
-        this.loadingService.startRequest();
+        this.ngZone.run(() => this.loadingService.startRequest());
         this.viewChange.next(range);
       });
   }
@@ -257,7 +293,7 @@ export class MatImageGridLibComponent<
           returnedElements: serverResponse.returnedElements,
         } as serverDataImages<ServerData>;
       }),
-      tap(() => this.loadingService.receivedResponse()),
+      tap(() => this.ngZone.run(() => this.loadingService.receivedResponse())),
     );
     this.dataFromDataSourceImages
       .pipe(
@@ -291,8 +327,6 @@ export class MatImageGridLibComponent<
             this.images.length,
           );
           this.computeLayout(startIndex, endIndexExclusive);
-
-          // TODO should this run out of zone?
           this.showImagesInViewport();
 
           // load more images, if estimation of visible images was too little
@@ -308,14 +342,6 @@ export class MatImageGridLibComponent<
    * application.
    */
   private setUiEventHandlers() {
-    this.onScroll = this.getOnScroll();
-    this.onscrollUnloadHandler?.();
-    this.onscrollUnloadHandler = this.renderer2.listen(
-      this.migContainerNative,
-      'scroll',
-      this.onScroll,
-    );
-
     this.optimizedResize.add(() => {
       this.lastWindowWidth = this.migContainerNative.offsetWidth;
 
@@ -331,10 +357,7 @@ export class MatImageGridLibComponent<
    * Remove all scroll and resize listeners.
    */
   private disable() {
-    if (this.onscrollUnloadHandler) {
-      this.onscrollUnloadHandler();
-      this.onscrollUnloadHandler = null;
-    }
+    // TODO how to disable / remove cdkScrollable?
 
     this.optimizedResize.disable();
   }
@@ -409,7 +432,9 @@ export class MatImageGridLibComponent<
         progressiveImage.onClick$
           .pipe(takeUntil(this.unsubscribe$))
           // .subscribe(this.imageClicked);
-          .subscribe((imageData) => this.imageClicked.next(imageData));
+          .subscribe((imageData) =>
+            this.ngZone.run(() => this.imageClicked.next(imageData)),
+          );
       }
 
       progressiveImages.push(progressiveImage);
@@ -639,44 +664,21 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Create our onScroll handler and return it.
-   * @returns Our optimized onScroll handler that we should attach.
+   * Event handler for images grid scroll event (triggered by cdkScrollable).
    */
-  private getOnScroll() {
-    // TODO how can we use angular material CdkVirtualScrollableElement like in CdkVirtualScrollViewport:223?
+  private onContentScrolled() {
+    // Compute the scroll direction using the latestYOffset and the previousYOffset
+    const newYOffset = this.migContainerNative.scrollTop;
+    this.previousYOffset = this.latestYOffset || newYOffset;
+    this.latestYOffset = newYOffset;
+    this.scrollDirection =
+      this.latestYOffset >= this.previousYOffset ? 'down' : 'up';
 
-    /**
-     * This function is called on scroll. It computes variables about the page
-     * position and scroll direction, and then calls a doLayout guarded by a
-     * window.requestAnimationFrame.
-     *
-     * We use the boolean variable _this.inRAF to ensure that we don't overload
-     * the number of layouts we perform by starting another layout while we are
-     * in the middle of doing one.
-     */
-    const onScroll = () => {
-      // Compute the scroll direction using the latestYOffset and the previousYOffset
-      const newYOffset = this.migContainerNative.scrollTop;
-      this.previousYOffset = this.latestYOffset || newYOffset;
-      this.latestYOffset = newYOffset;
-      this.scrollDirection =
-        this.latestYOffset >= this.previousYOffset ? 'down' : 'up';
+    // Show / hide images according to new scroll position
+    this.showImagesInViewport();
 
-      // Call this.fillViewport guarded by window.requestAnimationFrame
-      if (!this.inRAF) {
-        this.inRAF = true;
-        window.requestAnimationFrame(() => {
-          // Show / hide images according to new scroll position
-          this.showImagesInViewport();
-
-          // load more images, if required
-          this.fillViewport();
-          this.inRAF = false;
-        });
-      }
-    };
-
-    return onScroll;
+    // load more images, if required
+    this.fillViewport();
   }
 
   /**
