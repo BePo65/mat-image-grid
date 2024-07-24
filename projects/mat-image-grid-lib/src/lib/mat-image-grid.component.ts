@@ -33,8 +33,8 @@ import {
 
 import { FloatingAverage } from './classes/floating-average.class';
 import { LoadingService } from './classes/loading-service.class';
-import { OptimizedResize } from './classes/optimized-resize.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
+import { MigResizableDirective } from './directives/mig-resizable-directive';
 import {
   DataSourcePaged,
   Page,
@@ -71,7 +71,12 @@ const SCROLL_SCHEDULER =
 @Component({
   selector: 'mat-image-grid',
   standalone: true,
-  imports: [CommonModule, MatProgressBar, ScrollingModule],
+  imports: [
+    CommonModule,
+    MatProgressBar,
+    MigResizableDirective,
+    ScrollingModule,
+  ],
   templateUrl: './mat-image-grid.component.html',
   styleUrl: './mat-image-grid.component.scss',
 })
@@ -129,7 +134,7 @@ export class MatImageGridLibComponent<
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('migGrid') private migGrid!: ElementRef<HTMLDivElement>;
   @ViewChild(CdkScrollable) private scrollable!: CdkScrollable;
-  private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
+  @ViewChild(MigResizableDirective) private resizable!: MigResizableDirective;
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
@@ -174,32 +179,12 @@ export class MatImageGridLibComponent<
     this.dataFromDataSource = this.dataSource.connect(this);
     this.initDataFromDataSourceTotals();
     this.initDataFromDataSourceImages();
-
-    // It's still too early to measure the viewport at this point. Deferring with a promise allows
-    // the Viewport to be rendered with the correct size before we measure. We run this outside the
-    // zone to avoid causing more change detection cycles. We handle the change detection loop
-    // ourselves instead.
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.ngZone.runOutsideAngular(() =>
-      Promise.resolve().then(() => {
-        this.scrollable
-          .elementScrolled()
-          .pipe(
-            // Start off with a fake scroll event so we properly detect our initial position.
-            startWith(null),
-
-            // Collect multiple events into one until the next animation frame. This way if
-            // there are multiple scroll events in the same frame we only need to recheck
-            // our layout once.
-            auditTime(0, SCROLL_SCHEDULER),
-            takeUntil(this.unsubscribe$),
-          )
-          .subscribe(() => this.onContentScrolled());
-      }),
-    );
+    this.initOnScroll();
   }
 
   public ngAfterViewInit(): void {
+    this.initOnResize();
+
     this.averageHeightOfRow = new FloatingAverage(
       25,
       this.getImageSize(this.lastWindowWidth),
@@ -216,24 +201,12 @@ export class MatImageGridLibComponent<
 
     this.migContainerNative = this.migContainer.nativeElement;
     this.migGridNative = this.migGrid.nativeElement;
-
-    // TODO is there an equivalent to cdkScrollable?
-    this.optimizedResize = new OptimizedResize(
-      this.documentRef,
-      this.renderer2,
-      this.ngZone,
-      this.migContainerNative,
-    );
-
-    this.setUiEventHandlers();
   }
 
   public ngOnDestroy(): void {
     this.dataSource.disconnect(this);
-    this.optimizedResize.dispose();
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
-    this.disable();
     this.clearImageData();
   }
 
@@ -337,29 +310,38 @@ export class MatImageGridLibComponent<
       });
   }
 
-  /**
-   * Enable scroll and resize handlers, and run a complete layout computation /
-   * application.
-   */
-  private setUiEventHandlers() {
-    this.optimizedResize.add(() => {
-      this.lastWindowWidth = this.migContainerNative.offsetWidth;
+  private initOnScroll() {
+    // It's still too early to measure the viewport at this point. Deferring with a promise allows
+    // the Viewport to be rendered with the correct size before we measure. We run this outside the
+    // zone to avoid causing more change detection cycles. We handle the change detection loop
+    // ourselves instead.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.ngZone.runOutsideAngular(() =>
+      Promise.resolve().then(() => {
+        this.scrollable
+          .elementScrolled()
+          .pipe(
+            // Start off with a fake scroll event so we properly detect our initial position.
+            startWith(null),
 
-      // Compute the minimum aspect ratio that should be applied to the rows.
-      this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
-
-      // TODO needed when not all data is loaded: this.computeLayout();
-      this.showImagesInViewport();
-    });
+            // Collect multiple events into one until the next animation frame. This way if
+            // there are multiple scroll events in the same frame we only need to recheck
+            // our layout once.
+            auditTime(0, SCROLL_SCHEDULER),
+            takeUntil(this.unsubscribe$),
+          )
+          .subscribe(() => this.onContentScrolled());
+      }),
+    );
   }
 
-  /**
-   * Remove all scroll and resize listeners.
-   */
-  private disable() {
-    // TODO how to disable / remove cdkScrollable?
-
-    this.optimizedResize.disable();
+  private initOnResize() {
+    this.resizable.elementResized
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(() => {
+        // ResizeObserver runs out of angular ngZone
+        this.onResized();
+      });
   }
 
   /**
@@ -678,6 +660,19 @@ export class MatImageGridLibComponent<
     this.showImagesInViewport();
 
     // load more images, if required
+    this.fillViewport();
+  }
+
+  private onResized() {
+    this.bottomOfLastRow = 0;
+    this.lastWindowWidth = this.migContainerNative.offsetWidth;
+    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
+    this.setViewportHeight();
+
+    // Reposition all loaded images
+    this.computeLayout(0, this.images.length);
+    this.setViewportHeight();
+    this.showImagesInViewport();
     this.fillViewport();
   }
 
