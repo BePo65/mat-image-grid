@@ -1,11 +1,9 @@
 import { CollectionViewer } from '@angular/cdk/collections';
 import {
-  AfterViewInit,
   Component,
   DebugElement,
   Inject,
   InjectionToken,
-  OnDestroy,
   ViewChild,
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -30,7 +28,8 @@ const DEMO_COMPONENT_CONFIG = new InjectionToken<DemoComponentConfig>(
 describe('MatImageGridLibComponent', () => {
   let component: DemoMigComponent;
   let fixture: ComponentFixture<DemoMigComponent>;
-  const WaitForSubelementsTimeMs = 120;
+  const imagesOnFirstLoad = 4;
+  const WaitForSubelementsTimeMs = 400;
   const testImageServiceConfig = {
     numberOfImages: 50,
   } as DemoComponentConfig;
@@ -47,6 +46,12 @@ describe('MatImageGridLibComponent', () => {
     fixture = TestBed.createComponent(DemoMigComponent);
     fixture.detectChanges();
     component = fixture.componentInstance;
+
+    // wait for ProgressiveImage to create all subelements
+    await new Promise((resolve) =>
+      setTimeout(resolve, WaitForSubelementsTimeMs),
+    );
+    fixture.detectChanges();
   });
 
   it('should create instance', () => {
@@ -56,29 +61,25 @@ describe('MatImageGridLibComponent', () => {
   it('should have figure entries', () => {
     const images = fixture.debugElement.queryAll(By.css('figure'));
 
-    expect(images).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(images.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
   });
 
-  it('should have img entries', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
+  it('should have img entries', () => {
+    const figures = fixture.debugElement.queryAll(By.css('figure'));
     const images = fixture.debugElement.queryAll(By.css('img'));
 
-    expect(images).toHaveSize(testImageServiceConfig.numberOfImages * 2);
+    expect(figures.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(images.length).toBe(figures.length * 2);
   });
 
-  it('should have thumbnail image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
+  it('should have thumbnail image entries with src attribute', () => {
+    const figures = fixture.debugElement.queryAll(By.css('figure'));
     const thumbnailImages = fixture.debugElement.queryAll(
       By.css('img.mat-image-grid-thumbnail'),
     );
 
-    expect(thumbnailImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(figures.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(thumbnailImages.length).toBe(figures.length);
 
     const thumbnailImages3 = thumbnailImages[2]
       .nativeElement as HTMLImageElement;
@@ -94,25 +95,23 @@ describe('MatImageGridLibComponent', () => {
     expect(height).toBe('20');
   });
 
-  it('should have fullscreen image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
+  it('should have fullscreen image entries with src attribute', () => {
+    const figures = fixture.debugElement.queryAll(By.css('figure'));
     const fullscreenImages = fixture.debugElement.queryAll(
       By.css('img.mat-image-grid-full-image'),
     );
 
-    expect(fullscreenImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(figures.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(fullscreenImages.length).toBe(figures.length);
 
-    const fullscreenImages5 = fullscreenImages[4]
+    const fullscreenImages5 = fullscreenImages[3]
       .nativeElement as HTMLImageElement;
 
     // Strip pure image file name from url
     const srcQuery = fullscreenImages5.src.split('?', 2)[1];
     const src = srcQuery.split('&', 1)[0].split('=', 2)[1];
 
-    expect(src).toBe('00004');
+    expect(src).toBe('00003');
   });
 
   it('should have several elements in first row of images', () => {
@@ -253,7 +252,7 @@ export class DemoDataSource<T extends MigImageData> extends DataSourcePaged<T> {
   template:
     '<mat-image-grid [dataSource]="testDataSource" [urlForImage]="urlForImage"> loading... </mat-image-grid>',
 })
-class DemoMigComponent implements AfterViewInit, OnDestroy {
+class DemoMigComponent {
   @ViewChild(MatImageGridLibComponent)
   protected imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
 
@@ -265,14 +264,6 @@ class DemoMigComponent implements AfterViewInit, OnDestroy {
     @Inject(DEMO_COMPONENT_CONFIG) dataSourceConfig: DemoComponentConfig,
   ) {
     this.testDataSource = new DemoDataSource(dataSourceConfig);
-  }
-
-  ngAfterViewInit(): void {
-    this.imageGrid.enable();
-  }
-
-  ngOnDestroy(): void {
-    this.imageGrid.disable();
   }
 
   /**

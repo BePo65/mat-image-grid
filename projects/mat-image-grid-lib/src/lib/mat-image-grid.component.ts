@@ -166,7 +166,7 @@ export class MatImageGridLibComponent<
   private loadingService: LoadingService;
 
   constructor(
-    @Inject(DOCUMENT) private readonly documentRef: Document,
+    @Inject(DOCUMENT) private readonly documentRef: Document, // TODO do we need this?
     private renderer2: Renderer2,
     private ngZone: NgZone,
   ) {

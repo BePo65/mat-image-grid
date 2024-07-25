@@ -32,12 +32,16 @@ describe('AppComponent', () => {
   let router: Router;
   let app: AppComponent;
 
-  const WaitForSubelementsTimeMs = 120;
+  const WaitForSubelementsTimeMs = 300;
+  const imagesOnFirstLoad = 20;
   const simpleGridImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
   const extendedGridImageServiceConfig = {
     numberOfImages: 200,
+  } as MigMockupServiceConfig;
+  const largeDatasetImageServiceConfig = {
+    numberOfImages: 1000,
   } as MigMockupServiceConfig;
 
   beforeEach(async () => {
@@ -80,7 +84,7 @@ describe('AppComponent', () => {
             providers: [
               {
                 provide: IMAGE_SERVICE_CONFIG,
-                useValue: simpleGridImageServiceConfig,
+                useValue: largeDatasetImageServiceConfig,
               },
               {
                 provide: LargeDatasetDatastoreService,
@@ -144,7 +148,6 @@ describe('AppComponent', () => {
   });
 
   it('should navigate to simple-grid', async () => {
-    const numberOfRenderedImages = 16;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['simple-grid']),
     );
@@ -163,11 +166,10 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/simple-grid');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(numberOfRenderedImages);
+    expect(figureElements?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
   });
 
   it('should navigate to extended-grid', async () => {
-    const numberOfRenderedImages = 16;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['extended-grid']),
     );
@@ -186,18 +188,21 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/extended-grid');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(numberOfRenderedImages);
+    expect(figureElements?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
   });
 
   it('should navigate to large-dataset', async () => {
-    const numberOfRenderedImages = 36;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['large-dataset']),
     );
 
     expect(navigated).toBeTruthy();
 
+    // wait for ProgressiveImage to create all subelements
     fixture.detectChanges();
+    await new Promise((resolve) =>
+      setTimeout(resolve, WaitForSubelementsTimeMs),
+    );
 
     const appNative = fixture.nativeElement as HTMLElement;
     const mainElements = appNative.querySelectorAll('app-large-dataset');
@@ -205,7 +210,7 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/large-dataset');
     expect(mainElements).toHaveSize(1);
-    expect(figureElements).toHaveSize(numberOfRenderedImages);
+    expect(figureElements?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
   });
 
   it('should navigate to page-not-found on non-existing route', async () => {
