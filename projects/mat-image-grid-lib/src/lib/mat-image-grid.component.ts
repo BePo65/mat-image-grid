@@ -1,4 +1,5 @@
 import { CollectionViewer, ListRange } from '@angular/cdk/collections';
+import { CdkScrollable, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   AfterViewInit,
@@ -9,15 +10,31 @@ import {
   Input,
   NgZone,
   OnDestroy,
+  OnInit,
   Output,
   Renderer2,
   ViewChild,
 } from '@angular/core';
 import { MatProgressBar } from '@angular/material/progress-bar';
-import { BehaviorSubject, Observable, Subject, takeUntil } from 'rxjs';
+import {
+  Observable,
+  Subject,
+  animationFrameScheduler,
+  asapScheduler,
+  auditTime,
+  delay,
+  distinctUntilChanged,
+  filter,
+  map,
+  startWith,
+  takeUntil,
+  tap,
+} from 'rxjs';
 
-import { OptimizedResize } from './classes/optimized-resize.class';
+import { FloatingAverage } from './classes/floating-average.class';
+import { LoadingService } from './classes/loading-service.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
+import { MigResizableDirective } from './directives/mig-resizable-directive';
 import {
   DataSourcePaged,
   Page,
@@ -26,16 +43,40 @@ import {
   CreateMigImage,
   GetImageSize,
   GetMinAspectRatio,
-  UnloadHandler,
   UrlForImageFromDimensions,
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
 
+type ServerDataTotals = {
+  totalElements: number;
+  totalFilteredElements: number;
+};
+type serverDataImages<T> = {
+  content: T[];
+  startImageIndex: number;
+  returnedElements: number;
+};
+
+/**
+ * Scheduler to be used for scroll events. Needs to fall back to
+ * something that doesn't rely on requestAnimationFrame on environments
+ * that don't support it (e.g. server-side rendering).
+ */
+const SCROLL_SCHEDULER =
+  typeof requestAnimationFrame !== 'undefined'
+    ? animationFrameScheduler
+    : asapScheduler;
+
 @Component({
   selector: 'mat-image-grid',
   standalone: true,
-  imports: [CommonModule, MatProgressBar],
+  imports: [
+    CommonModule,
+    MatProgressBar,
+    MigResizableDirective,
+    ScrollingModule,
+  ],
   templateUrl: './mat-image-grid.component.html',
   styleUrl: './mat-image-grid.component.scss',
 })
@@ -44,7 +85,7 @@ export class MatImageGridLibComponent<
     MigImage extends
       ProgressiveImage<ServerData> = ProgressiveImage<ServerData>,
   >
-  implements AfterViewInit, OnDestroy, CollectionViewer
+  implements AfterViewInit, OnDestroy, OnInit, CollectionViewer
 {
   /**
    * Default implementation of the function that gets the URL for a thumbnail image with the given data & dimensions.
@@ -63,8 +104,8 @@ export class MatImageGridLibComponent<
     return this.urlForImage(singleImageData, imageWidth, imageHeight);
   };
 
-  @Input() primaryImageBufferHeight = 1000;
-  @Input() secondaryImageBufferHeight = 300;
+  @Input() primaryImageBufferHeight = 1000; // TODO change to factor
+  @Input() secondaryImageBufferHeight = 300; // TODO change to factor
   @Input() spaceBetweenImages = 8;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
@@ -79,121 +120,256 @@ export class MatImageGridLibComponent<
   @Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault;
   @Input() getImageSize: GetImageSize = this.getImageSizeDefault;
   @Output() numberOfImagesOnServer = new EventEmitter<number>();
-  @Output() numberOfLoadedImages = new EventEmitter<number>();
+  @Output() numberOfImagesOnServerFiltered = new EventEmitter<number>();
   @Output() imageClicked = new EventEmitter<ServerData>();
 
-  private readonly loadingSubject = new BehaviorSubject<boolean>(false);
-  public loading$ = this.loadingSubject.asObservable();
+  /**
+    Implementation of the 'CollectionViewer' interface.
+    Used by the dataSource object as parameter of the connect method.
+    Emits when the rendered view of the data changes.
+   */
+  public readonly viewChange = new Subject<ListRange>();
+  public loading$: Observable<boolean>;
 
   @ViewChild('migContainer') private migContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('migGrid') private migGrid!: ElementRef<HTMLDivElement>;
-  private optimizedResize!: OptimizedResize; // Do not use before AfterViewInit
+  @ViewChild(CdkScrollable) private scrollable!: CdkScrollable;
+  @ViewChild(MigResizableDirective) private resizable!: MigResizableDirective;
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
-  private inRAF = false;
   private lastWindowWidth = window.innerWidth;
   private latestYOffset = 0;
   private minAspectRatio: number | null = null;
-  private onScroll = () => {};
-  private onscrollUnloadHandler: UnloadHandler | null = null;
   private previousYOffset = 0;
   private scrollDirection = 'down';
   private totalHeight = 0;
+  private bottomOfLastRow = 0;
+  private indexOfLastRenderedImage = -1;
+  private averageImagesPerRow!: FloatingAverage; // Do not use before AfterViewInit
+  private averageHeightOfRow!: FloatingAverage; // Do not use before AfterViewInit
+  private serverDataTotals = {
+    totalElements: 0,
+    totalFilteredElements: 0,
+  } as ServerDataTotals;
+
   private readonly unsubscribe$ = new Subject<void>();
 
   /** Emits when new data is available. */
-  private dataStream!: Observable<Page<ServerData>>; // Do not use before AfterViewInit
+  private dataFromDataSource!: Observable<Page<ServerData>>; // Do not use before AfterViewInit
+  private dataFromDataSourceTotals!: Observable<ServerDataTotals>; // Do not use before AfterViewInit
+  private dataFromDataSourceImages!: Observable<serverDataImages<ServerData>>; // Do not use before AfterViewInit
 
-  /** Emits when the rendered view of the data changes. */
-  readonly viewChange = new Subject<ListRange>();
+  /* request new data from server when range changes only */
+  private requestDataFromServer$!: Subject<ListRange>;
+
+  private loadingService: LoadingService;
 
   constructor(
-    @Inject(DOCUMENT) private readonly documentRef: Document,
+    @Inject(DOCUMENT) private readonly documentRef: Document, // TODO do we need this?
     private renderer2: Renderer2,
-    private zone: NgZone,
-  ) {}
+    private ngZone: NgZone,
+  ) {
+    this.initRequestSubject();
+    this.loadingService = new LoadingService();
+    this.loading$ = this.loadingService.loading$.pipe(delay(0));
+  }
+
+  public ngOnInit(): void {
+    this.dataFromDataSource = this.dataSource.connect(this);
+    this.initDataFromDataSourceTotals();
+    this.initDataFromDataSourceImages();
+    this.initOnScroll();
+  }
 
   public ngAfterViewInit(): void {
-    this.migContainerNative = this.migContainer.nativeElement;
-    this.migGridNative = this.migGrid.nativeElement;
-    this.optimizedResize = new OptimizedResize(
-      this.documentRef,
-      this.renderer2,
-      this.zone,
-      this.migContainerNative,
+    this.initOnResize();
+
+    this.averageHeightOfRow = new FloatingAverage(
+      25,
+      this.getImageSize(this.lastWindowWidth),
     );
 
-    // TODO change to getting only the first chunk of data for filling the viewport
-    // TODO shouldn't we fetch data on scroll event?!
-    // HACK this.getImageListFromServer();
-    // TODO enable() should be called in demo project!
-    // this.enable(); // HACK caused by loading data in scroll event
-    this.dataStream = this.dataSource.connect(this);
-    // HACK read all entries from data source
-    this.viewChange.next({ start: 0, end: 9999 });
+    const defaultAspectRatioForRow = this.getMinAspectRatio(
+      this.lastWindowWidth,
+    );
+    const defaultAspectRatioForImage = 0.75;
+    this.averageImagesPerRow = new FloatingAverage(
+      25,
+      defaultAspectRatioForRow / defaultAspectRatioForImage,
+    );
+
+    this.migContainerNative = this.migContainer.nativeElement;
+    this.migGridNative = this.migGrid.nativeElement;
   }
 
   public ngOnDestroy(): void {
     this.dataSource.disconnect(this);
-    this.disable();
-    this.optimizedResize.dispose();
-    this.clearImageData();
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
+    this.clearImageData();
   }
 
   /**
-   * Enable scroll and resize handlers, and run a complete layout computation /
-   * application.
+   * Initialize requestDataFromServer$.
+   * Remove duplicate requests and set loading indicator.
    */
-  public enable() {
-    this.onScroll = this.getOnScroll();
-    this.onscrollUnloadHandler?.();
-    this.onscrollUnloadHandler = this.renderer2.listen(
-      this.migContainerNative,
-      'scroll',
-      this.onScroll,
+  private initRequestSubject() {
+    this.requestDataFromServer$ = new Subject<ListRange>();
+    this.requestDataFromServer$
+      .pipe(
+        takeUntil(this.unsubscribe$),
+        distinctUntilChanged((previous: ListRange, current: ListRange) => {
+          return (
+            previous.start === current.start && previous.end === current.end
+          );
+        }),
+      )
+      .subscribe((range) => {
+        this.ngZone.run(() => this.loadingService.startRequest());
+        this.viewChange.next(range);
+      });
+  }
+
+  private initDataFromDataSourceTotals() {
+    this.dataFromDataSourceTotals = this.dataFromDataSource.pipe(
+      takeUntil(this.unsubscribe$),
+      filter((entry) => entry.totalElements !== 0),
+      map((serverResponse) => {
+        return {
+          totalElements: serverResponse.totalElements,
+          totalFilteredElements: serverResponse.totalFilteredElements,
+        } as ServerDataTotals;
+      }),
     );
-
-    // TODO get only data required bei current view
-    if (this.images.length === 0) {
-      this.getImageListFromServer();
-    }
-
-    this.optimizedResize.add(() => {
-      this.lastWindowWidth = this.migContainerNative.offsetWidth;
-      this.computeLayout();
-      this.doLayout();
+    this.dataFromDataSourceTotals.pipe(takeUntil(this.unsubscribe$)).subscribe({
+      next: (serverTotals) => {
+        this.serverDataTotals = { ...serverTotals };
+        this.setViewportHeight();
+        this.numberOfImagesOnServer.emit(serverTotals.totalElements);
+        this.numberOfImagesOnServerFiltered.emit(
+          serverTotals.totalFilteredElements,
+        );
+      },
+      error: (err: Error) =>
+        console.error(`dataFromDataSourceTotals: '${err.message}'`),
     });
   }
 
-  /**
-   * Remove all scroll and resize listeners.
-   */
-  public disable() {
-    if (this.onscrollUnloadHandler) {
-      this.onscrollUnloadHandler();
-      this.onscrollUnloadHandler = null;
-    }
+  private initDataFromDataSourceImages() {
+    this.dataFromDataSourceImages = this.dataFromDataSource.pipe(
+      takeUntil(this.unsubscribe$),
+      map((serverResponse) => {
+        return {
+          content: serverResponse.content,
+          startImageIndex: serverResponse.startImageIndex,
+          returnedElements: serverResponse.returnedElements,
+        } as serverDataImages<ServerData>;
+      }),
+      tap(() => this.ngZone.run(() => this.loadingService.receivedResponse())),
+    );
+    this.dataFromDataSourceImages
+      .pipe(
+        takeUntil(this.unsubscribe$),
+        filter((entry) => entry.returnedElements !== 0),
+      )
+      .subscribe({
+        next: (serverImages) => {
+          let startIndexForImport = serverImages.startImageIndex;
+          if (startIndexForImport > this.images.length) {
+            console.error(
+              `Data from server starts at index '${startIndexForImport}' but index of last image already loaded is '${this.images.length - 1}'.`,
+            );
+          }
 
-    this.optimizedResize.disable();
+          let dataToImport = serverImages.content;
+          if (startIndexForImport < this.images.length) {
+            dataToImport = serverImages.content.slice(
+              this.images.length - startIndexForImport,
+            );
+            startIndexForImport = this.images.length;
+          }
+
+          if (dataToImport.length > 0) {
+            this.setImageData(dataToImport, startIndexForImport);
+          }
+
+          const startIndex = this.indexOfLastRenderedImage + 1;
+          const endIndexExclusive = Math.min(
+            startIndex + serverImages.content.length,
+            this.images.length,
+          );
+          this.computeLayout(startIndex, endIndexExclusive);
+          this.showImagesInViewport();
+
+          // load more images, if estimation of visible images was too little
+          this.fillViewport();
+        },
+        error: (err: Error) =>
+          console.error(`dataFromDataSourceImages: '${err.message}'`),
+      });
+  }
+
+  private initOnScroll() {
+    // It's still too early to measure the viewport at this point. Deferring with a promise allows
+    // the Viewport to be rendered with the correct size before we measure. We run this outside the
+    // zone to avoid causing more change detection cycles. We handle the change detection loop
+    // ourselves instead.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.ngZone.runOutsideAngular(() =>
+      Promise.resolve().then(() => {
+        this.scrollable
+          .elementScrolled()
+          .pipe(
+            // Start off with a fake scroll event so we properly detect our initial position.
+            startWith(null),
+
+            // Collect multiple events into one until the next animation frame. This way if
+            // there are multiple scroll events in the same frame we only need to recheck
+            // our layout once.
+            auditTime(0, SCROLL_SCHEDULER),
+            takeUntil(this.unsubscribe$),
+          )
+          .subscribe(() => this.onContentScrolled());
+      }),
+    );
+  }
+
+  private initOnResize() {
+    this.resizable.elementResized
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(() => {
+        // ResizeObserver runs out of angular ngZone
+        this.onResized();
+      });
   }
 
   /**
    * Convert list of images information from server to internal list of images information.
    * This method must be called, while material-image-grid is disabled (with method 'disable()')!
    * @param imageData - list of Image details (information about each image)
+   * @param startIndex - index in images array, where to insert den new images
    */
-  public setImageData(imageData: ServerData[]): void {
-    this.images = this.parseImageData(imageData);
+  private setImageData(imageData: ServerData[], startIndex: number): void {
+    if (startIndex > this.images.length) {
+      console.error(
+        `Data from server is out of order; index '${startIndex}' is not the immediate successor of the data already loaded.`,
+      );
+    } else {
+      const imagesFromImageData = this.parseImageData(imageData, startIndex);
+      this.images.splice(
+        startIndex,
+        imagesFromImageData.length,
+        ...imagesFromImageData,
+      );
+    }
   }
 
   /**
    * Clear internal ist of images information.
    * This method must be called, while material-image-grid is disabled (with method 'disable()')!
    */
-  public clearImageData(): void {
+  private clearImageData(): void {
     this.images.forEach((image) => {
       if (image.existsOnPage) {
         image.hide();
@@ -205,36 +381,15 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Get list of images from data store and show images in grid.
-   * Emit total and filtered number of elements; indicate loading.
-   */
-  private getImageListFromServer() {
-    setTimeout(() => this.loadingSubject.next(true), 0);
-    this.dataStream.pipe(takeUntil(this.unsubscribe$)).subscribe({
-      next: (serverResponse) => {
-        // HACK this.disable();
-        this.setImageData(serverResponse.content);
-        // HACK this.enable();
-        // HACK use the following lines to show new data
-        this.computeLayout();
-        this.doLayout();
-        this.onScroll();
-        setTimeout(() => {
-          this.numberOfImagesOnServer.emit(serverResponse.totalElements);
-          this.numberOfLoadedImages.emit(serverResponse.returnedElements);
-        }, 0);
-        this.loadingSubject.next(false);
-      },
-      error: (err: Error) => console.error(err.message),
-    });
-  }
-
-  /**
    * Creates new instances of the MigImage class for each of the images defined in `imageData`.
    * @param imageData - An array of metadata about each image from the matImageGridImageService
+   * @param startImageIndex - index of first image in imageData, if transferred to images array
    * @returns An array of MigImage instances
    */
-  private parseImageData(imageData: ServerData[]): MigImage[] {
+  private parseImageData(
+    imageData: ServerData[],
+    startImageIndex: number,
+  ): MigImage[] {
     const progressiveImages: MigImage[] = [];
     const configurationParameters = {
       container: this.migGrid,
@@ -246,11 +401,12 @@ export class MatImageGridLibComponent<
       urlForThumbnail: this.urlForThumbnail,
     } as MigImageConfiguration;
 
-    imageData.forEach((image, index) => {
+    let imageIndex = startImageIndex;
+    imageData.forEach((image) => {
       const progressiveImage = this.createMigImage(
         this.renderer2,
         image,
-        index,
+        imageIndex++,
         configurationParameters,
       );
 
@@ -258,7 +414,9 @@ export class MatImageGridLibComponent<
         progressiveImage.onClick$
           .pipe(takeUntil(this.unsubscribe$))
           // .subscribe(this.imageClicked);
-          .subscribe((imageData) => this.imageClicked.next(imageData));
+          .subscribe((imageData) =>
+            this.ngZone.run(() => this.imageClicked.next(imageData)),
+          );
       }
 
       progressiveImages.push(progressiveImage);
@@ -301,78 +459,83 @@ export class MatImageGridLibComponent<
    * DOM at all.
    *
    * All DOM manipulation occurs in `doLayout`.
+   * @param startIndex - index of the first image to position in grid
+   * @param endIndexExclusive - index of the first image beyond the rendered range
    */
-  private computeLayout() {
+  private computeLayout(startIndex: number, endIndexExclusive: number) {
     // Constants
     const wrapperWidth = this.migContainerNative.clientWidth;
 
     // State
     let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
     let translateX = 0; // The current translateX value that we are at
-    let translateY = 0; // The current translateY value that we are at
+    let translateY = this.bottomOfLastRow; // The current translateY value that we are at
     let rowAspectRatio = 0; // The aspect ratio of the row we are building
-
-    // Compute the minimum aspect ratio that should be applied to the rows.
-    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
 
     // Loop through all our images, building them up into rows and computing
     // the working rowAspectRatio.
-    [].forEach.call(
-      this.images,
-      (image: ProgressiveImage<ServerData>, index) => {
-        rowAspectRatio += image.aspectRatio;
-        row.push(image);
+    for (let i = startIndex; i < endIndexExclusive; i++) {
+      const image = this.images[i];
+      rowAspectRatio += image.aspectRatio;
+      row.push(image);
 
-        // When the rowAspectRatio exceeds the minimum acceptable aspect ratio,
-        // or when we're out of images, we say that we have all the images we
-        // need for this row, and compute the style values for each of these
-        // images.
-        if (
-          rowAspectRatio >= (this.minAspectRatio || 0) ||
-          index + 1 === this.images.length
-        ) {
-          // Make sure that the last row also has a reasonable height
-          rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
+      // When the rowAspectRatio exceeds the minimum acceptable aspect ratio,
+      // or when we're out of images, we say that we have all the images we
+      // need for this row, and compute the style values for each of these
+      // images.
+      if (
+        rowAspectRatio >= (this.minAspectRatio || 0) ||
+        i + 1 >= this.serverDataTotals.totalFilteredElements
+      ) {
+        // Make sure that the last row also has a reasonable height
+        rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
 
-          // Compute this row's height.
-          const totalDesiredWidthOfImages =
-            wrapperWidth - this.spaceBetweenImages * (row.length - 1);
-          const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+        // Compute this row's height.
+        const totalDesiredWidthOfImages =
+          wrapperWidth - this.spaceBetweenImages * (row.length - 1);
+        const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
 
-          // For each image in the row, compute the width, height, translateX,
-          // and translateY values, and set them (and the transition value we
-          // found above) on each image.
-          //
-          // NOTE: This does not manipulate the DOM, rather it just sets the
-          //       style values on the ProgressiveImage instance. The DOM nodes
-          //       will be updated in doLayout.
-          row.forEach((img) => {
-            const imageWidth = rowHeight * img.aspectRatio;
+        // For each image in the row, compute the width, height, translateX,
+        // and translateY values, and set them (and the transition value we
+        // found above) on each image.
+        //
+        // NOTE: This does not manipulate the DOM, rather it just sets the
+        //       style values on the ProgressiveImage instance. The DOM nodes
+        //       will be updated in doLayout.
+        row.forEach((img) => {
+          const imageWidth = rowHeight * img.aspectRatio;
 
-            // This is NOT DOM manipulation.
-            img.style = {
-              width: imageWidth,
-              height: rowHeight,
-              translateX,
-              translateY,
-            };
+          // This is NOT DOM manipulation.
+          img.style = {
+            width: imageWidth,
+            height: rowHeight,
+            translateX,
+            translateY,
+          };
 
-            // The next image is this.settings.spaceBetweenImages pixels to the
-            // right of this image.
-            translateX += imageWidth + this.spaceBetweenImages;
-          });
+          // The next image is this.settings.spaceBetweenImages pixels to the
+          // right of this image.
+          translateX += imageWidth + this.spaceBetweenImages;
+        });
 
-          // Reset our state variables for next row.
-          row = [];
-          rowAspectRatio = 0;
-          translateY += rowHeight + this.spaceBetweenImages;
-          translateX = 0;
-        }
-      },
-    );
+        this.indexOfLastRenderedImage = i;
+        this.averageImagesPerRow.addEntry(row.length);
+        this.averageHeightOfRow.addEntry(rowHeight);
+
+        // Reset our state variables for next row.
+        row = [];
+        rowAspectRatio = 0;
+        translateY += rowHeight + this.spaceBetweenImages;
+        translateX = 0;
+      }
+    }
 
     // No space below the last image
-    this.totalHeight = translateY - this.spaceBetweenImages;
+    if (endIndexExclusive < this.serverDataTotals.totalFilteredElements) {
+      this.bottomOfLastRow = translateY;
+    } else {
+      this.bottomOfLastRow = translateY - this.spaceBetweenImages;
+    }
   }
 
   /**
@@ -437,14 +600,7 @@ export class MatImageGridLibComponent<
    * |                           |
    *
    */
-  private doLayout() {
-    // Set the container height
-    this.renderer2.setStyle(
-      this.migGridNative,
-      'height',
-      `${this.totalHeight}px`,
-    );
-
+  private showImagesInViewport() {
     // Get the top and bottom buffers heights.
     const bufferTop =
       this.scrollDirection === 'up'
@@ -472,58 +628,135 @@ export class MatImageGridLibComponent<
 
     // Here, we loop over every image, determine if it is inside our buffers or
     // no, and either insert it or remove it appropriately.
-    this.images.forEach((image) => {
+    for (let i = 0; i < this.images.length; ++i) {
+      const image = this.images[i];
       const imageTranslateYAsNumber = image.style?.translateY || 0;
       const imageHeightAsNumber = image.style?.height || 0;
       if (
         imageTranslateYAsNumber + imageHeightAsNumber <
           minTranslateYPlusHeight ||
-        imageTranslateYAsNumber > maxTranslateY
+        imageTranslateYAsNumber > maxTranslateY ||
+        i > this.indexOfLastRenderedImage
       ) {
         image.hide();
       } else {
         image.load();
       }
-    });
+    }
   }
 
   /**
-   * Create our onScroll handler and return it.
-   * @returns Our optimized onScroll handler that we should attach.
+   * Event handler for images grid scroll event (triggered by cdkScrollable).
    */
-  private getOnScroll() {
-    // TODO can we use angular material CdkVirtualScrollableElement like in CdkVirtualScrollViewport:223?
-
-    /**
-     * This function is called on scroll. It computes variables about the page
-     * position and scroll direction, and then calls a doLayout guarded by a
-     * window.requestAnimationFrame.
-     *
-     * We use the boolean variable _this.inRAF to ensure that we don't overload
-     * the number of layouts we perform by starting another layout while we are
-     * in the middle of doing one.
-     */
-    const onScroll = () => {
-      this.showContent();
-    };
-
-    return onScroll;
-  }
-
-  private showContent() {
+  private onContentScrolled() {
     // Compute the scroll direction using the latestYOffset and the previousYOffset
     const newYOffset = this.migContainerNative.scrollTop;
     this.previousYOffset = this.latestYOffset || newYOffset;
     this.latestYOffset = newYOffset;
     this.scrollDirection =
-      this.latestYOffset > this.previousYOffset ? 'down' : 'up';
+      this.latestYOffset >= this.previousYOffset ? 'down' : 'up';
 
-    // Call this.doLayout, guarded by window.requestAnimationFrame
-    if (!this.inRAF) {
-      this.inRAF = true;
-      window.requestAnimationFrame(() => {
-        this.doLayout();
-        this.inRAF = false;
+    // Show / hide images according to new scroll position
+    this.showImagesInViewport();
+
+    // load more images, if required
+    this.fillViewport();
+  }
+
+  private onResized() {
+    this.bottomOfLastRow = 0;
+    this.lastWindowWidth = this.migContainerNative.offsetWidth;
+    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
+    this.setViewportHeight();
+
+    // Reposition all loaded images
+    this.computeLayout(0, this.images.length);
+    this.setViewportHeight();
+    this.showImagesInViewport();
+    this.fillViewport();
+  }
+
+  /**
+   * Set the height of the images container based on images already rendered
+   * and on an estimation about the height required by the remaining images.
+   */
+  private setViewportHeight() {
+    if (this.serverDataTotals.totalFilteredElements > 0) {
+      this.totalHeight = Math.ceil(
+        this.bottomOfLastRow +
+          Math.ceil(
+            (this.serverDataTotals.totalFilteredElements -
+              (this.indexOfLastRenderedImage + 1)) /
+              this.averageImagesPerRow.average,
+          ) *
+            (this.averageHeightOfRow.average + this.spaceBetweenImages) -
+          this.spaceBetweenImages,
+      );
+    } else {
+      this.totalHeight = 0;
+    }
+
+    // Set the container height
+    this.renderer2.setStyle(
+      this.migGridNative,
+      'height',
+      `${this.totalHeight}px`,
+    );
+  }
+
+  /**
+   * Request images from dataSource to fill the viewport.
+   */
+  private fillViewport() {
+    // TODO consider scroll direction!
+    const scrollTop = this.migContainerNative.scrollTop;
+    const viewRangeStart = this.bottomOfLastRow - scrollTop;
+
+    // get the height of migContainerNative
+    const viewportComputedStyle = window.getComputedStyle(
+      this.migContainerNative,
+      null,
+    );
+    const migContainerHeight =
+      this.migContainerNative.clientHeight -
+      parseFloat(viewportComputedStyle.paddingTop) -
+      parseFloat(viewportComputedStyle.paddingBottom);
+    const viewRangeEnd = migContainerHeight + this.primaryImageBufferHeight;
+
+    const rowsToRender = Math.ceil(
+      (viewRangeEnd - viewRangeStart) / this.averageHeightOfRow.average,
+    );
+    const imagesToRender = Math.ceil(
+      rowsToRender * this.averageImagesPerRow.average,
+    );
+    const indexOfFirstImageToLoad = this.images.length;
+    const indexOfLastImageToLoad = Math.max(
+      indexOfFirstImageToLoad + imagesToRender - 1,
+      0,
+    );
+    if (indexOfLastImageToLoad >= indexOfFirstImageToLoad) {
+      this.requestDataFromServer(
+        indexOfFirstImageToLoad,
+        indexOfLastImageToLoad + 1,
+      );
+    }
+  }
+
+  /**
+   * Request images data from server.
+   * @param indexStart - index of first image to load
+   * @param indexEndExclusive - index of last image to load + 1
+   */
+  private requestDataFromServer(indexStart: number, indexEndExclusive: number) {
+    // Send only requests that will return data
+    const imagesAvailable = this.serverDataTotals.totalFilteredElements;
+    if (
+      indexEndExclusive > indexStart &&
+      (indexStart < imagesAvailable || imagesAvailable === 0)
+    ) {
+      this.requestDataFromServer$.next({
+        start: indexStart,
+        end: indexEndExclusive,
       });
     }
   }

@@ -35,12 +35,14 @@ export class SimpleGridComponent implements AfterViewInit, OnDestroy {
     this.simpleDataSource = new AppDataSource(this.datastore);
   }
 
+  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
   ngAfterViewInit(): void {
-    this.imageGrid.enable();
+    // HACK this.imageGrid.enable();
   }
 
+  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
   ngOnDestroy(): void {
-    this.imageGrid.disable();
+    // HACK this.imageGrid.disable();
   }
 
   /**

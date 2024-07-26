@@ -1,64 +1,103 @@
-import { NgZone, Renderer2 } from '@angular/core';
+/* eslint-disable @angular-eslint/directive-selector */
+
+import { DOCUMENT } from '@angular/common';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  Inject,
+  OnDestroy,
+  Renderer2,
+} from '@angular/core';
+import {
+  animationFrameScheduler,
+  asapScheduler,
+  auditTime,
+  Observable,
+  Subject,
+  takeUntil,
+} from 'rxjs';
 
 import { UnloadHandler } from '../interfaces/mig-common.types';
 
-type Callback = () => void;
+/**
+ * Scheduler to be used for resize events. Needs to fall back to
+ * something that doesn't rely on requestAnimationFrame on environments
+ * that don't support it (e.g. server-side rendering).
+ */
+const RESIZE_SCHEDULER =
+  typeof requestAnimationFrame !== 'undefined'
+    ? animationFrameScheduler
+    : asapScheduler;
 
 /**
- * This is a manager for our resize handlers. You can add a callback, disable
- * all resize handlers, and (re-)enable handlers after they have been disabled.
+ * This is a manager for our resize events. You can add disable
+ * the resize handlers, and (re-)enable handlers after they have been disabled.
  *
- * optimizedResize is adapted from Mozilla code:
- * https://developer.mozilla.org/en-US/docs/Web/Events/resize
+ * OptimizedResize uses the ResizeObserver object with a fallback to the
+ * window.resize event.
+ * The events emitted by the 'elementResized' property run out of
+ * Angular ngZone.
  */
-export class OptimizedResize {
-  private callbacks: Callback[] = [];
-  private isRunning = false;
+@Directive({
+  selector: '[migResizable]',
+  standalone: true,
+})
+export class MigResizableDirective implements AfterViewInit, OnDestroy {
   private window: (Window & typeof globalThis) | null;
-  private renderer: Renderer2;
+  private migContainerNative: HTMLDivElement;
   private resizeUnloadHandler: UnloadHandler | null = null;
-  private resizeDebounceTime = 66;
   private containerResizeObserver: ResizeObserver | undefined;
   private lastContainerWidth = 0;
   private resizeObserverEnabled = false;
-  migContainerNative: HTMLDivElement;
+
+  private readonly unsubscribe$ = new Subject<void>();
+  private resizingSubject = new Subject<void>();
+
+  /**
+   * Observable that emits, when element resized.
+   * Collects multiple events into one until the next animation frame.
+   */
+  public elementResized: Observable<void> = this.resizingSubject.pipe(
+    // Collect multiple events into one until the next animation frame. This way if
+    // there are multiple resize events in the same frame we only need to recheck
+    // our layout once.
+    auditTime(0, RESIZE_SCHEDULER),
+    takeUntil(this.unsubscribe$),
+  );
 
   /**
    *Creates an instance of OptimizedResize.
    * @param documentRef - Reference to the angular DOCUMENT element.
-   * @param renderer2 - Angular class to modify DOM (here: add / remove event handlers).
-   * @param zone - Angular zone to run callbacks in.
-   * @param migContainerNative - Material-image-grid container element.
+   * @param renderer - Angular class to modify DOM (here: add / remove event handlers).
+   * @param containerElement - elementRef of the container element
    */
   constructor(
-    documentRef: Document,
-    renderer2: Renderer2,
-    private zone: NgZone,
-    migContainerNative: HTMLDivElement,
+    @Inject(DOCUMENT) documentRef: Document,
+    private renderer: Renderer2,
+    containerElement: ElementRef<HTMLDivElement>,
   ) {
     // get a reference to the 'window' object that can be used in ssr environments too.
     this.window = documentRef.defaultView;
-    this.renderer = renderer2;
-    this.migContainerNative = migContainerNative;
+    this.migContainerNative = containerElement.nativeElement;
+
     if (this.window?.ResizeObserver) {
       this.createContainerWidthResizeObserver();
     }
   }
 
-  /**
-   * Add a callback to be run on resize.
-   * @param callback - The callback to run on resize.
-   */
-  add(callback: Callback) {
-    if (!this.callbacks.length) {
-      this.enable();
-    }
+  ngAfterViewInit(): void {
+    this.enable();
+  }
 
-    this.callbacks.push(callback);
+  ngOnDestroy(): void {
+    this.disable();
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   /**
-   * Enables all resize handlers, if they fo not exist or were disabled.
+   * Enables all resize handlers, if they do not exist or were disabled.
    */
   enable() {
     if (this.containerResizeObserver) {
@@ -94,11 +133,6 @@ export class OptimizedResize {
     }
   }
 
-  dispose() {
-    this.disable();
-    this.callbacks = [];
-  }
-
   /**
    * Create observer for resize events of the container element to update the
    * image grid. When the width of the container changes, all resize callbacks
@@ -120,7 +154,7 @@ export class OptimizedResize {
 
             if (newWidth !== this.lastContainerWidth) {
               // ResizeObserver runs out of angular zone
-              this.zone.run(() => this.resize());
+              this.resize();
               this.lastContainerWidth = newWidth;
             }
           }
@@ -133,24 +167,6 @@ export class OptimizedResize {
    * Handle the resize event.
    */
   private resize() {
-    if (!this.isRunning) {
-      this.isRunning = true;
-      if (this.window?.requestAnimationFrame) {
-        this.window.requestAnimationFrame(this.runCallbacks.bind(this));
-      } else {
-        setTimeout(this.runCallbacks.bind(this), this.resizeDebounceTime);
-      }
-    }
-  }
-
-  /**
-   * Run the actual callbacks.
-   */
-  private runCallbacks() {
-    this.callbacks.forEach((callback) => {
-      callback();
-    });
-
-    this.isRunning = false;
+    this.resizingSubject.next();
   }
 }

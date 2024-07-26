@@ -1,3 +1,6 @@
+- make primaryImageBufferHeight and secondaryImageBufferHeight relative to viewport height
 - make pig get image data from a paged data store not as an array with data of all images
-- do not use angular zone for fast events
-- use CdkVirtualScrollableElement for scroll events (getOnScroll)
+  - reserve space im this.images, when starting requests (create sparse array by setting 'this.images.length') will prevent requesting multiple blocks from server with the same starting index and increasing length; but this will create holes in the images array.
+  - scroll backwards with sparse images array: will it reload the images?
+  - save memory by keeping only server data in memory and recreate ProgressiveImage objects, when they must be rendered?
+  - remove images when no more needed to save memory (add option for size of buffer of images?)

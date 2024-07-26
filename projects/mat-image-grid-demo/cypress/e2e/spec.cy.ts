@@ -18,33 +18,63 @@ describe('Test demo application', () => {
   });
 
   it('contains figures and images in tab "Simple Grid"', () => {
-    const numberOfFigures = 9;
+    let numberOfFigures = 4;
 
     cy.visit('/simple-grid');
 
     cy.get('[data-tab-id="0"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', numberOfFigures);
-    cy.get('img').should('have.length', numberOfFigures * 2);
+    cy.get('figure')
+      .its('length')
+      .should('be.greaterThan', numberOfFigures)
+      .then((length) => {
+        numberOfFigures = length;
+        cy.log('>>> numberOfFigures', numberOfFigures);
+      });
+    cy.get('img')
+      .its('length')
+      .should((length) => {
+        expect(length).to.equal(numberOfFigures * 2);
+      });
   });
 
   it('contains figures and images in tab "Extended Grid"', () => {
-    const numberOfFigures = 9;
+    let numberOfFigures = 4;
 
     cy.visit('/extended-grid');
 
     cy.get('[data-tab-id="1"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', numberOfFigures);
-    cy.get('img').should('have.length', numberOfFigures * 2);
+    cy.get('figure')
+      .its('length')
+      .should('be.greaterThan', numberOfFigures)
+      .then((length) => {
+        numberOfFigures = length;
+        cy.log('>>> numberOfFigures', numberOfFigures);
+      });
+    cy.get('img')
+      .its('length')
+      .should((length) => {
+        expect(length).to.equal(numberOfFigures * 2);
+      });
   });
 
   it('contains figures and images in tab "Large Dataset"', () => {
-    const numberOfFigures = 15;
+    let numberOfFigures = 8;
 
     cy.visit('/large-dataset');
 
     cy.get('[data-tab-id="2"]').should('have.class', 'mdc-tab--active');
-    cy.get('figure').should('have.length', numberOfFigures);
-    cy.get('img').should('have.length', numberOfFigures * 2);
+    cy.get('figure')
+      .its('length')
+      .should('be.greaterThan', numberOfFigures)
+      .then((length) => {
+        numberOfFigures = length;
+        cy.log('>>> numberOfFigures', numberOfFigures);
+      });
+    cy.get('img')
+      .its('length')
+      .should((length) => {
+        expect(length).to.equal(numberOfFigures * 2);
+      });
   });
 
   it('contains text in tab for non-existing route', () => {

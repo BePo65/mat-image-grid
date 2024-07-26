@@ -40,7 +40,7 @@ export class AppDataSource<T extends MigImageData> extends DataSourcePaged<T> {
     this.collectionViewerSubscription = collectionViewer.viewChange.subscribe(
       (listRange) => {
         const numberOfRequestedImages = Math.max(
-          listRange.end - listRange.start,
+          listRange.end - listRange.start + 1,
           0,
         );
 

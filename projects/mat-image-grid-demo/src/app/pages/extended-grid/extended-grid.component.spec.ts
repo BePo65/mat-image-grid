@@ -27,7 +27,8 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
 describe('ExtendedGridComponent', () => {
   let harness: RouterTestingHarness;
 
-  const WaitForSubelementsTimeMs = 120;
+  const WaitForSubelementsTimeMs = 300;
+  const imagesOnFirstLoad = 20;
   const testImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
@@ -59,6 +60,11 @@ describe('ExtendedGridComponent', () => {
 
   beforeEach(async () => {
     harness = await RouterTestingHarness.create('/extended-grid');
+
+    // wait for ProgressiveImage to create all subelements
+    await new Promise((resolve) =>
+      setTimeout(resolve, WaitForSubelementsTimeMs),
+    );
   });
 
   it('should create component instance', () => {
@@ -72,31 +78,27 @@ describe('ExtendedGridComponent', () => {
   it('should have figure entries', () => {
     const images = harness.routeNativeElement?.querySelectorAll('figure');
 
-    expect(images).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(images?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
   });
 
-  it('should have img entries', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
-
+  it('should have img entries', () => {
+    const figures = harness.routeNativeElement?.querySelectorAll('figure');
+    const numberOfFigures = figures?.length || 1;
     const images = harness.routeNativeElement?.querySelectorAll('img');
 
-    expect(images).toHaveSize(testImageServiceConfig.numberOfImages * 2);
+    expect(figures?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(images?.length).toBe(numberOfFigures * 2);
   });
 
-  it('should have thumbnail image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
-
+  it('should have thumbnail image entries with src attribute', () => {
+    const figures = harness.routeNativeElement?.querySelectorAll('figure');
+    const numberOfFigures = figures?.length || 1;
     const thumbnailImages = harness.routeNativeElement?.querySelectorAll(
       'img.mat-image-grid-thumbnail',
     );
 
-    expect(thumbnailImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(figures?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(thumbnailImages?.length).toBe(numberOfFigures);
 
     if (thumbnailImages !== undefined) {
       const thumbnailImages3 = thumbnailImages[2] as HTMLImageElement;
@@ -107,17 +109,15 @@ describe('ExtendedGridComponent', () => {
     }
   });
 
-  it('should have fullscreen image entries with src attribute', async () => {
-    // wait for ProgressiveImage to create all subelements
-    await new Promise((resolve) =>
-      setTimeout(resolve, WaitForSubelementsTimeMs),
-    );
-
+  it('should have fullscreen image entries with src attribute', () => {
+    const figures = harness.routeNativeElement?.querySelectorAll('figure');
+    const numberOfFigures = figures?.length || 1;
     const fullscreenImages = harness.routeNativeElement?.querySelectorAll(
       'img.mat-image-grid-full-image',
     );
 
-    expect(fullscreenImages).toHaveSize(testImageServiceConfig.numberOfImages);
+    expect(figures?.length).toBeGreaterThanOrEqual(imagesOnFirstLoad);
+    expect(fullscreenImages?.length).toBe(numberOfFigures);
 
     if (fullscreenImages !== undefined) {
       const fullscreenImages5 = fullscreenImages[4] as HTMLImageElement;
