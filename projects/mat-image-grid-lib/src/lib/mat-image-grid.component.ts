@@ -1,12 +1,11 @@
 import { CollectionViewer, ListRange } from '@angular/cdk/collections';
 import { CdkScrollable, ScrollingModule } from '@angular/cdk/scrolling';
-import { CommonModule, DOCUMENT } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
-  Inject,
   Input,
   NgZone,
   OnDestroy,
@@ -166,7 +165,6 @@ export class MatImageGridLibComponent<
   private loadingService: LoadingService;
 
   constructor(
-    @Inject(DOCUMENT) private readonly documentRef: Document, // TODO do we need this?
     private renderer2: Renderer2,
     private ngZone: NgZone,
   ) {
