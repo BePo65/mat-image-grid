@@ -243,7 +243,6 @@ export class MatImageGridLibComponent<
     this.dataFromDataSourceTotals.pipe(takeUntil(this.unsubscribe$)).subscribe({
       next: (serverTotals) => {
         this.serverDataTotals = { ...serverTotals };
-        this.setViewportHeight();
         this.numberOfImagesOnServer.emit(serverTotals.totalElements);
         this.numberOfImagesOnServerFiltered.emit(
           serverTotals.totalFilteredElements,
@@ -528,12 +527,10 @@ export class MatImageGridLibComponent<
       }
     }
 
-    // No space below the last image
-    if (endIndexExclusive < this.serverDataTotals.totalFilteredElements) {
-      this.bottomOfLastRow = translateY;
-    } else {
-      this.bottomOfLastRow = translateY - this.spaceBetweenImages;
-    }
+    this.bottomOfLastRow = translateY;
+
+    // update viewport height as we updated 'bottomOfLastRow'
+    this.setViewportHeight();
   }
 
   /**
@@ -665,7 +662,6 @@ export class MatImageGridLibComponent<
     this.bottomOfLastRow = 0;
     this.lastWindowWidth = this.migContainerNative.offsetWidth;
     this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
-    this.setViewportHeight();
 
     // Reposition all loaded images
     this.computeLayout(0, this.images.length);
@@ -680,16 +676,19 @@ export class MatImageGridLibComponent<
    */
   private setViewportHeight() {
     if (this.serverDataTotals.totalFilteredElements > 0) {
+      const numberOfUnloadedImages = Math.ceil(
+        this.serverDataTotals.totalFilteredElements -
+          (this.indexOfLastRenderedImage + 1),
+      );
       this.totalHeight = Math.ceil(
         this.bottomOfLastRow +
-          Math.ceil(
-            (this.serverDataTotals.totalFilteredElements -
-              (this.indexOfLastRenderedImage + 1)) /
-              this.averageImagesPerRow.average,
-          ) *
-            (this.averageHeightOfRow.average + this.spaceBetweenImages) -
-          this.spaceBetweenImages,
+          (numberOfUnloadedImages / this.averageImagesPerRow.average) *
+            (this.averageHeightOfRow.average + this.spaceBetweenImages),
       );
+
+      if (numberOfUnloadedImages <= 0) {
+        this.totalHeight -= this.spaceBetweenImages;
+      }
     } else {
       this.totalHeight = 0;
     }
