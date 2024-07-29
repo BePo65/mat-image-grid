@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 
 import { AppDataSource } from '../../app.data-source.class';
 import { SimpleGridDatastoreService } from '../../services/simple-grid.datastore.service';
@@ -17,7 +17,7 @@ import {
   templateUrl: './simple-grid.component.html',
   styleUrl: './simple-grid.component.scss',
 })
-export class SimpleGridComponent implements AfterViewInit, OnDestroy {
+export class SimpleGridComponent {
   public componentType = 'SimpleGridComponent';
 
   @ViewChild(MatImageGridLibComponent)
@@ -33,16 +33,6 @@ export class SimpleGridComponent implements AfterViewInit, OnDestroy {
   ) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
     this.simpleDataSource = new AppDataSource(this.datastore);
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngAfterViewInit(): void {
-    // HACK this.imageGrid.enable();
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngOnDestroy(): void {
-    // HACK this.imageGrid.disable();
   }
 
   /**

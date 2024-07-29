@@ -1,10 +1,4 @@
-import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  Renderer2,
-  ViewChild,
-} from '@angular/core';
+import { Component, Renderer2, ViewChild } from '@angular/core';
 
 import { AppDataSource } from '../../app.data-source.class';
 import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
@@ -21,7 +15,7 @@ import {
   templateUrl: './large-dataset.component.html',
   styleUrl: './large-dataset.component.scss',
 })
-export class LargeDatasetComponent implements AfterViewInit, OnDestroy {
+export class LargeDatasetComponent {
   public componentType = 'LargeDatasetComponent';
 
   @ViewChild(MatImageGridLibComponent)
@@ -82,16 +76,6 @@ export class LargeDatasetComponent implements AfterViewInit, OnDestroy {
     private renderer: Renderer2,
   ) {
     this.largeDataSource = new AppDataSource(this.datastore);
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngAfterViewInit(): void {
-    // HACK this.imageGrid.enable();
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngOnDestroy(): void {
-    // HACK this.imageGrid.disable();
   }
 
   /**

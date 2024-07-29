@@ -1,11 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  Renderer2,
-  ViewChild,
-} from '@angular/core';
+import { Component, Renderer2, ViewChild } from '@angular/core';
 import {
   MatSlideToggleChange,
   MatSlideToggle,
@@ -33,7 +27,7 @@ import {
     './mig-customization/mat-image-grid-ext.component.scss',
   ],
 })
-export class ExtendedGridComponent implements AfterViewInit, OnDestroy {
+export class ExtendedGridComponent {
   public componentType = 'ExtendedGridComponent';
 
   @ViewChild(MatImageGridLibComponent)
@@ -53,16 +47,6 @@ export class ExtendedGridComponent implements AfterViewInit, OnDestroy {
   ) {
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
     this.extendedDataSource = new AppDataSource(this.datastore);
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngAfterViewInit(): void {
-    // HACK this.imageGrid.enable();
-  }
-
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
-  ngOnDestroy(): void {
-    // HACK this.imageGrid.disable();
   }
 
   /**
