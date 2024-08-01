@@ -71,7 +71,7 @@
     "@cypress/webpack-preprocessor": "^6.0.2",
     "@faker-js/faker": "^8.4.1",
     "@types/jasmine": "~5.1.4",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^7.17.0",
     "commit-and-tag-version": "^12.4.1",
     "cpy-cli": "^5.0.0",
