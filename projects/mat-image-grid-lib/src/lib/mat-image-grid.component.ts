@@ -424,25 +424,6 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Returns the distance from `elem` to the top of the page. This is done by
-   * walking up the node tree, getting the offsetTop of each parent node, until
-   * the top of the page.
-   * @param elem - The element to compute the offset of.
-   * @returns Distance of `elem` to the top of the page
-   */
-  private getOffsetTop(elem: HTMLElement) {
-    let loopElement: HTMLElement | undefined = elem;
-    let offsetTop = 0;
-    do {
-      if (!Number.isNaN(loopElement.offsetTop)) {
-        offsetTop += loopElement.offsetTop;
-      }
-      loopElement = loopElement.offsetParent as HTMLElement;
-    } while (loopElement);
-    return offsetTop;
-  }
-
-  /**
    * This computes the layout of the entire grid, setting the height, width,
    * translateX, translateY, and transition values for each ProgressiveImage in
    * `this.images`. These styles are set on the ProgressiveImage.style property,
@@ -607,19 +588,16 @@ export class MatImageGridLibComponent<
         : this.secondaryImageBufferHeight;
 
     // Now we compute the location of the top and bottom buffers:
-    const containerOffset = this.getOffsetTop(this.migContainerNative);
 
     const scrollerHeight = this.migContainerNative.offsetHeight;
 
     // This is the top of the top buffer. If the bottom of an image is above
     // this line, it will be removed.
-    const minTranslateYPlusHeight =
-      this.latestYOffset - containerOffset - bufferTop;
+    const minTranslateYPlusHeight = Math.max(this.latestYOffset - bufferTop, 0);
 
     // This is the bottom of the bottom buffer. If the top of an image is
     // below this line, it will be removed.
-    const maxTranslateY =
-      this.latestYOffset - containerOffset + scrollerHeight + bufferBottom;
+    const maxTranslateY = this.latestYOffset + scrollerHeight + bufferBottom;
 
     // Here, we loop over every image, determine if it is inside our buffers or
     // no, and either insert it or remove it appropriately.
