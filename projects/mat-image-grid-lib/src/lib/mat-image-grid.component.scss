@@ -2,7 +2,7 @@
   --mat-image-grid-ease-duration: 500ms;
 }
 
-/* Consider space for loading indicator ("mat-progress-bar" with class ".mdc-linear-progress") */
+/* Calculate height to consider space for loading indicator ("mat-progress-bar" with class ".mdc-linear-progress") */
 .images-container {
   height: calc(
     100% - max(

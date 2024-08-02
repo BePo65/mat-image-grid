@@ -76,6 +76,8 @@ npm install @bepo65/mat-image-grid
 
 Configure the `mat-image-grid` in your application template and provide the necessary settings.
 
+Important: `mat-image-grid` must have a defined height, as the component uses `height. 100%` in one of its subcomponents.
+
 ```html
 <mat-image-grid [urlForImage]="UrlForImage"> loading... </mat-image-grid>
 ```

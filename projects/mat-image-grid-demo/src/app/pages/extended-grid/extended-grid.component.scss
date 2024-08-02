@@ -1,11 +1,24 @@
+:host {
+  --options-height: 25px;
+  --options-margin-bottom: 4px;
+}
+
 mat-image-grid {
   --mat-image-grid-ease-duration: 1s;
 }
 
+.mig-extended {
+  /* Make mat-image-grid the 'containing block' of its content
+     and set its height
+   */
+  display: block;
+  height: calc(100% - var(--options-height) - var(--options-margin-bottom));
+}
+
 .grid-header {
   display: grid;
-  grid: 25px / 200px 200px 1fr;
-  margin: 0 0 4px;
+  grid: var(--options-height) / 200px 200px 1fr;
+  margin: 0 0 var(--options-margin-bottom);
   padding: 0 0.5em;
 }
 
