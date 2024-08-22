@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.4.4](https://github.com/BePo65/mat-image-grid/compare/v0.4.3...v0.4.4) (2024-08-22)
+
+### Features
+
+- add image index to figure tag ([8f37b3d](https://github.com/BePo65/mat-image-grid/commit/8f37b3d016acf4d41d18a5dfa219e785a9dc02c3))
+- change OptimizedResize to MigResizable directive ([6674175](https://github.com/BePo65/mat-image-grid/commit/6674175593f61ab5a85672d6f5d6cb2bdf25038e))
+- **demo:** make aspect ratio more random ([4af22c1](https://github.com/BePo65/mat-image-grid/commit/4af22c188b2fd70de15c6299b9ec3e68da597177))
+- load data as required (not all at once) ([16750e0](https://github.com/BePo65/mat-image-grid/commit/16750e0da8391ad112a6f07561a60d83cc732fe6))
+- use cdkScrollable instead of native event ([8a627fd](https://github.com/BePo65/mat-image-grid/commit/8a627fd37e6da54420fce35a1fa26302b7406b72))
+
+### Bug Fixes
+
+- bufferBottom mixed primary and secondary height ([ea37aa2](https://github.com/BePo65/mat-image-grid/commit/ea37aa2aef2265bf246060056fba703f40909aae))
+- **demo:** set height of extended grid to show all content ([01f6841](https://github.com/BePo65/mat-image-grid/commit/01f684118fbe9325cf1b0aaff845b3dd2055151f))
+- **lib:** fix error in setting height of viewport ([5ee65c9](https://github.com/BePo65/mat-image-grid/commit/5ee65c94ac4f4899f17d89934507f31ba8bbd935))
+- **lib:** remove unused injection ([89a1c5e](https://github.com/BePo65/mat-image-grid/commit/89a1c5ebea08a36ed12220b4d007b5a893b21e8c))
+- **lib:** update calculation of area to show images within ([bc430f7](https://github.com/BePo65/mat-image-grid/commit/bc430f79c21351990cbb844d7f9fac2557b47d37))
+- make large-dataset handle requests for subsets ([aeb2912](https://github.com/BePo65/mat-image-grid/commit/aeb2912a0bf642bea8dd7abba194bdf1a6a66887))
+- remove mess with usage of migContainer and migGrid ([edadfb3](https://github.com/BePo65/mat-image-grid/commit/edadfb338dda05e416bd026565e7eebac2b46e9b))
+- update packages to fix github dependabot security warning ([c3cb407](https://github.com/BePo65/mat-image-grid/commit/c3cb407fbb7c1e939d64e647f20c48093d01d370))
+
 ## [0.4.3](https://github.com/BePo65/mat-image-grid/compare/v0.4.2...v0.4.3) (2024-05-23)
 
 ### Features
