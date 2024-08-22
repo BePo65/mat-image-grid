@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.5.0](https://github.com/BePo65/mat-image-grid/compare/v0.4.4...v0.5.0) (2024-08-22)
+
+### ⚠ BREAKING CHANGES
+
+- package published as 'mat-image-grid'
+
+### Bug Fixes
+
+- change library name to 'mat-image-grid' ([cf309cf](https://github.com/BePo65/mat-image-grid/commit/cf309cf7f2c0254f0e58121505191164a45503c3))
+
 ## [0.4.4](https://github.com/BePo65/mat-image-grid/compare/v0.4.3...v0.4.4) (2024-08-22)
 
 ### Features
