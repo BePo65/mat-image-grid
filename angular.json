@@ -99,7 +99,7 @@
         }
       }
     },
-    "mat-image-grid-lib": {
+    "mat-image-grid": {
       "projectType": "library",
       "root": "projects/mat-image-grid-lib",
       "sourceRoot": "projects/mat-image-grid-lib/src",

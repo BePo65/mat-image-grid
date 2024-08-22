@@ -1,5 +1,5 @@
 {
-  "name": "mat-image-grid-lib",
+  "name": "mat-image-grid",
   "version": "0.4.4",
   "description": "A component for Angular using Angular Material that shows images as a grid of progressive images. The project contains a library component and a demo project.",
   "repository": {
