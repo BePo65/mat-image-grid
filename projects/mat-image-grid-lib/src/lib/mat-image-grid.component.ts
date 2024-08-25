@@ -1,3 +1,6 @@
+// TODO what is container?
+// TODO what is viewport?
+
 import { CollectionViewer, ListRange } from '@angular/cdk/collections';
 import { CdkScrollable, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
@@ -103,8 +106,11 @@ export class MatImageGridLibComponent<
     return this.urlForImage(singleImageData, imageWidth, imageHeight);
   };
 
-  @Input() primaryImageBufferHeight = 1000; // TODO change to factor
-  @Input() secondaryImageBufferHeight = 300; // TODO change to factor
+  @Input() PreViewportLoadBufferMultiplier = 3;
+  @Input() PostViewportLoadBufferMultiplier = 1;
+  @Input() PreViewportDomBufferMultiplier = 1;
+  @Input() PostViewportDomBufferMultiplier = 0.5;
+  @Input() PreViewportTriggerLoadBufferMultiplier = 1;
   @Input() spaceBetweenImages = 8;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
@@ -137,13 +143,15 @@ export class MatImageGridLibComponent<
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
   private images: MigImage[] = [];
-  private lastWindowWidth = window.innerWidth;
-  private latestYOffset = 0;
+  private containerHeight = 0;
+  private containerWidth = window.innerWidth;
+  private latestViewportTop = 0;
+  private yTriggerLoadImages = 0;
   private minAspectRatio: number | null = null;
   private previousYOffset = 0;
   private scrollDirection = 'down';
   private totalHeight = 0;
-  private bottomOfLastRow = 0;
+  private bottomOfLastPositionedRow = 0;
   private indexOfLastRenderedImage = -1;
   private averageImagesPerRow!: FloatingAverage; // Do not use before AfterViewInit
   private averageHeightOfRow!: FloatingAverage; // Do not use before AfterViewInit
@@ -185,11 +193,11 @@ export class MatImageGridLibComponent<
 
     this.averageHeightOfRow = new FloatingAverage(
       25,
-      this.getImageSize(this.lastWindowWidth),
+      this.getImageSize(this.containerWidth),
     );
 
     const defaultAspectRatioForRow = this.getMinAspectRatio(
-      this.lastWindowWidth,
+      this.containerWidth,
     );
     const defaultAspectRatioForImage = 0.75;
     this.averageImagesPerRow = new FloatingAverage(
@@ -362,6 +370,7 @@ export class MatImageGridLibComponent<
     }
   }
 
+  // TODO do we need this?
   /**
    * Clear internal ist of images information.
    * This method must be called, while material-image-grid is disabled (with method 'disable()')!
@@ -391,7 +400,7 @@ export class MatImageGridLibComponent<
     const configurationParameters = {
       container: this.migGrid,
       thumbnailSize: this.thumbnailSize,
-      lastWindowWidth: this.lastWindowWidth,
+      lastWindowWidth: this.containerWidth,
       withClickEvent: this.withImageClickEvents,
       getImageSize: this.getImageSize,
       urlForImage: this.urlForImage,
@@ -424,8 +433,8 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * This computes the layout of the entire grid, setting the height, width,
-   * translateX, translateY, and transition values for each ProgressiveImage in
+   * This computes the layout of the images in the given range, setting the height,
+   * width, translateX, translateY, and transition values for each ProgressiveImage
    * `this.images`. These styles are set on the ProgressiveImage.style property,
    * but are not set in the DOM.
    *
@@ -433,10 +442,10 @@ export class MatImageGridLibComponent<
    * paramount to the performance of mat-image-grid. While we need to manipulate
    * the DOM every time we scroll (adding or remove images, etc.), we only need
    * to compute the layout of the mat-image-grid on load and on resize. Therefore,
-   * this function will compute the entire grid layout but will not manipulate the
-   * DOM at all.
+   * this function will compute the layout of the images in the given range but
+   * will not manipulate the DOM at all.
    *
-   * All DOM manipulation occurs in `doLayout`.
+   * All DOM manipulation occurs in `showImagesInViewport`.
    * @param startIndex - index of the first image to position in grid
    * @param endIndexExclusive - index of the first image beyond the rendered range
    */
@@ -447,7 +456,7 @@ export class MatImageGridLibComponent<
     // State
     let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
     let translateX = 0; // The current translateX value that we are at
-    let translateY = this.bottomOfLastRow; // The current translateY value that we are at
+    let translateY = this.bottomOfLastPositionedRow; // The current translateY value that we are at
     let rowAspectRatio = 0; // The aspect ratio of the row we are building
 
     // Loop through all our images, building them up into rows and computing
@@ -479,7 +488,7 @@ export class MatImageGridLibComponent<
         //
         // NOTE: This does not manipulate the DOM, rather it just sets the
         //       style values on the ProgressiveImage instance. The DOM nodes
-        //       will be updated in doLayout.
+        //       will be updated in showImagesInViewport.
         row.forEach((img) => {
           const imageWidth = rowHeight * img.aspectRatio;
 
@@ -508,99 +517,64 @@ export class MatImageGridLibComponent<
       }
     }
 
-    this.bottomOfLastRow = translateY;
+    this.bottomOfLastPositionedRow = translateY;
+    const offsetToTriggerPoint = Math.max(
+      this.containerHeight *
+        (this.PreViewportLoadBufferMultiplier -
+          this.PreViewportDomBufferMultiplier),
+      0,
+    );
+    this.yTriggerLoadImages = Math.max(translateY - offsetToTriggerPoint, 0);
 
     // update viewport height as we updated 'bottomOfLastRow'
     this.setViewportHeight();
   }
 
   /**
-   * Update the DOM to reflect the style values of each image in 'images',
-   * adding or removing images appropriately.
+   * Update the DOM to reflect the style values of each image in 'images'
+   * field of this component, adding or removing images appropriately.
    *
    * Mat-image-grid ensures that there are not too many images loaded into the
-   * DOM at once by maintaining a buffer region around the viewport in which
+   * DOM at once by maintaining buffer regions around the viewport in which
    * images are allowed, removing all images below and above. Because all of
    * our layout is computed using CSS transforms, removing an image above the
    * buffer will not cause the grid to reshuffle.
    *
-   * The primary buffer is the buffer in the direction of the user's scrolling.
+   * The Pre- buffers are the buffers in the direction of the user's scrolling.
    * (Below if they are scrolling down, above if they are scrolling up.) The
    * size of this buffer determines the experience of scrolling down the page.
    *
-   * The secondary buffer is the buffer in the opposite direction of the user's
+   * The Post- buffers are the buffers in the opposite direction of the user's
    * scrolling.  The size of this buffer determines the experience of changing
    * scroll directions. (Too small, and we have to reload a ton of images above
    * the viewport if the user changes scroll directions.)
    *
-   * While the entire grid has been computed, only images within the viewport,
-   * the primary buffer, and the secondary buffer will exist in the DOM.
-   *
-   *
-   * !           Illustration: the primary and secondary buffers
-   *
-   *
-   * +---------------------------+
-   * |                           |
-   * |                           |
-   * |                           |
-   * |                           |
-   * + - - - - - - - - - - - - - +                   -------
-   * |                           |                      A
-   * |     Secondary Buffer      |   this.setting.secondaryImageBufferHeight
-   * |                           |                      V
-   * +---------------------------+                   -------
-   * |                           |                      A
-   * |                           |                      |
-   * |                           |                      |
-   * |        Viewport           |              window.innerHeight
-   * |                           |                      |
-   * |                           |                      |
-   * |                           |                      V
-   * +---------------------------+                   -------
-   * |                           |                      A
-   * |                           |                      |
-   * |                           |                      |
-   * |                           |                      |
-   * |      Primary Buffer       |    this.settings.primaryImageBufferHeight
-   * |                           |                      |
-   * |                           |                      |
-   * |                           |                      |
-   * |                           |                      V
-   * + - - - - - - - - - - - - - +                   -------
-   * |                           |
-   * |    (Scroll direction)     |
-   * |            |              |
-   * |            |              |
-   * |            V              |
-   * |                           |
-   *
+   * While the layout of all loaded images have been computed, only images within
+   * the viewport, the PreViewportDomBuffer, and the PostViewportDomBuffer
+   * will exist in the DOM.
    */
   private showImagesInViewport() {
-    // Get the top and bottom buffers heights.
-    const bufferTop =
-      this.scrollDirection === 'up'
-        ? this.primaryImageBufferHeight
-        : this.secondaryImageBufferHeight;
-    const bufferBottom =
+    const heightBufferTop =
       this.scrollDirection === 'down'
-        ? this.primaryImageBufferHeight
-        : this.secondaryImageBufferHeight;
-
-    // Now we compute the location of the top and bottom buffers:
-
-    const scrollerHeight = this.migContainerNative.offsetHeight;
+        ? this.containerHeight * this.PostViewportDomBufferMultiplier
+        : this.containerHeight * this.PreViewportDomBufferMultiplier;
+    const heightBufferBottom =
+      this.scrollDirection === 'down'
+        ? this.containerHeight * this.PreViewportDomBufferMultiplier
+        : this.containerHeight * this.PostViewportDomBufferMultiplier;
 
     // This is the top of the top buffer. If the bottom of an image is above
-    // this line, it will be removed.
-    const minTranslateYPlusHeight = Math.max(this.latestYOffset - bufferTop, 0);
+    // this line, it will be removed from DOM.
+    const minTranslateYPlusHeight = Math.max(
+      this.latestViewportTop - heightBufferTop,
+      0,
+    );
 
     // This is the bottom of the bottom buffer. If the top of an image is
-    // below this line, it will be removed.
-    const maxTranslateY = this.latestYOffset + scrollerHeight + bufferBottom;
+    // below this line, it will be removed from DOM.
+    const maxTranslateY =
+      this.latestViewportTop + this.containerHeight + heightBufferBottom;
 
-    // Here, we loop over every image, determine if it is inside our buffers or
-    // no, and either insert it or remove it appropriately.
     for (let i = 0; i < this.images.length; ++i) {
       const image = this.images[i];
       const imageTranslateYAsNumber = image.style?.translateY || 0;
@@ -624,10 +598,10 @@ export class MatImageGridLibComponent<
   private onContentScrolled() {
     // Compute the scroll direction using the latestYOffset and the previousYOffset
     const newYOffset = this.migContainerNative.scrollTop;
-    this.previousYOffset = this.latestYOffset || newYOffset;
-    this.latestYOffset = newYOffset;
+    this.previousYOffset = this.latestViewportTop || newYOffset;
+    this.latestViewportTop = newYOffset;
     this.scrollDirection =
-      this.latestYOffset >= this.previousYOffset ? 'down' : 'up';
+      this.latestViewportTop >= this.previousYOffset ? 'down' : 'up';
 
     // Show / hide images according to new scroll position
     this.showImagesInViewport();
@@ -637,9 +611,10 @@ export class MatImageGridLibComponent<
   }
 
   private onResized() {
-    this.bottomOfLastRow = 0;
-    this.lastWindowWidth = this.migContainerNative.offsetWidth;
-    this.minAspectRatio = this.getMinAspectRatio(this.lastWindowWidth);
+    this.bottomOfLastPositionedRow = 0;
+    this.containerHeight = this.migContainerNative.offsetHeight;
+    this.containerWidth = this.migContainerNative.offsetWidth;
+    this.minAspectRatio = this.getMinAspectRatio(this.containerWidth);
 
     // Reposition all loaded images
     this.computeLayout(0, this.images.length);
@@ -659,7 +634,7 @@ export class MatImageGridLibComponent<
           (this.indexOfLastRenderedImage + 1),
       );
       this.totalHeight = Math.ceil(
-        this.bottomOfLastRow +
+        this.bottomOfLastPositionedRow +
           (numberOfUnloadedImages / this.averageImagesPerRow.average) *
             (this.averageHeightOfRow.average + this.spaceBetweenImages),
       );
@@ -683,37 +658,45 @@ export class MatImageGridLibComponent<
    * Request images from dataSource to fill the viewport.
    */
   private fillViewport() {
-    // TODO consider scroll direction!
-    const scrollTop = this.migContainerNative.scrollTop;
-    const viewRangeStart = this.bottomOfLastRow - scrollTop;
+    if (this.containerHeight === 0) {
+      // get number of images on sever only
+      this.requestDataFromServer(0, 0);
+    } else {
+      // TODO consider scroll direction!
+      const bottomOfDomBuffer =
+        this.migContainerNative.scrollTop +
+        this.containerHeight * (1 + this.PreViewportDomBufferMultiplier);
 
-    // get the height of migContainerNative
-    const viewportComputedStyle = window.getComputedStyle(
-      this.migContainerNative,
-      null,
-    );
-    const migContainerHeight =
-      this.migContainerNative.clientHeight -
-      parseFloat(viewportComputedStyle.paddingTop) -
-      parseFloat(viewportComputedStyle.paddingBottom);
-    const viewRangeEnd = migContainerHeight + this.primaryImageBufferHeight;
+      if (bottomOfDomBuffer >= this.yTriggerLoadImages) {
+        // Calculate vertical space to fill starting from top of visible area
+        const viewRangePositioned =
+          this.bottomOfLastPositionedRow - this.migContainerNative.scrollTop;
 
-    const rowsToRender = Math.ceil(
-      (viewRangeEnd - viewRangeStart) / this.averageHeightOfRow.average,
-    );
-    const imagesToRender = Math.ceil(
-      rowsToRender * this.averageImagesPerRow.average,
-    );
-    const indexOfFirstImageToLoad = this.images.length;
-    const indexOfLastImageToLoad = Math.max(
-      indexOfFirstImageToLoad + imagesToRender - 1,
-      0,
-    );
-    if (indexOfLastImageToLoad >= indexOfFirstImageToLoad) {
-      this.requestDataFromServer(
-        indexOfFirstImageToLoad,
-        indexOfLastImageToLoad + 1,
-      );
+        const viewRangeRequired =
+          this.containerHeight *
+          (1 +
+            this.PreViewportDomBufferMultiplier +
+            this.PreViewportLoadBufferMultiplier);
+
+        const rowsToRender = Math.ceil(
+          (viewRangeRequired - viewRangePositioned) /
+            this.averageHeightOfRow.average,
+        );
+        const imagesToRender = Math.ceil(
+          rowsToRender * this.averageImagesPerRow.average,
+        );
+        const indexOfFirstImageToLoad = this.images.length;
+        const indexOfLastImageToLoad = Math.max(
+          indexOfFirstImageToLoad + imagesToRender - 1,
+          0,
+        );
+        if (indexOfLastImageToLoad >= indexOfFirstImageToLoad) {
+          this.requestDataFromServer(
+            indexOfFirstImageToLoad,
+            indexOfLastImageToLoad + 1,
+          );
+        }
+      }
     }
   }
 
@@ -733,6 +716,14 @@ export class MatImageGridLibComponent<
         start: indexStart,
         end: indexEndExclusive,
       });
+    } else {
+      if (indexStart === indexEndExclusive) {
+        // request number of images on server only
+        this.requestDataFromServer$.next({
+          start: 0,
+          end: 0,
+        });
+      }
     }
   }
 

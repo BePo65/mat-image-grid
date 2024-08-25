@@ -1,4 +1,3 @@
-- make primaryImageBufferHeight and secondaryImageBufferHeight relative to viewport height
 - make pig get image data from a paged data store not as an array with data of all images
   - reserve space im this.images, when starting requests (create sparse array by setting 'this.images.length') will prevent requesting multiple blocks from server with the same starting index and increasing length; but this will create holes in the images array.
   - scroll backwards with sparse images array: will it reload the images?
