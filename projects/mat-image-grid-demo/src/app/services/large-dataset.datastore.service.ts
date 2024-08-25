@@ -31,9 +31,7 @@ export class LargeDatasetDatastoreService extends AppDatastoreServiceBase<MigIma
     /* eslint-enable @typescript-eslint/no-unused-vars */
   ): Observable<Page<MigImageData>> {
     let numberOfImagesToLoad =
-      imagesRange.numberOfImages === -1
-        ? this.numberOfImages
-        : imagesRange.numberOfImages;
+      imagesRange.numberOfImages < 0 ? 0 : imagesRange.numberOfImages;
 
     // Prevent to return images that are not in the (simulated) data set
     const indexOfLastImageToLoad =

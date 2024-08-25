@@ -33,9 +33,7 @@ export class SimpleGridDatastoreService extends AppDatastoreServiceBase<MigImage
     /* eslint-enable @typescript-eslint/no-unused-vars */
   ): Observable<Page<MigImageData>> {
     const numberOfImages =
-      imagesRange.numberOfImages === -1
-        ? this.images.length
-        : imagesRange.numberOfImages;
+      imagesRange.numberOfImages < 0 ? 0 : imagesRange.numberOfImages;
     const migImages = this.images.slice(
       imagesRange.startImageIndex,
       imagesRange.startImageIndex + numberOfImages,

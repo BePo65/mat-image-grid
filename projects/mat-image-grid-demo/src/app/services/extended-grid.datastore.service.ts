@@ -34,9 +34,7 @@ export class ExtendedGridDatastoreService extends AppDatastoreServiceBase<MigIma
     /* eslint-enable @typescript-eslint/no-unused-vars */
   ): Observable<Page<MigImageExtData>> {
     const numberOfImages =
-      imagesRange.numberOfImages === -1
-        ? this.images.length
-        : imagesRange.numberOfImages;
+      imagesRange.numberOfImages < 0 ? 0 : imagesRange.numberOfImages;
     const migImages = this.images.slice(
       imagesRange.startImageIndex,
       imagesRange.startImageIndex + numberOfImages,
