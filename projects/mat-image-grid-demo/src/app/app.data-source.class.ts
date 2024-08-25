@@ -39,8 +39,9 @@ export class AppDataSource<T extends MigImageData> extends DataSourcePaged<T> {
   override connect(collectionViewer: CollectionViewer): Observable<Page<T>> {
     this.collectionViewerSubscription = collectionViewer.viewChange.subscribe(
       (listRange) => {
+        // start is inclusive, end is exclusive
         const numberOfRequestedImages = Math.max(
-          listRange.end - listRange.start + 1,
+          listRange.end - listRange.start,
           0,
         );
 
