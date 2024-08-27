@@ -165,8 +165,8 @@ class MatImageGridExtendedMockupService extends AppDatastoreServiceBase<MigImage
       totalFilteredElements: 0,
     } as Page<MigImageExtData>;
     const numberOfImages =
-      imagesRange.numberOfImages === -1
-        ? this.entriesInDatastore
+      imagesRange.numberOfImages < 0
+        ? 0
         : Math.min(
             imagesRange.startImageIndex + imagesRange.numberOfImages,
             this.entriesInDatastore,
@@ -183,8 +183,8 @@ class MatImageGridExtendedMockupService extends AppDatastoreServiceBase<MigImage
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 
-    resultPage.totalElements = resultPage.returnedElements;
-    resultPage.totalFilteredElements = resultPage.returnedElements;
+    resultPage.totalElements = this.entriesInDatastore;
+    resultPage.totalFilteredElements = this.entriesInDatastore;
     return of(resultPage);
   }
 }

@@ -223,27 +223,37 @@ export class DemoDataSource<T extends MigImageData> extends DataSourcePaged<T> {
   }
 
   private getPagedData(start: number, count: number): Observable<Page<T>> {
+    // Prevent to return images that are not in the (simulated) data set
+    let numberOfImagesToLoad = Math.max(count, 0);
+
+    const indexOfFirstImageToLoad = Math.max(start, 0);
+    if (indexOfFirstImageToLoad >= this.entriesInDatastore) {
+      numberOfImagesToLoad = 0;
+    }
+
+    let indexOfLastImageToLoad = start + numberOfImagesToLoad - 1;
+    if (indexOfLastImageToLoad >= this.entriesInDatastore) {
+      indexOfLastImageToLoad -=
+        indexOfLastImageToLoad - this.entriesInDatastore + 1;
+      indexOfLastImageToLoad = Math.max(indexOfLastImageToLoad, 0);
+    }
+
     const resultPage = {
       content: [],
       startImageIndex: start,
       returnedElements: 0,
-      totalElements: 0,
-      totalFilteredElements: 0,
+      totalElements: this.entriesInDatastore,
+      totalFilteredElements: this.entriesInDatastore,
     } as Page<T>;
-    const numberOfImages =
-      count === -1
-        ? this.entriesInDatastore
-        : Math.min(start + count, this.entriesInDatastore) - start;
-    for (let i = 0; i < numberOfImages; i++) {
+
+    for (let i = indexOfFirstImageToLoad; i <= indexOfLastImageToLoad; ++i) {
       const entry = {
-        imageId: `${(start + i).toString().padStart(5, '0').slice(-5)}`,
+        imageId: `${i.toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
       } as T;
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 
-    resultPage.totalElements = resultPage.returnedElements;
-    resultPage.totalFilteredElements = resultPage.returnedElements;
     return of(resultPage);
   }
 }
@@ -251,6 +261,7 @@ export class DemoDataSource<T extends MigImageData> extends DataSourcePaged<T> {
 @Component({
   template:
     '<mat-image-grid [dataSource]="testDataSource" [urlForImage]="urlForImage"> loading... </mat-image-grid>',
+  styles: [],
 })
 class DemoMigComponent {
   @ViewChild(MatImageGridLibComponent)
