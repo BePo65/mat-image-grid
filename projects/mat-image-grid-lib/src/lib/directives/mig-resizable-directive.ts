@@ -48,6 +48,7 @@ export class MigResizableDirective implements AfterViewInit, OnDestroy {
   private migContainerNative: HTMLDivElement;
   private resizeUnloadHandler: UnloadHandler | null = null;
   private containerResizeObserver: ResizeObserver | undefined;
+  private lastContainerHeight = 0;
   private lastContainerWidth = 0;
   private resizeObserverEnabled = false;
 
@@ -135,8 +136,8 @@ export class MigResizableDirective implements AfterViewInit, OnDestroy {
 
   /**
    * Create observer for resize events of the container element to update the
-   * image grid. When the width of the container changes, all resize callbacks
-   * get called.
+   * image grid. When the height or width of the container changes, all resize
+   * callbacks get called.
    */
   private createContainerWidthResizeObserver() {
     this.containerResizeObserver = new ResizeObserver((entries) => {
@@ -150,11 +151,16 @@ export class MigResizableDirective implements AfterViewInit, OnDestroy {
           ) {
             const contentBoxSize =
               entry.contentBoxSize as ReadonlyArray<ResizeObserverSize>;
+            const newHeight = contentBoxSize[0].blockSize;
             const newWidth = contentBoxSize[0].inlineSize;
 
-            if (newWidth !== this.lastContainerWidth) {
+            if (
+              newHeight !== this.lastContainerHeight ||
+              newWidth !== this.lastContainerWidth
+            ) {
               // ResizeObserver runs out of angular zone
               this.resize();
+              this.lastContainerHeight = newHeight;
               this.lastContainerWidth = newWidth;
             }
           }
