@@ -301,7 +301,7 @@ export class MatImageGridLibComponent<
 
           const startIndex = this.indexOfLastRenderedImage + 1;
           const endIndexExclusive = Math.min(
-            startIndex + serverImages.content.length,
+            startIndexForImport + dataToImport.length,
             this.images.length,
           );
           this.computeLayout(startIndex, endIndexExclusive);
@@ -594,6 +594,8 @@ export class MatImageGridLibComponent<
 
   /**
    * Event handler for images grid scroll event (triggered by cdkScrollable).
+   * When called in this.scrollable observable, this event handler runs outside
+   * the Angular zone.
    */
   private onContentScrolled() {
     // Compute the scroll direction using the latestYOffset and the previousYOffset
