@@ -117,6 +117,10 @@
         "type": "json"
       },
       {
+        "filename": "package-lock.json",
+        "type": "json"
+      },
+      {
         "filename": "projects/mat-image-grid-lib/package.json",
         "type": "json"
       },
