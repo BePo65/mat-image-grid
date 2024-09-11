@@ -27,6 +27,9 @@ An Angular material component showing images in a grid display. Based on the [Pr
     <li><a href="#mat-image-grid-demo">Mat-Image-Grid Demo</a></li>
     <li><a href="#theming">Theming</a></li>
     <li>
+      <a href="#basic-buffer-layout">Basic buffer layout</a>
+    </li>
+    <li>
       <a href="#api-reference">API Reference</a>
       <ul>
         <li><a href="#classes-api">Classes</a></li>
@@ -130,6 +133,73 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## Basic buffer layout
+
+**Buffer layout when scrolling down**
+
+```
++-------------+
+| images-grid |
+|             |
+|             |
+|—————————————| <——— remove loaded image data before this point
+|             |   ^
+|             |   |
+|             |   | containerHeight * PostViewportLoadBufferMultiplier
+|             |   | image data already loaded from server but not added to DOM
+|             |   |
+|             |   v
+|— . — . — . —| <——— render images from this point on
+|             |   ^
+|             |   |
+|             |   | images added to DOM that are no more visible
+|             |   | containerHeight * PostViewportDomBufferMultiplier
+|             |   |
+|             |   v
+|…………………………………|…………………
+|             |   ^
+|             |   |
+|             |   | visible area (images container)
+|             |   | containerHeight
+|             |   |
+|             |   v
+|…………………………………|…………………
+|             |   ^
+|             |   |
+|             |   | images added to DOM that are not yet visible
+|             |   | containerHeight * PreViewportDomBufferMultiplier
+|             |   |
+|             |   v
+|— . — . — . —| <——— render images up to this point
+|             |   ^     |
+|             |   |     |
+|             |   |     | containerHeight * PreViewportTriggerLoadBufferMultiplier
+|             |   |     |
+|             |   |     v
+|             |   |++++++++++  <——— trigger loading of more image data,
+|             |   |                 when PreViewportRenderedBuffer scrolls beyond this point
+|             |   |
+|             |   |
+|             |   |
+|             |   | image data already loaded from server but not added to DOM
+|             |   | containerHeight * PreViewportLoadBufferMultiplier
+|             |   |
+|             |   v
+|—————————————| <——— load image data from server up to this point
+|             |
+|             |
+|             |
+|             |
+|             |
+|             |
+|             |
++------------+
+```
+
+When scrolling upward, Pre- and Post- multipliers change place.
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ## API Reference
 
 `import { MatImageGrid } from '@bepo65/mat-image-grid';`
@@ -144,23 +214,26 @@ Component to create an angular material .....
 
 ##### **Properties**
 
-| Name                                                                                         | Description                                                                                                                     |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `@Input() primaryImageBufferHeight: number`                                                  | Height (in 'px') of the image buffer in current scroll direction (default = 1000).                                              |
-| `@Input() secondaryImageBufferHeight: number`                                                | Height (in 'px') of the image buffer in opposition to the current scroll direction (default = 300).                             |
-| `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                       |
-| `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                                |
-| `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                                   |
-| `@Input() urlForImage: UrlForImageFromDimensions = this.urlForSizeDefault`                   | Callback for getting the url for an image based on the given server data and size (default: url = '/ID/width/height').          |
-| `@Input() urlForThumbnail: UrlForImageFromDimensions = this.urlForImage`                     | Callback for getting the url for a thumbnail image based on the given server data and size (default: url = '/ID/width/height'). |
-| `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class).       |
-| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).                    |
-| `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).         |
-| `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                                   |
-| `@Output() numberOfImagesOnServerFiltered: EventEmitter<number>`                             | Observable emitting the number of images on the server after applying the current filter.                                       |
-| `imageClicked: EventEmitter<Observable<ServerData>>`                                         | Observable emitting the image data from the server, when clicking the image.                                                    |
-| `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                       |
-|                                                                                              |                                                                                                                                 |
+| Name                                                                                         | Description                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@Input() PostViewportLoadBufferMultiplier: number`                                          | Multiplier to calculate the height of the buffer for image data still loaded, but no longer in the DOM; base is the height of the current viewport (default = 1).        |
+| `@Input() PostViewportDomBufferMultiplier: number`                                           | Multiplier to calculate the height of the buffer for images still in the DOM, but no longer visible; base is the height of the current viewport (default = 0.5).         |
+| `@Input() PreViewportDomBufferMultiplier: number`                                            | Multiplier to calculate the height of the buffer for images already in the DOM, but not yet visible; base is the height of the current viewport (default = 1).           |
+| `@Input() PreViewportTriggerLoadBufferMultiplier: number`                                    | Multiplier to calculate the position of the trigger point, where more image data is requested from the server; base is the height of the current viewport (default = 1). |
+| `@Input() PreViewportLoadBufferMultiplier: number`                                           | Multiplier to calculate the height of the buffer for image data already loaded, but not yet in the DOM; base is the height of the current viewport (default = 3).        |
+| `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                                                                |
+| `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                                                                         |
+| `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                                                                            |
+| `@Input() urlForImage: UrlForImageFromDimensions = this.urlForSizeDefault`                   | Callback for getting the url for an image based on the given server data and size (default: url = '/ID/width/height').                                                   |
+| `@Input() urlForThumbnail: UrlForImageFromDimensions = this.urlForImage`                     | Callback for getting the url for a thumbnail image based on the given server data and size (default: url = '/ID/width/height').                                          |
+| `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class).                                                |
+| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).                                                             |
+| `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).                                                  |
+| `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                                                                            |
+| `@Output() numberOfImagesOnServerFiltered: EventEmitter<number>`                             | Observable emitting the number of images on the server after applying the current filter.                                                                                |
+| `imageClicked: EventEmitter<Observable<ServerData>>`                                         | Observable emitting the image data from the server, when clicking the image.                                                                                             |
+| `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                                                                |
+|                                                                                              |                                                                                                                                                                          |
 
 ##### **Injectables**
 
