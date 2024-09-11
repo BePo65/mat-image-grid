@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.0](https://github.com/BePo65/mat-image-grid/compare/v0.5.0...v0.6.0) (2024-09-11)
+
+### ⚠ BREAKING CHANGES
+
+- **lib:** change buffer heights to factor relating to current
+  height of container viewport.
+
+### Features
+
+- **lib:** use factors for buffer heights instead of pixel ([497cfd6](https://github.com/BePo65/mat-image-grid/commit/497cfd6596063338d9b8fa94c33d770cc87613f0))
+
+### Bug Fixes
+
+- **demo:** return no images from datastore, when numberOfImages is -1 ([b105a1f](https://github.com/BePo65/mat-image-grid/commit/b105a1fa5e871ff66b1b19201901e9a957a8a82b))
+- **lib:** all images are loaded when scrolling ([587fa71](https://github.com/BePo65/mat-image-grid/commit/587fa710a4ab9e703d044e10c04c4b5c33952627))
+- **lib:** make index of end of range exclusive (not inclusive) ([8ab21e3](https://github.com/BePo65/mat-image-grid/commit/8ab21e39164a45ef298b9eba2f37c4fe6381c4e5))
+- **lib:** make resize dierective react on changing height too ([a477bd5](https://github.com/BePo65/mat-image-grid/commit/a477bd553c54659d97469ea0d44e9a35391449af))
+
 ## [0.5.0](https://github.com/BePo65/mat-image-grid/compare/v0.4.4...v0.5.0) (2024-08-22)
 
 ### ⚠ BREAKING CHANGES
