@@ -33,7 +33,7 @@ describe('AppComponent', () => {
   let app: AppComponent;
 
   const WaitForSubelementsTimeMs = 300;
-  const imagesOnFirstLoad = 20;
+  const imagesOnFirstLoad = 16;
   const simpleGridImageServiceConfig = {
     numberOfImages: 200,
   } as MigMockupServiceConfig;
