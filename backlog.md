@@ -3,6 +3,7 @@
 - replace MatImageGridImageServiceBase with DataSourcePaged<T>
 - update basic usage in readme.md with data source example
 - make angular animation a dependency (in readme and as peer dependency of lib)
+- use Angular directive composition API
 
 - make pig get image data from a paged data store not as an array with data of all images
   - reserve space im this.images, when starting requests (create sparse array by setting 'this.images.length') will prevent requesting multiple blocks from server with the same starting index and increasing length; but this will create holes in the images array.
