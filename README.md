@@ -513,4 +513,6 @@ This project uses icons from the [Google Material Icons Library](https://fonts.g
 
 As `eslint` V9 requires a fundamental change to the configuration files, the update will be done in a later version.
 
+As a consequence the package `eslint-plugin-cypress` cannot be updated to a version 4.x (as this version has a peerDependency of eslint >= 9).
+
 <p align="right">(<a href="#top">back to top</a>)</p>
