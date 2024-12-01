@@ -63,7 +63,7 @@
     "@angular-eslint/schematics": "17.5.3",
     "@angular-eslint/template-parser": "17.5.3",
     "@angular/cli": "^17.3.9",
-    "@angular/compiler-cli": "^17.3.12",
+    "@angular/compiler-cli": "^19.0.1",
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-angular": "^19.5.0",
     "@cypress/schematic": "^2.5.2",
