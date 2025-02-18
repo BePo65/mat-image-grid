@@ -145,35 +145,35 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 |—————————————| <——— remove loaded image data before this point
 |             |   ^
 |             |   |
-|             |   | containerHeight * PostViewportLoadBufferMultiplier
 |             |   | image data already loaded from server but not added to DOM
+|             |   | (height = containerHeight * PostViewportLoadBufferMultiplier)
 |             |   |
 |             |   v
 |— . — . — . —| <——— render images from this point on
 |             |   ^
 |             |   |
 |             |   | images added to DOM that are no more visible
-|             |   | containerHeight * PostViewportDomBufferMultiplier
+|             |   | (height = containerHeight * PostViewportDomBufferMultiplier)
 |             |   |
 |             |   v
 |…………………………………|…………………
 |             |   ^
 |             |   |
 |             |   | visible area (images container)
-|             |   | containerHeight
+|             |   | (height = containerHeight)
 |             |   |
 |             |   v
 |…………………………………|…………………
 |             |   ^
 |             |   |
 |             |   | images added to DOM that are not yet visible
-|             |   | containerHeight * PreViewportDomBufferMultiplier
+|             |   | (height = containerHeight * PreViewportDomBufferMultiplier)
 |             |   |
 |             |   v
 |— . — . — . —| <——— render images up to this point
 |             |   ^     |
 |             |   |     |
-|             |   |     | containerHeight * PreViewportTriggerLoadBufferMultiplier
+|             |   |     | (height = containerHeight * PreViewportTriggerLoadBufferMultiplier)
 |             |   |     |
 |             |   |     v
 |             |   |++++++++++  <——— trigger loading of more image data,
@@ -182,7 +182,7 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 |             |   |
 |             |   |
 |             |   | image data already loaded from server but not added to DOM
-|             |   | containerHeight * PreViewportLoadBufferMultiplier
+|             |   | (height = containerHeight * PreViewportLoadBufferMultiplier)
 |             |   |
 |             |   v
 |—————————————| <——— load image data from server up to this point
