@@ -511,7 +511,7 @@ This project uses icons from the [Google Material Icons Library](https://fonts.g
 
 ## Hints
 
-As `eslint` V9 requires a fundamental change to the configuration files, the update will be done in a later version.
+As `eslint` V9 is not supported by angular@17 and also requires a fundamental change to the configuration files, the update will be done in a later version.
 
 As a consequence the package `eslint-plugin-cypress` cannot be updated to a version 4.x (as this version has a peerDependency of eslint >= 9).
 
