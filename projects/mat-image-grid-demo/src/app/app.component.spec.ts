@@ -170,6 +170,7 @@ describe('AppComponent', () => {
   });
 
   it('should navigate to extended-grid', async () => {
+    const imagesOnFirstLoad = 12;
     const navigated = await fixture.ngZone?.run(() =>
       router.navigate(['extended-grid']),
     );

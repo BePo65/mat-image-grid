@@ -13,7 +13,7 @@
   /* stylelint-disable-next-line selector-pseudo-element-no-unknown */
   ::ng-deep {
     .mat-image-grid-date {
-      background-color: rgba(128 128 128 / 35%);
+      background-color: rgb(211 211 211);
       color: white;
       font-size: 11px;
       opacity: 0;
@@ -23,7 +23,7 @@
     }
 
     .mat-image-grid-desc {
-      background-color: rgba(128 128 128 / 35%);
+      background-color: rgb(211 211 211);
       bottom: 0;
       color: white;
       font-size: 11px;
