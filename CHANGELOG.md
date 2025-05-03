@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.2](https://github.com/BePo65/mat-image-grid/compare/v0.6.1...v0.6.2) (2025-05-03)
+
+### Bug Fixes
+
+- reapply alpha channel in rgba style in scss file ([055303c](https://github.com/BePo65/mat-image-grid/commit/055303cb15c0060ddc9fa2842b52cc286f4e5c22))
+- update packages to fix dependabot warning ([778e3fb](https://github.com/BePo65/mat-image-grid/commit/778e3fb5b3a0dbcd2541e3db2141fc5aa7c4783c))
+- update packages to fix github dependabot security warning ([8b41c42](https://github.com/BePo65/mat-image-grid/commit/8b41c4274dc41eb8d005ac15a8827def462a1448))
+- update packages to fix github dependabot security warnings ([43e0b30](https://github.com/BePo65/mat-image-grid/commit/43e0b30fb0de90a6cff50c2c096eec0ff98f7fff))
+- update packages to fix github dependabot security warnings ([2adef92](https://github.com/BePo65/mat-image-grid/commit/2adef92083ac82d79892d8e33291141347f9885e))
+- update packages to fix github dependabot security warnings ([f1776d9](https://github.com/BePo65/mat-image-grid/commit/f1776d987504fcc19b560791e9041dc20fc5db12))
+
 ## [0.6.1](https://github.com/BePo65/mat-image-grid/compare/v0.6.0...v0.6.1) (2024-09-11)
 
 ## [0.6.0](https://github.com/BePo65/mat-image-grid/compare/v0.5.0...v0.6.0) (2024-09-11)
