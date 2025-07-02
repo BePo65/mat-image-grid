@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.6.4](https://github.com/BePo65/mat-image-grid/compare/v0.6.3...v0.6.4) (2025-07-02)
+
+### Bug Fixes
+
+- update packages to fix security warnings ([55e366c](https://github.com/BePo65/mat-image-grid/commit/55e366cc08fc1e019a1e1265ad6ab95accd5f6aa))
+
 ## [0.6.3](https://github.com/BePo65/mat-image-grid/compare/v0.6.2...v0.6.3) (2025-05-03)
 
 ## [0.6.2](https://github.com/BePo65/mat-image-grid/compare/v0.6.1...v0.6.2) (2025-05-03)
