@@ -2,7 +2,7 @@ name: publish-demo-to-github-pages
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
   workflow_dispatch:
 
 env:
@@ -24,8 +24,8 @@ jobs:
       - name: Use Node v22
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
-          cache: 'npm'
+          node-version: "22.x"
+          cache: "npm"
 
       - name: npm ci and npm run build
         run: |
