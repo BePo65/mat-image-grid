@@ -68,7 +68,7 @@
     "@commitlint/config-angular": "^19.8.1",
     "@cypress/schematic": "^3.0.0",
     "@cypress/webpack-preprocessor": "^6.0.4",
-    "@faker-js/faker": "^9.9.0",
+    "@faker-js/faker": "^10.0.0",
     "@types/jasmine": "^5.1.8",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
