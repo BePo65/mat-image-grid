@@ -16,6 +16,9 @@ env:
 
 jobs:
   build:
+    permissions:
+      contents: read
+
     runs-on: ubuntu-22.04
 
     strategy:
