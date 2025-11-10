@@ -155,6 +155,27 @@ export class ProgressiveImage<ServerData extends MigImageData> {
   };
 
   /**
+   * Gets the Y position of the top of the image in the web page
+   * @returns Y position of the top of the image
+   */
+  get yTop(): number {
+    return this.style?.translateY ?? 0;
+  }
+
+  /**
+   * Gets the Y position of the bottom of the image in the web page
+   * @returns Y position of the bottom of the image
+   */
+  get yBottom(): number {
+    let bottom = 0;
+    const style = this.style;
+    if (style !== undefined) {
+      bottom = style.translateY + style.height;
+    }
+    return bottom;
+  }
+
+  /**
    * Get the wrapper DOM element (<figure> tag) associated with this ProgressiveImage.
    * We create it, if it doesn't exist. The DOM element is not added to the page.
    * @returns The wrapper DOM element associated with this instance.

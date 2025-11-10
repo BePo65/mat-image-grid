@@ -142,14 +142,14 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 | images-grid |
 |             |
 |             |
-|—————————————| <——— remove loaded image data before this point
+|—————————————| <——— remove loaded images before this point from buffer
 |             |   ^
 |             |   |
 |             |   | image data already loaded from server but not added to DOM
 |             |   | (height = containerHeight * PostViewportLoadBufferMultiplier)
 |             |   |
 |             |   v
-|— . — . — . —| <——— render images from this point on
+|— . — . — . —| <——— add images from this point on to DOM (top of first positioned row)
 |             |   ^
 |             |   |
 |             |   | images added to DOM that are no more visible
@@ -170,30 +170,26 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 |             |   | (height = containerHeight * PreViewportDomBufferMultiplier)
 |             |   |
 |             |   v
-|— . — . — . —| <——— render images up to this point
-|             |   ^     |
+|— . — . — . —| <——— images in DOM up to this point
+|             |   ^     ^
 |             |   |     |
 |             |   |     | (height = containerHeight * PreViewportTriggerLoadBufferMultiplier)
 |             |   |     |
 |             |   |     v
 |             |   |++++++++++  <——— trigger loading of more image data,
-|             |   |                 when PreViewportRenderedBuffer scrolls beyond this point
+|             |   |                 when PreViewportDomBuffer scrolls beyond this point
 |             |   |
 |             |   |
 |             |   |
-|             |   | image data already loaded from server but not added to DOM
+|             |   | images already loaded from server but not added to DOM
 |             |   | (height = containerHeight * PreViewportLoadBufferMultiplier)
 |             |   |
 |             |   v
-|—————————————| <——— load image data from server up to this point
-|             |
-|             |
-|             |
-|             |
-|             |
-|             |
-|             |
-+------------+
+|—————————————| <——— image already loaded and positioned (but not in DOM)
+|             |   ^
+|             |   |**********  <——— image data loaded from server, but not yet positioned
+|             |   v                 (incomplete rows)
++-------------+ <——— image data from server loaded up to this point
 ```
 
 When scrolling upward, Pre- and Post- multipliers change place.
@@ -234,6 +230,22 @@ Component to create an angular material .....
 | `imageClicked: EventEmitter<Observable<ServerData>>`                                         | Observable emitting the image data from the server, when clicking the image.                                                                                             |
 | `loading$: EventEmitter<Observable<boolean>>`                                                | Observable emitting the state of loading the images list from the server.                                                                                                |
 |                                                                                              |                                                                                                                                                                          |
+
+The buffer multipliers are accumulative, i.e.
+
+- above the viewport (visible area of the image grid) we have an area with images that already have been added to the DOM and that have just been scrolled out of view. These images can be scrolled into view very fast. The height of this area is viewportHeight \* PostViewportDOMBufferMultiplier.
+
+- above this DOM buffer we have an area with images that already have been loaded from the server, but that are not yet part of the DOM. Before they can be displayed, they must be added to the DOM, which will take a few milliseconds, but what will be much faster than fetching the images from the server. The height of this area is (viewportHeight \* PostViewportLoadBufferMultiplier).
+
+- below the viewport (when scrolling down) we have the same buffers only the name of the multipliers change from PostViewportXxx to PreViewportXxx.
+
+- an additional element is the point where we request more images from the server. This happens before all images already loaded are added to the DOM, as it will take some time, before the images are available. The distance of this trigger point from the bottom of the PreViewportLoadBuffer is (viewportHeight \* PreViewportTriggerLoadBufferMultiplier).
+
+**Recommendation**
+
+Make (PostViewportDOMBufferMultiplier + PostViewportLoadBufferMultiplier) the same as (PreViewportDOMBufferMultiplier + PreViewportLoadBufferMultiplier) to avoid too many delete and load operations when scrolling only a little bit up and down.
+
+PreViewportTriggerLoadBufferMultiplier should be greater or equal to (PreViewportTriggerLoadBufferMultiplier \* 0.5) otherwise some of the images that would be requested from the server are already in the load buffer.
 
 ##### **Injectables**
 

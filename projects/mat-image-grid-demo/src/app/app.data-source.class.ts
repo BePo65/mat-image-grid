@@ -53,7 +53,9 @@ export class AppDataSource<T extends MigImageData> extends DataSourcePaged<T> {
         this.datastore
           .getPagedData(requestedRange)
           .pipe(first())
-          .subscribe((page: Page<T>) => this._data.next(page));
+          .subscribe((page: Page<T>) => {
+            return this._data.next(page);
+          });
       },
     );
     return this._data.asObservable();

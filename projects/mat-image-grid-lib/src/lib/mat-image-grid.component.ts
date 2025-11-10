@@ -46,6 +46,7 @@ import {
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
+import { RouterTestingHarness } from '@angular/router/testing';
 
 type ServerDataTotals = {
   totalElements: number;
@@ -55,10 +56,6 @@ type serverDataImages<T> = {
   content: T[];
   startImageIndex: number;
   returnedElements: number;
-};
-type ImportDefinition<T> = {
-  dataToImport: T[];
-  startIndex: number;
 };
 
 enum ScrollDirection {
@@ -112,11 +109,12 @@ export class MatImageGridLibComponent<
     return this.urlForImage(singleImageData, imageWidth, imageHeight);
   };
 
-  @Input() PreViewportLoadBufferMultiplier = 3;
-  @Input() PostViewportLoadBufferMultiplier = 1;
-  @Input() PreViewportDomBufferMultiplier = 1;
-  @Input() PostViewportDomBufferMultiplier = 0.5;
-  @Input() PreViewportTriggerLoadBufferMultiplier = 1;
+  @Input() PostViewportLoadBufferMultiplier = 3; // remove images before this point
+  @Input() PostViewportDomBufferMultiplier = 1; // buffer for images that just scrolled out of view
+  @Input() PreViewportDomBufferMultiplier = 1; // buffer for images that are ready to scroll into view
+  @Input() PreViewportTriggerLoadBufferMultiplier = 1.9; // start loading more images, although we have more to scroll into view
+  @Input() PreViewportLoadBufferMultiplier = 3; // remove images after this point
+  @Input() ScrollDirectionChangeThreshold = 2; // minimum number of pixels to scroll, before a change in scroll direction is recognized
   @Input() spaceBetweenImages = 8;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
@@ -148,19 +146,26 @@ export class MatImageGridLibComponent<
   @ViewChild(MigResizableDirective) private resizable!: MigResizableDirective;
   private migContainerNative!: HTMLDivElement; // Do not use before AfterViewInit
   private migGridNative!: HTMLDivElement; // Do not use before AfterViewInit
-  private images: MigImage[] = [];
-  private containerHeight = 0;
-  private containerWidth = window.innerWidth;
-  private latestViewportTop = 0;
-  private triggerPointLoadImages = 0;
+  private images: MigImage[] = []; // Cached data from server (with positions added)
+
+  private containerWidth = window.innerWidth; // width of element that contains the image grid
+  private containerHeight = 0; // height of element that contains the image grid
+  private totalHeight = 0; // total height of the image grid
+  private latestViewportTop = 0; // current top of the viewport
   private minAspectRatio: number | null = null;
   private scrollDirection: ScrollDirection = ScrollDirection.down;
-  private totalHeight = 0;
-  private bottomOfLastPositionedRow = 0;
-  private indexOfFirstRenderedImage = -1;
-  private indexOfLastRenderedImage = -1;
-  private topOfFirstPositionedRow = 0;
-  private loadBufferStartIndex = -1;
+  private triggerPointLoadImages = 0; // Y coordinate that will trigger loading more images from server
+
+  private indexOfFirstLoadedImage = -1; // index of first loaded image in this.images
+
+  // The position of images in this.images is only calculated for complete rows.
+  // Images that have not yet been positioned can exist at the beginning or at
+  // the end of this.images.
+  private indexOfFirstRenderedImage = -1; // Index of the first positioned image in this.images.
+  private indexOfLastRenderedImage = -1; // index of last positioned image in this.images
+
+  // Images up to this index were already used to calculate the average values.
+  // The average values are used to calculate the height of the whole image-grid.
   private highestIndexOfImageEverRendered = -1;
 
   private averageImagesPerRow!: FloatingAverage; // Do not use before AfterViewInit
@@ -225,6 +230,181 @@ export class MatImageGridLibComponent<
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
     this.clearImageData();
+  }
+
+  private get topOfFirstPositionedRow() {
+    return this.indexOfFirstRenderedImage >= 0
+      ? this.images[this.indexOfFirstRenderedImage].yTop
+      : 0;
+  }
+
+  private get bottomOfLastPositionedRow() {
+    if (this.indexOfLastRenderedImage >= 0) {
+      return (
+        this.images[this.indexOfLastRenderedImage].yBottom +
+        this.spaceBetweenImages
+      );
+    }
+
+    return 0;
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the load buffer any more, when scrolling down.
+   * @returns y-position of the start of the load buffer when scrolling down
+   */
+  private loadBufferStartScrollDown() {
+    return (
+      this.latestViewportTop -
+      this.containerHeight *
+        (this.PostViewportDomBufferMultiplier +
+          this.PostViewportLoadBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the load buffer any more, when scrolling up.
+   * @returns y-position of the start of the load buffer when scrolling up
+   */
+  private loadBufferStartScrollUp() {
+    return (
+      this.latestViewportTop -
+      this.containerHeight *
+        (this.PreViewportDomBufferMultiplier +
+          this.PreViewportLoadBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the load buffer any more,
+   * @returns y-position of the start of the load buffer
+   */
+  private get loadBufferStart() {
+    if (this.scrollDirection === ScrollDirection.down) {
+      return this.loadBufferStartScrollDown();
+    }
+
+    return this.loadBufferStartScrollUp();
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need images
+   * in the load buffer any more, when scrolling down.
+   * @returns y-position of the end of the load buffer when scrolling down
+   */
+  private loadBufferEndScrollDown() {
+    return (
+      this.latestViewportTop +
+      this.containerHeight *
+        (1 +
+          this.PreViewportDomBufferMultiplier +
+          this.PreViewportLoadBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need images
+   * in the load buffer any more, when scrolling up.
+   * @returns y-position of the end of the load buffer when scrolling up
+   */
+  private loadBufferEndScrollUp() {
+    return (
+      this.latestViewportTop +
+      this.containerHeight *
+        (1 +
+          this.PostViewportDomBufferMultiplier +
+          this.PostViewportLoadBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need
+   * images in the load buffer any more,
+   * @returns y-position of the end of the load buffer
+   */
+  private get loadBufferEnd() {
+    if (this.scrollDirection === ScrollDirection.down) {
+      return this.loadBufferEndScrollDown();
+    }
+
+    return this.loadBufferEndScrollUp();
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the DOM any more, when scrolling down.
+   * @returns y-position of the start of the DOM buffer when scrolling down
+   */
+  private domBufferStartScrollDown() {
+    return (
+      this.latestViewportTop -
+      this.containerHeight * this.PostViewportDomBufferMultiplier
+    );
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the DOM any more, when scrolling up.
+   * @returns y-position of the start of the DOM buffer when scrolling up
+   */
+  private domBufferStartScrollUp() {
+    return (
+      this.latestViewportTop -
+      this.containerHeight * this.PreViewportDomBufferMultiplier
+    );
+  }
+
+  /**
+   * Get the y-position above the viewport, from where we don't need
+   * images in the DOM buffer any more,
+   * @returns y-position of the start of the DOM buffer
+   */
+  private get domBufferStart() {
+    if (this.scrollDirection === ScrollDirection.down) {
+      return this.domBufferStartScrollDown();
+    }
+
+    return this.domBufferStartScrollUp();
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need
+   * images in the DOM any more, when scrolling down.
+   * @returns y-position of the end of the DOM buffer when scrolling down
+   */
+  private domBufferEndScrollDown() {
+    return (
+      this.latestViewportTop +
+      this.containerHeight * (1 + this.PreViewportDomBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need
+   * from where we don't need images in the DOM any more.
+   * @returns y-position of the end of the DOM buffer when scrolling up
+   */
+  private domBufferEndScrollUp() {
+    return (
+      this.latestViewportTop +
+      this.containerHeight * (1 + this.PostViewportDomBufferMultiplier)
+    );
+  }
+
+  /**
+   * Get the y-position below the viewport, from where we don't need
+   * images in the DOM buffer any more,
+   * @returns y-position of the end of the DOM buffer
+   */
+  private get domBufferEnd() {
+    if (this.scrollDirection === ScrollDirection.down) {
+      return this.domBufferEndScrollDown();
+    }
+
+    return this.domBufferEndScrollUp();
   }
 
   /**
@@ -294,39 +474,57 @@ export class MatImageGridLibComponent<
           const startIndexForImport = serverImages.startImageIndex;
           const dataToImport = serverImages.content;
 
-          // handle data to import at the start of this.images
-          const importAtStartDef = this.splitDataForImportAtStart(
-            dataToImport,
-            startIndexForImport,
-          );
-          this.importImageDataAtStart(
-            importAtStartDef.dataToImport,
-            importAtStartDef.startIndex,
-          );
-          this.computeLayoutAtStart(
-            importAtStartDef.startIndex,
-            importAtStartDef.startIndex + importAtStartDef.dataToImport.length,
-          );
-
           // handle data to import at the end of this.images
-          const importAtEndDef = this.splitDataForImportAtEnd(
+          const dataToEndOfImages = this.selectDataToImportAtEnd(
             dataToImport,
             startIndexForImport,
           );
-          this.importImageDataAtEnd(
-            importAtEndDef.dataToImport,
-            importAtEndDef.startIndex,
-          );
-          this.computeLayoutAtEnd(
-            importAtEndDef.startIndex,
-            importAtEndDef.startIndex + importAtEndDef.dataToImport.length,
-          );
+          if (dataToEndOfImages.length > 0) {
+            this.importImageDataAtEnd(dataToEndOfImages);
+            this.computeLayoutAtEnd(
+              this.indexOfLastRenderedImage + 1,
+              this.images.length,
+            );
+          }
 
-          this.showImagesInViewport();
+          // handle data to import at the start of this.images
+          const dataToStartOfImages = this.selectDataToImportAtStart(
+            dataToImport,
+            startIndexForImport,
+          );
+          if (dataToStartOfImages.length > 0) {
+            this.importImageDataAtStart(
+              dataToStartOfImages,
+              startIndexForImport,
+            );
+            if (startIndexForImport > 0) {
+              this.computeLayoutAtStart(
+                startIndexForImport,
+                startIndexForImport + dataToStartOfImages.length,
+              );
+            } else {
+              // added images to an empty this.images
+              this.indexOfFirstRenderedImage = -1;
+              this.indexOfLastRenderedImage = -1;
+              this.computeLayoutAtEnd(0, this.images.length);
+            }
+          }
 
-          // load more images, if estimation of visible images was too little
-          this.setReloadTrigger();
-          this.fillViewport();
+          if (dataToEndOfImages.length > 0 || dataToStartOfImages.length > 0) {
+            this.showImagesInViewport();
+
+            // load more images, if estimation of visible images was too little
+            this.setReloadTrigger();
+            this.fillViewport();
+
+            // remove buffered data that is out of bounds for the current scroll position
+            if (this.scrollDirection === ScrollDirection.down) {
+              this.deleteImagesAtStart();
+            } else {
+              this.deleteImagesAtEnd();
+            }
+          }
+          const x = 1;
         },
         error: (err: Error) =>
           console.error(`dataFromDataSourceImages: '${err.message}'`),
@@ -335,38 +533,37 @@ export class MatImageGridLibComponent<
 
   /**
    * Get the definition for the data to import at the beginning of the images array.
-   * @param {Array} data - list of images data returned by the server
-   * @param {number} startIndex - index of the first image to insert in the images array
-   * @returns ImportDefinition<ServerData> with the definition for the data that is to be imported
+   * @param imagesFromServer - list of images data returned by the server
+   * @param indexOfFirstImageFromServer - where to place the first image from the server into this.images array
+   * @returns ServerData[] with the definition for the data to import
    */
-  private splitDataForImportAtStart(
-    data: ServerData[],
-    startIndex: number,
-  ): ImportDefinition<ServerData> {
-    const result = {
-      dataToImport: [] as ServerData[],
-      startIndex: 0,
-    } as ImportDefinition<ServerData>;
+  private selectDataToImportAtStart(
+    imagesFromServer: ServerData[],
+    indexOfFirstImageFromServer: number,
+  ): ServerData[] {
+    let result = [] as ServerData[];
 
-    if (data.length > 0) {
+    if (imagesFromServer.length > 0) {
       if (
-        this.loadBufferStartIndex < 0 &&
-        startIndex === 0 &&
+        this.indexOfFirstLoadedImage < 0 &&
+        indexOfFirstImageFromServer === 0 &&
         this.images.length === 0
       ) {
         // import to empty images array
-        result.dataToImport = data;
-      } else if (startIndex < this.loadBufferStartIndex) {
+        result = imagesFromServer;
+      } else if (
+        indexOfFirstImageFromServer < this.indexOfFirstLoadedImage &&
+        (this.scrollDirection === ScrollDirection.up ||
+          this.topOfFirstPositionedRow > this.loadBufferStart)
+      ) {
         // import to the start of the images array
-        const importLength = this.loadBufferStartIndex - startIndex;
-        if (data.length >= importLength) {
-          // get segment of data to import to images array without creating holes
-          result.dataToImport = data.slice(0, importLength);
-          result.startIndex = importLength;
-        } else {
-          console.error(
-            `Importing data from server would leave holes in images array; should import '${data.length}' images from ${startIndex}, but images array starts at '${this.loadBufferStartIndex}'.`,
-          );
+        const importLength =
+          this.indexOfFirstLoadedImage - indexOfFirstImageFromServer;
+        if (imagesFromServer.length >= importLength) {
+          // get segment of data to import into images array without creating holes;
+          // on fast scrolling images requested from server may already have been
+          // scrolled out of the buffer (start and end defined by the given limits)
+          result = imagesFromServer.slice(0, importLength);
         }
       }
     }
@@ -376,88 +573,91 @@ export class MatImageGridLibComponent<
 
   /**
    * Convert list of images information from server to internal representation required
-   * by the image grid and add it to the start of the list of images information.
-   * @param imageData - list of Image details from server (information about each image)
-   * @param startIndex - index in images array, where to insert the new images
+   * by the image grid and add it to the start of this.images.
+   * @param imageDataToAdd - list of Image details from server (information about each image)
+   * @param startIndex - index in this.images array, where to insert the new images
    */
   private importImageDataAtStart(
-    imageData: ServerData[],
+    imageDataToAdd: ServerData[],
     startIndex: number,
   ): void {
-    if (imageData.length > 0) {
-      const imagesFromImageData = this.parseImageData(imageData, startIndex);
+    if (imageDataToAdd.length > 0) {
+      const imagesFromImageData = this.parseImageData(
+        imageDataToAdd,
+        startIndex,
+      );
       this.images.splice(
         startIndex,
         imagesFromImageData.length,
         ...imagesFromImageData,
       );
 
-      // remember where the image data starts
+      // remember the new index of the first image in this.images
       if (
-        this.loadBufferStartIndex < 0 ||
-        startIndex < this.loadBufferStartIndex
+        this.indexOfFirstLoadedImage < 0 ||
+        startIndex < this.indexOfFirstLoadedImage
       ) {
-        this.loadBufferStartIndex = startIndex;
+        this.indexOfFirstLoadedImage = startIndex;
       }
     }
   }
 
   /**
-   * Get the definition for the data to import at the end of the images array.
-   * @param {Array} data - list of images data returned by the server
-   * @param {number} startIndex - index of the first image to insert in the images array
-   * @returns ImportDefinition<ServerData> with the definition for the data that is to be imported
+   * Extract the data to import at the end of the images array from the data returned by the server.
+   * @param imagesFromServer - list of images data returned by the server
+   * @param indexOfFirstImageFromServer - where to place the first image from the server into this.images array
+   * @returns ServerData[] with the definition for the data to import
    */
-  private splitDataForImportAtEnd(
-    data: ServerData[],
-    startIndex: number,
-  ): ImportDefinition<ServerData> {
-    const result = {
-      dataToImport: [] as ServerData[],
-      startIndex: 0,
-    } as ImportDefinition<ServerData>;
+  private selectDataToImportAtEnd(
+    imagesFromServer: ServerData[],
+    indexOfFirstImageFromServer: number,
+  ): ServerData[] {
+    let result = [] as ServerData[];
 
-    if (data.length > 0) {
+    if (imagesFromServer.length > 0) {
       if (
-        this.loadBufferStartIndex < 0 &&
-        startIndex === 0 &&
+        this.indexOfFirstLoadedImage < 0 &&
+        indexOfFirstImageFromServer === 0 &&
         this.images.length === 0
       ) {
         // import to empty images array
-        result.dataToImport = data;
-      } else if (startIndex <= this.images.length) {
-        // add to the end of the images array
-        const startOfNewData = this.images.length - startIndex;
-        const importLength = data.length - startOfNewData;
+        result = imagesFromServer;
+      } else if (
+        indexOfFirstImageFromServer <= this.images.length &&
+        (this.scrollDirection === ScrollDirection.down ||
+          this.bottomOfLastPositionedRow < this.loadBufferEnd)
+      ) {
+        // add images not yet available in this.images to the end of the images array
+        const startOfNewData = this.images.length - indexOfFirstImageFromServer;
 
-        // get segment of data to import to images array without creating holes
-        result.dataToImport = data.slice(startOfNewData, importLength);
-        result.startIndex = importLength;
-      } else {
-        console.error(
-          `Importing data from server would leave holes in images array; should import '${data.length}' images from ${startIndex}, but images array ends at '${this.images.length - 1}'.`,
-        );
+        if (startOfNewData >= 0) {
+          // get segment of data to import to images array without creating holes
+          result = imagesFromServer.slice(startOfNewData);
+        }
+        // HACK for debug only
+        const x = 1;
       }
     }
     return result;
   }
 
   /**
-   * Convert list of images information from server to internal list of images information.
-   * @param imageData - list of Image details (information about each image)
-   * @param startIndex - index in images array, where to insert den new images
+   * Convert list of images information from server to internal representation required
+   * by the image grid and add it to the end of this.images.
+   * @param imageDataToAppend - list of Image details (information about each image) to append
    */
-  private importImageDataAtEnd(
-    imageData: ServerData[],
-    startIndex: number,
-  ): void {
-    if (imageData.length > 0) {
-      const imagesFromImageData = this.parseImageData(imageData, startIndex);
-      this.images.splice(
-        startIndex,
-        imagesFromImageData.length,
-        ...imagesFromImageData,
+  private importImageDataAtEnd(imageDataToAppend: ServerData[]): void {
+    if (imageDataToAppend.length > 0) {
+      const imagesFromImageData = this.parseImageData(
+        imageDataToAppend,
+        this.images.length,
       );
+      this.images.splice(this.images.length, 0, ...imagesFromImageData);
+
+      // on first load: remember where the image data starts
+      if (this.indexOfFirstLoadedImage < 0) {
+        this.indexOfFirstLoadedImage = 0;
+      }
     }
   }
 
@@ -513,7 +713,7 @@ export class MatImageGridLibComponent<
   /**
    * Creates new instances of the MigImage class for each of the images defined in `imageData`.
    * @param imageData - An array of metadata about each image from the matImageGridImageService
-   * @param startImageIndex - index of first image in imageData, if transferred to images array
+   * @param startImageIndex - index of first image in imageData, after adding it to this.images array
    * @returns An array of MigImage instances
    */
   private parseImageData(
@@ -572,7 +772,7 @@ export class MatImageGridLibComponent<
    * All DOM manipulation occurs in `showImagesInViewport`.
    *
    * This method handles positioning images at the start of the images list
-   * (images that were deleted, when scrolling down).
+   * (images that have been deleted, when scrolling down).
    * @param startIndex - index of the first image to position in grid
    * @param endIndexExclusive - index of the first image beyond the rendered range
    */
@@ -593,14 +793,19 @@ export class MatImageGridLibComponent<
       // When the rowAspectRatio exceeds the minimum acceptable aspect ratio,
       // we say that we have all the images we need for this row, and
       // compute the style values for each of these images.
-      if (rowAspectRatio >= (this.minAspectRatio || 0)) {
+      if (rowAspectRatio >= (this.minAspectRatio ?? 0)) {
         // Compute this row's height.
         const totalDesiredWidthOfImages =
           wrapperWidth - this.spaceBetweenImages * (row.length - 1);
-        const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+
+        // round height of images to integer (as height has unit px)
+        // round down to avoid horizontal scrollbar (rounding up, the image might be 1px too wide)
+        const rowHeight = Math.floor(
+          totalDesiredWidthOfImages / rowAspectRatio,
+        );
 
         // fix position of row
-        translateY += rowHeight + this.spaceBetweenImages;
+        translateY -= rowHeight + this.spaceBetweenImages;
 
         // For each image in the row, compute the width, height, translateX,
         // and translateY values, and set them (and the transition value we
@@ -634,7 +839,7 @@ export class MatImageGridLibComponent<
       }
     }
 
-    this.topOfFirstPositionedRow = translateY;
+    const x = translateY;
   }
 
   /**
@@ -660,9 +865,9 @@ export class MatImageGridLibComponent<
     let adjustViewportHeight = false;
     const wrapperWidth = this.migContainerNative.clientWidth;
     let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
+    let rowAspectRatio = 0; // The aspect ratio of the row we are building
     let translateX = 0; // The current translateX value that we are at
     let translateY = this.bottomOfLastPositionedRow; // The current translateY value that we are at
-    let rowAspectRatio = 0; // The aspect ratio of the row we are building
 
     // Loop through all our images in the given range, building them up into rows and computing
     // the working rowAspectRatio.
@@ -676,16 +881,21 @@ export class MatImageGridLibComponent<
       // need for this row, and compute the style values for each of these
       // images.
       if (
-        rowAspectRatio >= (this.minAspectRatio || 0) ||
+        rowAspectRatio >= (this.minAspectRatio ?? 0) ||
         i + 1 >= this.serverDataTotals.totalFilteredElements
       ) {
         // Make sure that the last row also has a reasonable height
-        rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio || 0);
+        rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio ?? 0);
 
         // Compute this row's height.
         const totalDesiredWidthOfImages =
           wrapperWidth - this.spaceBetweenImages * (row.length - 1);
-        const rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+
+        // round height of images to integer (as height has unit px)
+        // round down to avoid horizontal scrollbar (rounding up, the image might be 1px too wide)
+        const rowHeight = Math.floor(
+          totalDesiredWidthOfImages / rowAspectRatio,
+        );
 
         // For each image in the row, compute the width, height, translateX,
         // and translateY values, and set them (and the transition value we
@@ -712,6 +922,12 @@ export class MatImageGridLibComponent<
 
         this.indexOfLastRenderedImage = i;
 
+        // if we did not yet call computeLayoutAtStart, then this is also the first rendered image
+        if (this.indexOfFirstRenderedImage < 0) {
+          this.indexOfFirstRenderedImage = startIndex;
+        }
+
+        // recalculate viewport height only if new images are positioned
         if (i > this.highestIndexOfImageEverRendered) {
           this.highestIndexOfImageEverRendered = i;
 
@@ -729,33 +945,12 @@ export class MatImageGridLibComponent<
       }
     }
 
-    // this is the bottom of the "PreViewportLoadBuffer"
-    this.bottomOfLastPositionedRow = translateY;
+    // HACK this is the bottom of the "PreViewportLoadBuffer"
+    const x = translateY;
 
     if (adjustViewportHeight) {
       // update viewport height as we updated 'bottomOfLastRow' for rows we never loaded before
-      this.setViewportHeight();
-    }
-  }
-
-  /**
-   * Set y position where to start loading more images when scrolling up.
-   */
-  private setReloadTriggerScrollUp() {
-    const offsetToTriggerPointFromTop = Math.max(
-      this.containerHeight *
-        (this.PreViewportLoadBufferMultiplier -
-          this.PreViewportTriggerLoadBufferMultiplier),
-      0,
-    );
-
-    if (this.indexOfFirstRenderedImage > 0) {
-      this.triggerPointLoadImages = Math.max(
-        this.topOfFirstPositionedRow - offsetToTriggerPointFromTop,
-        0,
-      );
-    } else {
-      this.triggerPointLoadImages = 0;
+      this.setImageGridHeight();
     }
   }
 
@@ -763,16 +958,37 @@ export class MatImageGridLibComponent<
    * Set y position where to start loading more images when scrolling down.
    */
   private setReloadTriggerScrollDown() {
-    const offsetToTriggerPointFromBottom = Math.max(
+    const offsetToTriggerPointFromBottom = Math.floor(
       this.containerHeight *
-        (this.PreViewportLoadBufferMultiplier -
+        (1 +
+          this.PreViewportDomBufferMultiplier +
           this.PreViewportTriggerLoadBufferMultiplier),
-      0,
     );
+
+    this.triggerPointLoadImages = Math.min(
+      this.latestViewportTop + offsetToTriggerPointFromBottom,
+      this.bottomOfLastPositionedRow,
+    );
+    // HACK for debugging only
+    const x = 1;
+  }
+
+  /**
+   * Set y position where to start loading more images when scrolling up.
+   */
+  private setReloadTriggerScrollUp() {
+    const offsetToTriggerPointFromTop = Math.floor(
+      this.containerHeight *
+        (this.PreViewportDomBufferMultiplier +
+          this.PreViewportTriggerLoadBufferMultiplier),
+    );
+
     this.triggerPointLoadImages = Math.max(
-      this.bottomOfLastPositionedRow - offsetToTriggerPointFromBottom,
-      0,
+      this.latestViewportTop - offsetToTriggerPointFromTop,
+      this.topOfFirstPositionedRow,
     );
+    // HACK for debugging only
+    const x = 1;
   }
 
   /**
@@ -811,43 +1027,37 @@ export class MatImageGridLibComponent<
    * exist in the DOM.
    */
   private showImagesInViewport() {
-    // 'start' is 'towards the start of the images list
-    // 'end' is 'towards the end of the images list
-    let heightBufferStart: number;
-    let heightBufferEnd: number;
-
-    if (this.scrollDirection === ScrollDirection.down) {
-      heightBufferStart =
-        this.containerHeight * this.PostViewportDomBufferMultiplier;
-      heightBufferEnd =
-        this.containerHeight * this.PreViewportDomBufferMultiplier;
-    } else {
-      heightBufferStart =
-        this.containerHeight * this.PreViewportDomBufferMultiplier;
-      heightBufferEnd =
-        this.containerHeight * this.PostViewportDomBufferMultiplier;
+    if (this.indexOfFirstRenderedImage < 0) {
+      // nothing to show
+      return;
     }
 
-    // This is the top of the top buffer. If the bottom of an image is above
-    // this line, it will be removed from DOM.
-    const minTranslateYPlusHeight = Math.max(
-      this.latestViewportTop - heightBufferStart,
-      0,
-    );
+    // This is the top of the DOM buffer (smallest Y value). If the bottom
+    // of an image is above this line, it will be removed from the DOM.
+    const minYInDom = Math.max(this.domBufferStart, 0);
 
-    // This is the bottom of the bottom buffer. If the top of an image is
-    // below this line, it will be removed from DOM.
-    const maxTranslateY =
-      this.latestViewportTop + this.containerHeight + heightBufferEnd;
+    // This is the bottom of the DOM buffer (highest Y value). If the
+    // top of an image is below this line, it will be removed from the DOM.
+    const maxYInDom = this.domBufferEnd;
 
-    for (let i = 0; i <= this.highestIndexOfImageEverRendered; ++i) {
+    for (
+      let i = this.indexOfFirstRenderedImage;
+      i <= this.indexOfLastRenderedImage;
+      ++i
+    ) {
+      // ignore 'holes' in sparse array
+      if (this.images[i] === undefined) {
+        continue;
+      }
+
       const image = this.images[i];
-      const imageTranslateYAsNumber = image.style?.translateY || 0;
-      const imageHeightAsNumber = image.style?.height || 0;
+      const imageTranslateYAsNumber = image.style?.translateY ?? 0;
+      const imageHeightAsNumber = image.style?.height ?? 0;
+      const bottomOfImage = imageTranslateYAsNumber + imageHeightAsNumber;
+
       if (
-        imageTranslateYAsNumber + imageHeightAsNumber <
-          minTranslateYPlusHeight ||
-        imageTranslateYAsNumber > maxTranslateY ||
+        bottomOfImage < minYInDom ||
+        imageTranslateYAsNumber > maxYInDom ||
         i > this.indexOfLastRenderedImage
       ) {
         image.hide();
@@ -864,26 +1074,138 @@ export class MatImageGridLibComponent<
    */
   private onContentScrolled() {
     // Compute the scroll direction using the latestYOffset and the previousYOffset
-    const newYOffset = this.migContainerNative.scrollTop;
-    const previousYOffset = this.latestViewportTop || newYOffset;
+    // HACK 'min' should prevent that we scroll below the bottom of the grid and then "change direction"
+    const newYOffset = Math.min(
+      this.migContainerNative.scrollTop,
+      // TODO should be this.totalHeight - this.containerHeight,
+      this.totalHeight,
+    );
+    const previousYOffset = this.latestViewportTop ?? newYOffset;
     this.latestViewportTop = newYOffset;
-    this.scrollDirection =
-      this.latestViewportTop >= previousYOffset
-        ? ScrollDirection.down
-        : ScrollDirection.up;
+    const scrollTopChange = newYOffset - previousYOffset;
+
+    // HACK for testing only
+    const ScrollDirOld =
+      this.scrollDirection === ScrollDirection.down ? 'down' : 'up';
+
+    if (Math.abs(scrollTopChange) >= this.ScrollDirectionChangeThreshold) {
+      this.scrollDirection =
+        scrollTopChange >= 0 ? ScrollDirection.down : ScrollDirection.up;
+      const ScrollDirNew =
+        this.scrollDirection === ScrollDirection.down ? 'down' : 'up';
+      if (ScrollDirNew !== ScrollDirOld) {
+        const x = 1;
+      }
+    }
 
     // Show / hide images according to new scroll position
     this.showImagesInViewport();
 
     // load more images, if required
     this.fillViewport();
+    // HACK for debug only
+    const y = 1;
+  }
+
+  /**
+   * Delete images from the start of the load cache ('this.images') when scrolling down.
+   */
+  private deleteImagesAtStart() {
+    // do nothing, if this.images is empty
+    if (this.indexOfFirstLoadedImage < 0) {
+      return;
+    }
+
+    // calculate Y of the top of the DOM buffer. If the bottom of an image
+    // is above this line, it will be removed from the DOM.
+    const heightDomBufferStart =
+      this.containerHeight * this.PostViewportDomBufferMultiplier;
+    const minYInDom = Math.max(
+      this.latestViewportTop - heightDomBufferStart,
+      0,
+    );
+
+    // calculate Y of the top of the load buffer. If the bottom of an image is above
+    // this line, it will be removed from the load buffer (this.images).
+    const heightLoadBufferStart =
+      this.containerHeight * this.PostViewportLoadBufferMultiplier;
+    const minYLoaded = Math.max(minYInDom - heightLoadBufferStart, 0);
+    const x = 1;
+
+    // do not delete the last positioned image, as we need it to get the y-position
+    // of images added at the end of this.images
+    for (
+      let i = this.indexOfFirstLoadedImage;
+      i < this.indexOfLastRenderedImage;
+      i++
+    ) {
+      if (this.images[i].yBottom >= minYLoaded) {
+        break;
+      }
+
+      this.images[i].hide();
+      // eslint-disable-next-line @typescript-eslint/no-array-delete
+      delete this.images[i];
+      this.indexOfFirstLoadedImage = i + 1;
+
+      // TODO do we have unrendered images from incomplete rows? How to identify them?
+      this.indexOfFirstRenderedImage = this.indexOfFirstLoadedImage;
+    }
+  }
+
+  /**
+   * Delete images from the end of the load cache ('this.images') when scrolling up.
+   */
+  private deleteImagesAtEnd() {
+    // calculate Y of the bottom of the DOM buffer. If the top of an image
+    // is below this line, it will be removed from the DOM.
+    const heightDomBufferEnd =
+      this.containerHeight * this.PostViewportDomBufferMultiplier;
+    const maxYInDom =
+      this.latestViewportTop + this.containerHeight + heightDomBufferEnd;
+
+    // calculate Y of the bottom of the load buffer. If the top of an image
+    // is below this line, it will be removed from the load buffer (this.images).
+    const heightLoadBufferEnd =
+      this.containerHeight * this.PostViewportLoadBufferMultiplier;
+    const maxYLoadBuffer = maxYInDom + heightLoadBufferEnd;
+
+    let indexOfFirstImageToDelete = this.indexOfLastRenderedImage + 1;
+
+    // do not delete the first positioned image, as we need it to get the y-position
+    // of images to be added at the start of this image
+    for (
+      let i = this.images.length - 1;
+      i > this.indexOfFirstRenderedImage;
+      i--
+    ) {
+      const image = this.images[i];
+      const yTop = image.yTop;
+      if (yTop <= maxYLoadBuffer) {
+        indexOfFirstImageToDelete = i + 1;
+        break;
+      }
+
+      image.hide();
+    }
+
+    // set this.bottomOfLastPositionedRow; calculate from image and space between images
+    if (indexOfFirstImageToDelete < this.images.length) {
+      this.indexOfLastRenderedImage = Math.max(
+        indexOfFirstImageToDelete - 1,
+        0,
+      );
+    }
+
+    // remove unneeded elements at end of cache
+    this.images.splice(indexOfFirstImageToDelete);
   }
 
   // TODO is this correct?
   private onResized() {
     // reset component state
-    this.bottomOfLastPositionedRow = 0;
-    this.topOfFirstPositionedRow = 0;
+    this.indexOfFirstRenderedImage = -1;
+    this.indexOfLastRenderedImage = -1;
     this.triggerPointLoadImages = 0;
     // TODO reset averageImagesPerRow and averageHeightOfRow
 
@@ -892,9 +1214,11 @@ export class MatImageGridLibComponent<
     this.minAspectRatio = this.getMinAspectRatio(this.containerWidth);
 
     // Reposition all loaded images
+    // TODO this will fail, as we have holes in this.images
     this.computeLayoutAtEnd(0, this.images.length);
-    this.setViewportHeight();
+    this.setImageGridHeight();
     this.showImagesInViewport();
+    this.setReloadTrigger();
     this.fillViewport();
   }
 
@@ -905,7 +1229,7 @@ export class MatImageGridLibComponent<
    * bottomOfLastPositionedRow is used; i.e. images that were once rendered and
    * then later removed while scrolling up are ignored.
    */
-  private setViewportHeight() {
+  private setImageGridHeight() {
     if (this.serverDataTotals.totalFilteredElements > 0) {
       const numberOfUnloadedImages = Math.ceil(
         this.serverDataTotals.totalFilteredElements -
@@ -930,6 +1254,9 @@ export class MatImageGridLibComponent<
       'height',
       `${this.totalHeight}px`,
     );
+
+    // set this.latestViewportTop to current scrollTop, as scrollTop changes, when container height is reduced
+    this.latestViewportTop = this.migContainerNative.scrollTop;
   }
 
   /**
@@ -955,13 +1282,16 @@ export class MatImageGridLibComponent<
    */
   private fillViewportScrollDown() {
     const bottomOfDomBuffer =
-      this.migContainerNative.scrollTop +
+      this.latestViewportTop +
       this.containerHeight * (1 + this.PreViewportDomBufferMultiplier);
 
-    if (bottomOfDomBuffer >= this.triggerPointLoadImages) {
+    if (
+      bottomOfDomBuffer >= this.triggerPointLoadImages ||
+      this.images.length === 0
+    ) {
       // Calculate vertical space to fill starting from top of visible area
       const viewRangeAlreadyPositioned =
-        this.bottomOfLastPositionedRow - this.migContainerNative.scrollTop;
+        this.bottomOfLastPositionedRow - this.latestViewportTop;
 
       const viewRangeRequired =
         this.containerHeight *
@@ -977,14 +1307,23 @@ export class MatImageGridLibComponent<
         rowsToRender * this.averageImagesPerRow.average,
       );
       const indexOfFirstImageToLoad = this.images.length;
-      const indexOfLastImageToLoad = Math.max(
-        indexOfFirstImageToLoad + imagesToRender - 1,
+
+      let indexOfLastImageToLoadExcl = Math.max(
+        indexOfFirstImageToLoad + imagesToRender,
         0,
       );
-      if (indexOfLastImageToLoad >= indexOfFirstImageToLoad) {
+      // limit last index to number of images on server, if available
+      if (this.serverDataTotals.totalFilteredElements !== 0) {
+        indexOfLastImageToLoadExcl = Math.min(
+          indexOfLastImageToLoadExcl,
+          this.serverDataTotals.totalFilteredElements,
+        );
+      }
+
+      if (indexOfLastImageToLoadExcl > indexOfFirstImageToLoad) {
         this.requestDataFromServer(
           indexOfFirstImageToLoad,
-          indexOfLastImageToLoad + 1,
+          indexOfLastImageToLoadExcl,
         );
       }
     }
@@ -996,13 +1335,13 @@ export class MatImageGridLibComponent<
    */
   private fillViewportScrollUp() {
     const topOfDomBuffer =
-      this.migContainerNative.scrollTop +
+      this.latestViewportTop -
       this.containerHeight * this.PreViewportDomBufferMultiplier;
 
     if (topOfDomBuffer <= this.triggerPointLoadImages) {
       // Calculate vertical space to fill starting from top of visible area
       const viewRangeAlreadyPositioned =
-        this.migContainerNative.scrollTop - this.topOfFirstPositionedRow;
+        this.latestViewportTop - this.topOfFirstPositionedRow;
 
       const viewRangeRequired =
         this.containerHeight *
@@ -1016,7 +1355,7 @@ export class MatImageGridLibComponent<
       const imagesToRender = Math.ceil(
         rowsToRender * this.averageImagesPerRow.average,
       );
-      const indexOfLastImageToLoad = this.loadBufferStartIndex - 1;
+      const indexOfLastImageToLoad = this.indexOfFirstLoadedImage - 1;
       const indexOfFirstImageToLoad = Math.max(
         indexOfLastImageToLoad - imagesToRender + 1,
         0,
@@ -1134,5 +1473,61 @@ export class MatImageGridLibComponent<
       return 250;
     }
     return 500;
+  }
+
+  // HACK function for logPoint
+  private positions() {
+    const i2 = this.indexOfFirstRenderedImage;
+    let topOfFirstImage = -1;
+    if (i2 >= 0) {
+      topOfFirstImage = this.images[i2].yTop;
+    }
+    const i3 = this.indexOfLastRenderedImage;
+    let topOfLastImage = -1;
+    if (i3 >= 0) {
+      topOfLastImage = this.images[i3].yTop;
+    }
+    return JSON.stringify(
+      {
+        iFirstLoaded: this.indexOfFirstLoadedImage,
+        iFirstRendered: this.indexOfFirstRenderedImage,
+        yTopFirst: topOfFirstImage,
+        yTrigger: this.triggerPointLoadImages,
+        yScrollTop: this.migContainerNative.scrollTop,
+        yTopLast: topOfLastImage,
+        iLastRendered: this.indexOfLastRenderedImage,
+        iLastLoaded: this.images.length - 1,
+      },
+      this.replacer,
+      2,
+    );
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private replacer = (key: string, value: any) => {
+    if (typeof value === 'number') {
+      return value.toFixed(0);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return value;
+  };
+  private limits() {
+    return JSON.stringify(
+      {
+        loadBufferStartScrollDown: this.loadBufferStartScrollDown(),
+        loadBufferStartScrollUp: this.loadBufferStartScrollUp(),
+        loadBufferStart: this.loadBufferStart,
+        loadBufferEndScrollDown: this.loadBufferEndScrollDown(),
+        loadBufferEndScrollUp: this.loadBufferEndScrollUp(),
+        loadBufferEnd: this.loadBufferEnd,
+        domBufferStartScrollDown: this.domBufferStartScrollDown(),
+        domBufferStartScrollUp: this.domBufferStartScrollUp(),
+        domBufferStart: this.domBufferStart,
+        domBufferEndScrollDown: this.domBufferEndScrollDown(),
+        domBufferEndScrollUp: this.domBufferEndScrollUp(),
+        domBufferEnd: this.domBufferEnd,
+      },
+      this.replacer,
+      2,
+    );
   }
 }

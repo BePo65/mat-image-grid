@@ -21,6 +21,8 @@ export class SimpleGridDatastoreService extends AppDatastoreServiceBase<MigImage
 
   public constructor() {
     super();
+
+    // clone images list
     this.images = SIMPLE_GRID_DATA.map((image) => image);
   }
 
