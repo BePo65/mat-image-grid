@@ -161,12 +161,12 @@ export class MatImageGridLibComponent<
   // The position of images in this.images is only calculated for complete rows.
   // Images that have not yet been positioned can exist at the beginning or at
   // the end of this.images.
-  private indexOfFirstRenderedImage = -1; // Index of the first positioned image in this.images.
-  private indexOfLastRenderedImage = -1; // index of last positioned image in this.images
+  private indexOfFirstPositionedImage = -1; // Index of the first positioned image in this.images.
+  private indexOfLastPositionedImage = -1; // index of last positioned image in this.images
 
   // Images up to this index were already used to calculate the average values.
   // The average values are used to calculate the height of the whole image-grid.
-  private highestIndexOfImageEverRendered = -1;
+  private highestIndexOfImageEverPositioned = -1;
 
   private averageImagesPerRow!: FloatingAverage; // Do not use before AfterViewInit
   private averageHeightOfRow!: FloatingAverage; // Do not use before AfterViewInit
@@ -233,15 +233,15 @@ export class MatImageGridLibComponent<
   }
 
   private get topOfFirstPositionedRow() {
-    return this.indexOfFirstRenderedImage >= 0
-      ? this.images[this.indexOfFirstRenderedImage].yTop
+    return this.indexOfFirstPositionedImage >= 0
+      ? this.images[this.indexOfFirstPositionedImage].yTop
       : 0;
   }
 
   private get bottomOfLastPositionedRow() {
-    if (this.indexOfLastRenderedImage >= 0) {
+    if (this.indexOfLastPositionedImage >= 0) {
       return (
-        this.images[this.indexOfLastRenderedImage].yBottom +
+        this.images[this.indexOfLastPositionedImage].yBottom +
         this.spaceBetweenImages
       );
     }
@@ -482,7 +482,7 @@ export class MatImageGridLibComponent<
           if (dataToEndOfImages.length > 0) {
             this.importImageDataAtEnd(dataToEndOfImages);
             this.computeLayoutAtEnd(
-              this.indexOfLastRenderedImage + 1,
+              this.indexOfLastPositionedImage + 1,
               this.images.length,
             );
           }
@@ -504,8 +504,8 @@ export class MatImageGridLibComponent<
               );
             } else {
               // added images to an empty this.images
-              this.indexOfFirstRenderedImage = -1;
-              this.indexOfLastRenderedImage = -1;
+              this.indexOfFirstPositionedImage = -1;
+              this.indexOfLastPositionedImage = -1;
               this.computeLayoutAtEnd(0, this.images.length);
             }
           }
@@ -774,7 +774,7 @@ export class MatImageGridLibComponent<
    * This method handles positioning images at the start of the images list
    * (images that have been deleted, when scrolling down).
    * @param startIndex - index of the first image to position in grid
-   * @param endIndexExclusive - index of the first image beyond the rendered range
+   * @param endIndexExclusive - index of the first image beyond the positioned range
    */
   private computeLayoutAtStart(startIndex: number, endIndexExclusive: number) {
     const wrapperWidth = this.migContainerNative.clientWidth;
@@ -830,7 +830,7 @@ export class MatImageGridLibComponent<
           translateX += imageWidth + this.spaceBetweenImages;
         });
 
-        this.indexOfFirstRenderedImage = i;
+        this.indexOfFirstPositionedImage = i;
 
         // Reset our state variables for next row.
         row = [];
@@ -859,7 +859,7 @@ export class MatImageGridLibComponent<
    *
    * This method handles positioning images at the end of the images list.
    * @param startIndex - index of the first image to position in grid
-   * @param endIndexExclusive - index of the first image beyond the rendered range
+   * @param endIndexExclusive - index of the first image beyond the positioned range
    */
   private computeLayoutAtEnd(startIndex: number, endIndexExclusive: number) {
     let adjustViewportHeight = false;
@@ -920,16 +920,16 @@ export class MatImageGridLibComponent<
           translateX += imageWidth + this.spaceBetweenImages;
         });
 
-        this.indexOfLastRenderedImage = i;
+        this.indexOfLastPositionedImage = i;
 
-        // if we did not yet call computeLayoutAtStart, then this is also the first rendered image
-        if (this.indexOfFirstRenderedImage < 0) {
-          this.indexOfFirstRenderedImage = startIndex;
+        // if we did not yet call computeLayoutAtStart, then this is also the first positioned image
+        if (this.indexOfFirstPositionedImage < 0) {
+          this.indexOfFirstPositionedImage = startIndex;
         }
 
         // recalculate viewport height only if new images are positioned
-        if (i > this.highestIndexOfImageEverRendered) {
-          this.highestIndexOfImageEverRendered = i;
+        if (i > this.highestIndexOfImageEverPositioned) {
+          this.highestIndexOfImageEverPositioned = i;
 
           // only consider row, when we never considered these images before
           this.averageImagesPerRow.addEntry(row.length);
@@ -1027,7 +1027,7 @@ export class MatImageGridLibComponent<
    * exist in the DOM.
    */
   private showImagesInViewport() {
-    if (this.indexOfFirstRenderedImage < 0) {
+    if (this.indexOfFirstPositionedImage < 0) {
       // nothing to show
       return;
     }
@@ -1041,8 +1041,8 @@ export class MatImageGridLibComponent<
     const maxYInDom = this.domBufferEnd;
 
     for (
-      let i = this.indexOfFirstRenderedImage;
-      i <= this.indexOfLastRenderedImage;
+      let i = this.indexOfFirstPositionedImage;
+      i <= this.indexOfLastPositionedImage;
       ++i
     ) {
       // ignore 'holes' in sparse array
@@ -1058,7 +1058,7 @@ export class MatImageGridLibComponent<
       if (
         bottomOfImage < minYInDom ||
         imageTranslateYAsNumber > maxYInDom ||
-        i > this.indexOfLastRenderedImage
+        i > this.indexOfLastPositionedImage
       ) {
         image.hide();
       } else {
@@ -1136,7 +1136,7 @@ export class MatImageGridLibComponent<
     // of images added at the end of this.images
     for (
       let i = this.indexOfFirstLoadedImage;
-      i < this.indexOfLastRenderedImage;
+      i < this.indexOfLastPositionedImage;
       i++
     ) {
       if (this.images[i].yBottom >= minYLoaded) {
@@ -1148,8 +1148,8 @@ export class MatImageGridLibComponent<
       delete this.images[i];
       this.indexOfFirstLoadedImage = i + 1;
 
-      // TODO do we have unrendered images from incomplete rows? How to identify them?
-      this.indexOfFirstRenderedImage = this.indexOfFirstLoadedImage;
+      // TODO do we have not positioned images from incomplete rows? How to identify them?
+      this.indexOfFirstPositionedImage = this.indexOfFirstLoadedImage;
     }
   }
 
@@ -1170,13 +1170,13 @@ export class MatImageGridLibComponent<
       this.containerHeight * this.PostViewportLoadBufferMultiplier;
     const maxYLoadBuffer = maxYInDom + heightLoadBufferEnd;
 
-    let indexOfFirstImageToDelete = this.indexOfLastRenderedImage + 1;
+    let indexOfFirstImageToDelete = this.indexOfLastPositionedImage + 1;
 
     // do not delete the first positioned image, as we need it to get the y-position
     // of images to be added at the start of this image
     for (
       let i = this.images.length - 1;
-      i > this.indexOfFirstRenderedImage;
+      i > this.indexOfFirstPositionedImage;
       i--
     ) {
       const image = this.images[i];
@@ -1191,7 +1191,7 @@ export class MatImageGridLibComponent<
 
     // set this.bottomOfLastPositionedRow; calculate from image and space between images
     if (indexOfFirstImageToDelete < this.images.length) {
-      this.indexOfLastRenderedImage = Math.max(
+      this.indexOfLastPositionedImage = Math.max(
         indexOfFirstImageToDelete - 1,
         0,
       );
@@ -1204,8 +1204,8 @@ export class MatImageGridLibComponent<
   // TODO is this correct?
   private onResized() {
     // reset component state
-    this.indexOfFirstRenderedImage = -1;
-    this.indexOfLastRenderedImage = -1;
+    this.indexOfFirstPositionedImage = -1;
+    this.indexOfLastPositionedImage = -1;
     this.triggerPointLoadImages = 0;
     // TODO reset averageImagesPerRow and averageHeightOfRow
 
@@ -1223,17 +1223,17 @@ export class MatImageGridLibComponent<
   }
 
   /**
-   * Set the height of the images container based on the images already rendered
+   * Set the height of the images container based on the images already positioned
    * and on an estimation about the height required by the remaining images.
-   * for the 'images already rendered' indexOfLastRenderedImage and
-   * bottomOfLastPositionedRow is used; i.e. images that were once rendered and
+   * for the 'images already positioned' indexOfLastPositionedImage and
+   * bottomOfLastPositionedRow is used; i.e. images that were once positioned and
    * then later removed while scrolling up are ignored.
    */
   private setImageGridHeight() {
     if (this.serverDataTotals.totalFilteredElements > 0) {
       const numberOfUnloadedImages = Math.ceil(
         this.serverDataTotals.totalFilteredElements -
-          (this.indexOfLastRenderedImage + 1),
+          (this.indexOfLastPositionedImage + 1),
       );
       this.totalHeight = Math.ceil(
         this.bottomOfLastPositionedRow +
@@ -1477,12 +1477,12 @@ export class MatImageGridLibComponent<
 
   // HACK function for logPoint
   private positions() {
-    const i2 = this.indexOfFirstRenderedImage;
+    const i2 = this.indexOfFirstPositionedImage;
     let topOfFirstImage = -1;
     if (i2 >= 0) {
       topOfFirstImage = this.images[i2].yTop;
     }
-    const i3 = this.indexOfLastRenderedImage;
+    const i3 = this.indexOfLastPositionedImage;
     let topOfLastImage = -1;
     if (i3 >= 0) {
       topOfLastImage = this.images[i3].yTop;
@@ -1490,12 +1490,12 @@ export class MatImageGridLibComponent<
     return JSON.stringify(
       {
         iFirstLoaded: this.indexOfFirstLoadedImage,
-        iFirstRendered: this.indexOfFirstRenderedImage,
+        iFirstPositioned: this.indexOfFirstPositionedImage,
         yTopFirst: topOfFirstImage,
         yTrigger: this.triggerPointLoadImages,
         yScrollTop: this.migContainerNative.scrollTop,
         yTopLast: topOfLastImage,
-        iLastRendered: this.indexOfLastRenderedImage,
+        iLastPositioned: this.indexOfLastPositionedImage,
         iLastLoaded: this.images.length - 1,
       },
       this.replacer,
