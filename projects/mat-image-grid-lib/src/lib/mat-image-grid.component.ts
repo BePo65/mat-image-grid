@@ -532,8 +532,6 @@ export class MatImageGridLibComponent<
               this.indexFirstPositionedImage,
             );
             this.computeLayoutAtStart(startIndexForImport, endIndexExcl);
-            // HACK for debug only
-            const y = 1;
 
             // if we scrolled to the start of the container, but the first row is below
             // or above the start of the container, then move all positioned images
@@ -579,7 +577,6 @@ export class MatImageGridLibComponent<
               this.deleteImagesAtEnd();
             }
           }
-          const x = 1;
         },
         error: (err: Error) =>
           console.error(`dataFromDataSourceImages: '${err.message}'`),
@@ -689,8 +686,6 @@ export class MatImageGridLibComponent<
           // get segment of data to import to images array without creating holes
           result = imagesFromServer.slice(startOfNewData);
         }
-        // HACK for debug only
-        const x = 1;
       }
     }
     return result;
@@ -925,9 +920,6 @@ export class MatImageGridLibComponent<
         translateX = 0;
       }
     }
-
-    // HACK for debug only
-    const x = translateY;
   }
 
   /**
@@ -1038,9 +1030,6 @@ export class MatImageGridLibComponent<
       }
     }
 
-    // HACK for debug only
-    const x = translateY;
-
     return adjustImageGridHeight;
   }
 
@@ -1092,8 +1081,6 @@ export class MatImageGridLibComponent<
       this.latestViewportTop + offsetToTriggerPointFromBottom,
       this.bottomLastPositionedRow,
     );
-    // HACK for debugging only
-    const x = 1;
   }
 
   /**
@@ -1110,8 +1097,6 @@ export class MatImageGridLibComponent<
       this.latestViewportTop - offsetToTriggerPointFromTop,
       this.topFirstPositionedRow,
     );
-    // HACK for debugging only
-    const x = 1;
   }
 
   /**
@@ -1196,29 +1181,19 @@ export class MatImageGridLibComponent<
    * the Angular zone.
    */
   private onContentScrolled() {
-    // Compute the scroll direction using the latestYOffset and the previousYOffset
-    // HACK 'min' should prevent that we scroll below the bottom of the grid and then "change direction"
+    // Compute the scroll direction using the latestYOffset and the previousYOffset.
+    // Prevent scrolling below the bottom of the grid (would  inadvertently change scrolling direction)
     const newYOffset = Math.min(
       this.migContainerNative.scrollTop,
-      // TODO should be this.totalHeight - this.containerHeight,
       this.totalHeight,
     );
     const previousYOffset = this.latestViewportTop ?? newYOffset;
     this.latestViewportTop = newYOffset;
     const scrollTopChange = newYOffset - previousYOffset;
 
-    // HACK for testing only
-    const ScrollDirOld =
-      this.scrollDirection === ScrollDirection.down ? 'down' : 'up';
-
     if (Math.abs(scrollTopChange) >= this.ScrollDirectionChangeThreshold) {
       this.scrollDirection =
         scrollTopChange >= 0 ? ScrollDirection.down : ScrollDirection.up;
-      const ScrollDirNew =
-        this.scrollDirection === ScrollDirection.down ? 'down' : 'up';
-      if (ScrollDirNew !== ScrollDirOld) {
-        const x = 1;
-      }
     }
 
     // Show / hide images according to new scroll position
@@ -1226,8 +1201,6 @@ export class MatImageGridLibComponent<
 
     // load more images, if required
     this.fillViewport();
-    // HACK for debug only
-    const y = 1;
   }
 
   /**
@@ -1253,8 +1226,6 @@ export class MatImageGridLibComponent<
     const heightLoadBufferStart =
       this.containerHeight * this.PostViewportLoadBufferMultiplier;
     const minYLoaded = Math.max(minYInDom - heightLoadBufferStart, 0);
-    // HACK for debug only
-    const x = 1;
 
     // do not delete the last positioned image, as we need it to get the y-position
     // of images added at the end of this.images
@@ -1272,7 +1243,6 @@ export class MatImageGridLibComponent<
       delete this.images[i];
       this.indexFirstLoadedImage = i + 1;
 
-      // TODO do we have not positioned images from incomplete rows? How to identify them?
       this.indexFirstPositionedImage = this.indexFirstLoadedImage;
     }
   }
@@ -1341,7 +1311,6 @@ export class MatImageGridLibComponent<
       this.indexFirstLoadedImage,
       indexOfFirstVisibleImage,
     );
-    // TODO if topOfFirstPositionedRow<0 then computeLayoutAtEnd for all loaded images
 
     if (adjustImageGridHeight) {
       this.setImageGridHeight();
@@ -1624,61 +1593,5 @@ export class MatImageGridLibComponent<
       return 250;
     }
     return 500;
-  }
-
-  // HACK function for logPoint
-  private positions() {
-    const i2 = this.indexFirstPositionedImage;
-    let topOfFirstImage = -1;
-    if (i2 >= 0) {
-      topOfFirstImage = this.images[i2].yTop;
-    }
-    const i3 = this.indexLastPositionedImage;
-    let topOfLastImage = -1;
-    if (i3 >= 0) {
-      topOfLastImage = this.images[i3].yTop;
-    }
-    return JSON.stringify(
-      {
-        iFirstLoaded: this.indexFirstLoadedImage,
-        iFirstPositioned: this.indexFirstPositionedImage,
-        yTopFirst: topOfFirstImage,
-        yTrigger: this.triggerPointLoadImages,
-        yScrollTop: this.migContainerNative.scrollTop,
-        yTopLast: topOfLastImage,
-        iLastPositioned: this.indexLastPositionedImage,
-        iLastLoaded: this.images.length - 1,
-      },
-      this.replacer,
-      2,
-    );
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private replacer = (key: string, value: any) => {
-    if (typeof value === 'number') {
-      return value.toFixed(0);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return value;
-  };
-  private limits() {
-    return JSON.stringify(
-      {
-        loadBufferStartScrollDown: this.loadBufferStartScrollDown(),
-        loadBufferStartScrollUp: this.loadBufferStartScrollUp(),
-        loadBufferStart: this.loadBufferStart,
-        loadBufferEndScrollDown: this.loadBufferEndScrollDown(),
-        loadBufferEndScrollUp: this.loadBufferEndScrollUp(),
-        loadBufferEnd: this.loadBufferEnd,
-        domBufferStartScrollDown: this.domBufferStartScrollDown(),
-        domBufferStartScrollUp: this.domBufferStartScrollUp(),
-        domBufferStart: this.domBufferStart,
-        domBufferEndScrollDown: this.domBufferEndScrollDown(),
-        domBufferEndScrollUp: this.domBufferEndScrollUp(),
-        domBufferEnd: this.domBufferEnd,
-      },
-      this.replacer,
-      2,
-    );
   }
 }
