@@ -8,14 +8,12 @@ import {
 } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 
-import { MatImageGridLibComponent } from 'projects/mat-image-grid-lib/src';
-
 type RouteTab = { title: string; route: string; index: number };
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [MatImageGridLibComponent, MatTabsModule, RouterOutlet, RouterLink],
+  imports: [MatTabsModule, RouterOutlet, RouterLink],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   providers: [],
