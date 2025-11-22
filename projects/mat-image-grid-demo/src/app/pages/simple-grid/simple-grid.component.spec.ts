@@ -60,6 +60,13 @@ describe('SimpleGridComponent', () => {
   beforeEach(async () => {
     harness = await RouterTestingHarness.create('/simple-grid');
 
+    // we need a container with a defined height, as mat-image-grid does
+    // not set a height of its own, but fills container (parent element)
+    const simpleGrid = harness.routeNativeElement as HTMLDivElement;
+    if (simpleGrid && simpleGrid.parentElement) {
+      simpleGrid.parentElement.style.height = '600px';
+    }
+
     // wait for ProgressiveImage to create all subelements
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),

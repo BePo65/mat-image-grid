@@ -58,6 +58,13 @@ describe('LargeDatasetComponent', () => {
   beforeEach(async () => {
     harness = await RouterTestingHarness.create('/large-dataset');
 
+    // we need a container with a defined height, as mat-image-grid does
+    // not set a height of its own, but fills container (parent element)
+    const largeGrid = harness.routeNativeElement as HTMLDivElement;
+    if (largeGrid && largeGrid.parentElement) {
+      largeGrid.parentElement.style.height = '600px';
+    }
+
     // wait for ProgressiveImage to create all subelements
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),

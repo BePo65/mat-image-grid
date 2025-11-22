@@ -61,6 +61,13 @@ describe('ExtendedGridComponent', () => {
   beforeEach(async () => {
     harness = await RouterTestingHarness.create('/extended-grid');
 
+    // we need a container with a defined height, as mat-image-grid does
+    // not set a height of its own, but fills container (parent element)
+    const extendedGrid = harness.routeNativeElement as HTMLDivElement;
+    if (extendedGrid && extendedGrid.parentElement) {
+      extendedGrid.parentElement.style.height = '600px';
+    }
+
     // wait for ProgressiveImage to create all subelements
     await new Promise((resolve) =>
       setTimeout(resolve, WaitForSubelementsTimeMs),
