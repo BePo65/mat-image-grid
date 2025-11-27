@@ -27,7 +27,7 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
   'mig.mockup.service.config',
 );
 
-describe('AppComponent', () => {
+describe('Demo Component', () => {
   let fixture: ComponentFixture<AppComponent>;
   let router: Router;
   let app: AppComponent;
@@ -46,7 +46,6 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      // imports: [AppComponent, RouterModule, RouterOutlet, SimpleGridComponent],
       imports: [AppComponent, RouterModule],
       providers: [
         provideRouter([

@@ -35,6 +35,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.router.events.pipe(takeUntil(this.unsubscribe$)).subscribe((event) => {
       if (event instanceof NavigationEnd) {
+        // remember currently active tab
         const activeRoute = this.tabs.find(
           (routeDefinition) =>
             routeDefinition.route === event.urlAfterRedirects,

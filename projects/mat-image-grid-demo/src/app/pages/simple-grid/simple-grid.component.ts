@@ -31,6 +31,8 @@ export class SimpleGridComponent {
     private datastore: SimpleGridDatastoreService,
     private settings: SimpleGridSettings,
   ) {
+    // SimpleGridSettings is not listed in 'providers' or in route definition,
+    // as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
     this.simpleDataSource = new AppDataSource(this.datastore);
   }

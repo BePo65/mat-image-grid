@@ -45,6 +45,8 @@ export class ExtendedGridComponent {
     private datastore: ExtendedGridDatastoreService,
     private settings: ExtendedGridSettings,
   ) {
+    // ExtendedGridSettings is not listed in 'providers' or in route definition,
+    // as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
     this.extendedDataSource = new AppDataSource(this.datastore);
   }
