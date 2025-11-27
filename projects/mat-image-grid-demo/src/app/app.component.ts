@@ -16,7 +16,6 @@ type RouteTab = { title: string; route: string; index: number };
   imports: [MatTabsModule, RouterOutlet, RouterLink],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  providers: [],
 })
 export class AppComponent implements OnInit, OnDestroy {
   public title = 'MatImageGrid Demo';
