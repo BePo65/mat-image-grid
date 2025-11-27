@@ -30,6 +30,10 @@
     "strictInputAccessModifiers": true,
     "strictTemplates": true
   },
-  "include": ["**/src/**/*.ts", "node_modules/cypress"],
+  "include": [
+    "**/src/**/*.ts",
+    "node_modules/cypress",
+    "projects/minimal-demo/src/app/classes/minimal-grid-settings.class.ts"
+  ],
   "exclude": ["node_modules/cypress"]
 }

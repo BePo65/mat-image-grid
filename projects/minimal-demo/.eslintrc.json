@@ -1,0 +1,72 @@
+{
+  "extends": "../../.eslintrc.json",
+  "ignorePatterns": ["!**/*", "**/.angular/**"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "excludedFiles": "cypress.config.ts",
+      "rules": {
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": "app",
+            "style": "kebab-case"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["cypress.config.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "projects/minimal-demo/cypress/tsconfig.json",
+        "ecmaVersion": 2021,
+        "sourceType": "module"
+      },
+      "settings": {
+        "import/parsers": {
+          "@typescript-eslint/parser": [".ts"]
+        },
+        "import/resolver": {
+          "node": true,
+          "typescript": {
+            "project": ["projects/minimal-demo/cypress/tsconfig.json"]
+          }
+        }
+      },
+      "rules": {
+        "@typescript-eslint/unbound-method": [
+          "error",
+          {
+            "ignoreStatic": true
+          }
+        ],
+        "jsdoc/require-param-type": "off",
+        "jsdoc/require-returns-type": [
+          "off",
+          {
+            "contexts": ["any"]
+          }
+        ],
+        "prefer-arrow/prefer-arrow-functions": [
+          "warn",
+          {
+            "disallowPrototype": true,
+            "singleReturnOnly": false,
+            "classPropertiesAllowed": false
+          }
+        ],
+        "semi": ["error", "always"]
+      }
+    }
+  ]
+}

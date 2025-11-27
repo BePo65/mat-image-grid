@@ -1,0 +1,49 @@
+{
+  "extends": "../.eslintrc.json",
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "plugins": ["cypress"],
+      "env": {
+        "cypress/globals": true
+      },
+      "extends": ["plugin:cypress/recommended"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "projects/minimal-demo/cypress/tsconfig.json",
+        "ecmaVersion": 2021,
+        "sourceType": "module"
+      },
+      "settings": {
+        "import/parsers": {
+          "@typescript-eslint/parser": [".ts"]
+        },
+        "import/resolver": {
+          "node": true,
+          "typescript": {
+            "project": ["projects/minimal-demo/cypress/tsconfig.json"]
+          }
+        }
+      },
+      "rules": {
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "type": "attribute",
+            "prefix": "app",
+            "style": "camelCase"
+          }
+        ],
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "type": "element",
+            "prefix": "app",
+            "style": "kebab-case"
+          }
+        ]
+      }
+    }
+  ]
+}
