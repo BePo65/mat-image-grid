@@ -212,7 +212,7 @@ export class MatImageGridLibComponent<
   }
 
   public ngOnDestroy(): void {
-    this.dataSource.disconnect(this);
+    this.dataSource?.disconnect(this);
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
     this.clearImageData();
@@ -780,7 +780,9 @@ export class MatImageGridLibComponent<
       image.dispose();
     });
 
-    this.renderer2.setStyle(this.migGridNative, 'height', 'auto');
+    if (this.migGridNative !== undefined) {
+      this.renderer2.setStyle(this.migGridNative, 'height', 'auto');
+    }
   }
 
   /**
