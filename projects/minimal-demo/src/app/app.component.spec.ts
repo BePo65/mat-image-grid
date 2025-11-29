@@ -34,6 +34,7 @@ describe('Minimal Demo Component', () => {
   let originalTimeout: number;
 
   // it will take quite a long time, until all images have been loaded
+  // we have to wait, as ResizeObserver is not part of angular testing zone
   const WaitForSubelementsTimeMs = 2000;
   const jasmineTimeout = 5000;
   const imagesOnFirstLoad = 16;
