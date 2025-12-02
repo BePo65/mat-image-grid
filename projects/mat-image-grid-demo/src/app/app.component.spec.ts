@@ -4,6 +4,7 @@ import { Router, RouterModule, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
+import { AppDataSource } from './classes/app.data-source.class';
 import {
   RequestImagesRange,
   FieldSortDefinition,
@@ -15,9 +16,6 @@ import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.compo
 import { PageNotFoundComponent } from './pages/not-found/not-found.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
 import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
-import { ExtendedGridDatastoreService } from './services/extended-grid.datastore.service';
-import { LargeDatasetDatastoreService } from './services/large-dataset.datastore.service';
-import { SimpleGridDatastoreService } from './services/simple-grid.datastore.service';
 
 import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
@@ -58,9 +56,10 @@ describe('Demo Component', () => {
                 useValue: simpleGridImageServiceConfig,
               },
               {
-                provide: SimpleGridDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridMockupService,
               },
+              AppDataSource,
             ],
           },
           {
@@ -72,9 +71,10 @@ describe('Demo Component', () => {
                 useValue: extendedGridImageServiceConfig,
               },
               {
-                provide: ExtendedGridDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridExtendedMockupService,
               },
+              AppDataSource,
             ],
           },
           {
@@ -86,9 +86,10 @@ describe('Demo Component', () => {
                 useValue: largeDatasetImageServiceConfig,
               },
               {
-                provide: LargeDatasetDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridMockupService,
               },
+              AppDataSource,
             ],
           },
           { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },

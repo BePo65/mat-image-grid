@@ -4,13 +4,13 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
+import { AppDataSource } from '../../classes/app.data-source.class';
 import {
   FieldFilterDefinition,
   FieldSortDefinition,
   RequestImagesRange,
 } from '../../interfaces/datastore-provider.interface';
 import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
-import { SimpleGridDatastoreService } from '../../services/simple-grid.datastore.service';
 
 import { SimpleGridSettings } from './simple-grid-settings.class';
 import { SimpleGridComponent } from './simple-grid.component';
@@ -47,9 +47,10 @@ describe('SimpleGridComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: SimpleGridDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridMockupService,
               },
+              AppDataSource,
             ],
           },
         ]),

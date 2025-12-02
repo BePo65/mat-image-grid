@@ -1,7 +1,6 @@
 import { Component, Renderer2, ViewChild } from '@angular/core';
 
 import { AppDataSource } from '../../classes/app.data-source.class';
-import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
 
 import {
   MatImageGridLibComponent,
@@ -20,8 +19,6 @@ export class LargeDatasetComponent {
 
   @ViewChild(MatImageGridLibComponent)
   imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
-
-  protected largeDataSource: AppDataSource<MigImageData>;
 
   private imageColors = [
     {
@@ -68,15 +65,13 @@ export class LargeDatasetComponent {
 
   /**
    * Creates an instance of ProgressiveImage.
-   * @param datastore - Datastore to request images data from
-   * @param renderer - Angular class to modify DOM.
+   * @param renderer - Angular class to modify DOM
+   * @param largeDataSource - data source used to convert data from datastore
    */
   constructor(
-    private datastore: LargeDatasetDatastoreService,
     private renderer: Renderer2,
-  ) {
-    this.largeDataSource = new AppDataSource(this.datastore);
-  }
+    protected largeDataSource: AppDataSource<MigImageData>,
+  ) {}
 
   /**
    * Get the URL for an image with the given image data & dimensions.

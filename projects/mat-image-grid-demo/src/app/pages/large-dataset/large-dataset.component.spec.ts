@@ -4,13 +4,13 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
+import { AppDataSource } from '../../classes/app.data-source.class';
 import {
   RequestImagesRange,
   FieldSortDefinition,
   FieldFilterDefinition,
 } from '../../interfaces/datastore-provider.interface';
 import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
-import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
 
 import { LargeDatasetComponent } from './large-dataset.component';
 
@@ -45,9 +45,10 @@ describe('LargeDatasetComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: LargeDatasetDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridLargeDatasetMockupService,
               },
+              AppDataSource,
             ],
           },
         ]),

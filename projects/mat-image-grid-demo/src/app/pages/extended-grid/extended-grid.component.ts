@@ -6,7 +6,6 @@ import {
 } from '@angular/material/slide-toggle';
 
 import { AppDataSource } from '../../classes/app.data-source.class';
-import { ExtendedGridDatastoreService } from '../../services/extended-grid.datastore.service';
 
 import { ExtendedGridSettings } from './extended-grid-settings.class';
 import { MigImageExtData } from './mig-customization/mig-image-ext-data.interface';
@@ -33,7 +32,6 @@ export class ExtendedGridComponent {
   @ViewChild(MatImageGridLibComponent)
   imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
 
-  protected extendedDataSource: AppDataSource<MigImageExtData>;
   protected showImageDetails = true;
   protected showImageFullScreen = true;
   protected showImageDetailsStyle = 'visible';
@@ -42,13 +40,12 @@ export class ExtendedGridComponent {
   private imagesBaseUrl: string;
 
   constructor(
-    private datastore: ExtendedGridDatastoreService,
     private settings: ExtendedGridSettings,
+    protected extendedDataSource: AppDataSource<MigImageExtData>,
   ) {
     // ExtendedGridSettings is not listed in 'providers' or in route definition,
     // as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
-    this.extendedDataSource = new AppDataSource(this.datastore);
   }
 
   /**

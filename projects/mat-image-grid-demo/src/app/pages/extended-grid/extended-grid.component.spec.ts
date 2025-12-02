@@ -4,13 +4,13 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
+import { AppDataSource } from '../../classes/app.data-source.class';
 import {
   FieldFilterDefinition,
   FieldSortDefinition,
   RequestImagesRange,
 } from '../../interfaces/datastore-provider.interface';
 import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
-import { ExtendedGridDatastoreService } from '../../services/extended-grid.datastore.service';
 
 import { ExtendedGridSettings } from './extended-grid-settings.class';
 import { ExtendedGridComponent } from './extended-grid.component';
@@ -48,9 +48,10 @@ describe('ExtendedGridComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: ExtendedGridDatastoreService,
+                provide: AppDatastoreServiceBase,
                 useClass: MatImageGridExtendedMockupService,
               },
+              AppDataSource,
             ],
           },
         ]),
