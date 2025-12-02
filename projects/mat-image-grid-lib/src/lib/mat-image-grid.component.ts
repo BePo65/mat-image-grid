@@ -499,6 +499,11 @@ export class MatImageGridLibComponent<
       )
       .subscribe({
         next: (serverImages) => {
+          if (this.migGrid === undefined) {
+            // received data while the app is already shutting down
+            return;
+          }
+
           let adjustImageGridHeight = false;
           const startIndexForImport = serverImages.startImageIndex;
           const dataToImport = serverImages.content;
