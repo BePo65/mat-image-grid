@@ -6,7 +6,7 @@ import {
 } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 
-import { AppDataSource } from './app.data-source.class';
+import { AppDataSource } from './classes/app.data-source.class';
 import { MinimalGridSettings } from './classes/minimal-grid-settings.class';
 import {
   RequestImagesRange,
@@ -35,7 +35,7 @@ describe('Minimal Demo Component', () => {
 
   // it will take quite a long time, until all images have been loaded
   // we have to wait, as ResizeObserver is not part of angular testing zone
-  const WaitForSubelementsTimeMs = 2000;
+  const WaitForSubelementsTimeMs = 3000;
   const jasmineTimeout = 5000;
   const imagesOnFirstLoad = 16;
   const MinimalGridImageServiceConfig = {
@@ -158,7 +158,13 @@ class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
   selector: 'app-root',
   standalone: true,
   imports: [MatImageGridLibComponent],
-  providers: [MinimalGridDatastoreService],
+  providers: [
+    {
+      provide: AppDatastoreServiceBase,
+      useClass: MinimalGridDatastoreService,
+    },
+    AppDataSource,
+  ],
   template: `
     <div id="grid-container" #gridContainer>
       <mat-image-grid
@@ -179,17 +185,14 @@ class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
 export class AppTestComponent {
   public title = 'MatImageGrid Minimal Demo';
 
-  protected demoDataSource: AppDataSource<MigImageData>;
-
   private imagesBaseUrl: string;
 
   constructor(
-    private datastore: MinimalGridDatastoreService,
     private settings: MinimalGridSettings,
+    protected demoDataSource: AppDataSource<MigImageData>,
   ) {
     // MinimalGridSettings is not listed in 'providers', as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
-    this.demoDataSource = new AppDataSource(this.datastore);
   }
 
   /**

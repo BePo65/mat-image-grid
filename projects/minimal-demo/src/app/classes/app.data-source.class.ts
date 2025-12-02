@@ -13,11 +13,11 @@ import {
 
 /**
  * Class to get a list of information about the images to display in the minimal demo.
+ * This class converts the raw data received fom a datastore adapter to a format
+ * required by mat-image-grid.
  */
 @Injectable()
 export class AppDataSource<T extends MigImageData> extends DataSourcePaged<T> {
-  private datastore: AppDatastoreServiceBase<T>;
-
   private readonly emptyPage = {
     content: [] as T[],
     startImageIndex: 0,
@@ -30,10 +30,9 @@ export class AppDataSource<T extends MigImageData> extends DataSourcePaged<T> {
   private readonly _data: BehaviorSubject<Page<T>>;
   private collectionViewerSubscription!: Subscription;
 
-  public constructor(datastore: AppDatastoreServiceBase<T>) {
+  public constructor(private datastore: AppDatastoreServiceBase<T>) {
     super();
     this._data = new BehaviorSubject<Page<T>>(this.emptyPage);
-    this.datastore = datastore;
   }
 
   override connect(collectionViewer: CollectionViewer): Observable<Page<T>> {

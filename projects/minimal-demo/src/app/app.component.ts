@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 
 import { AppDataSource } from './classes/app.data-source.class';
 import { MinimalGridSettings } from './classes/minimal-grid-settings.class';
+import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
 import { MinimalGridDatastoreService } from './services/minimal-grid.datastore.service';
 
 import {
@@ -13,7 +14,13 @@ import {
   selector: 'app-root',
   standalone: true,
   imports: [MatImageGridLibComponent],
-  providers: [MinimalGridDatastoreService],
+  providers: [
+    {
+      provide: AppDatastoreServiceBase,
+      useClass: MinimalGridDatastoreService,
+    },
+    AppDataSource,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
@@ -23,17 +30,14 @@ export class AppComponent {
   @ViewChild(MatImageGridLibComponent)
   imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
 
-  protected demoDataSource: AppDataSource<MigImageData>;
-
   private imagesBaseUrl: string;
 
   constructor(
-    private datastore: MinimalGridDatastoreService,
     private settings: MinimalGridSettings,
+    protected demoDataSource: AppDataSource<MigImageData>,
   ) {
     // MinimalGridSettings is not listed in 'providers', as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;
-    this.demoDataSource = new AppDataSource(this.datastore);
   }
 
   /**
