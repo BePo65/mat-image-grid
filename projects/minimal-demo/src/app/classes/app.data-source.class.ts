@@ -2,8 +2,8 @@ import { CollectionViewer } from '@angular/cdk/collections';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription, first } from 'rxjs';
 
-import { RequestImagesRange } from './interfaces/datastore-provider.interface';
-import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
+import { RequestImagesRange } from '../interfaces/datastore-provider.interface';
+import { AppDatastoreServiceBase } from '../services/app.datastore.base.service';
 
 import {
   Page,

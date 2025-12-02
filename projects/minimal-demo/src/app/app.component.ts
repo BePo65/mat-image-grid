@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 
-import { AppDataSource } from './app.data-source.class';
+import { AppDataSource } from './classes/app.data-source.class';
 import { MinimalGridSettings } from './classes/minimal-grid-settings.class';
 import { MinimalGridDatastoreService } from './services/minimal-grid.datastore.service';
 
