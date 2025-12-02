@@ -5,7 +5,7 @@ import {
   MatSlideToggle,
 } from '@angular/material/slide-toggle';
 
-import { AppDataSource } from '../../app.data-source.class';
+import { AppDataSource } from '../../classes/app.data-source.class';
 import { ExtendedGridDatastoreService } from '../../services/extended-grid.datastore.service';
 
 import { ExtendedGridSettings } from './extended-grid-settings.class';

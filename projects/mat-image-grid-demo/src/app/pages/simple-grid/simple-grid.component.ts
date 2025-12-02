@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 
-import { AppDataSource } from '../../app.data-source.class';
+import { AppDataSource } from '../../classes/app.data-source.class';
 import { SimpleGridDatastoreService } from '../../services/simple-grid.datastore.service';
 
 import { SimpleGridSettings } from './simple-grid-settings.class';

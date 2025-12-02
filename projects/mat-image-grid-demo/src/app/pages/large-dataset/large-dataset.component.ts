@@ -1,6 +1,6 @@
 import { Component, Renderer2, ViewChild } from '@angular/core';
 
-import { AppDataSource } from '../../app.data-source.class';
+import { AppDataSource } from '../../classes/app.data-source.class';
 import { LargeDatasetDatastoreService } from '../../services/large-dataset.datastore.service';
 
 import {
