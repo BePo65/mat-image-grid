@@ -852,7 +852,7 @@ export class MatImageGridLibComponent<
    * @param endIndexExclusive - index of the first image beyond the positioned range
    */
   private computeLayoutAtStart(startIndex: number, endIndexExclusive: number) {
-    const wrapperWidth = this.migContainerNative.clientWidth;
+    const wrapperWidth = this.containerWidth;
     let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
     let translateX = 0; // The current translateX value that we are at
     let translateY = this.topOfImage(endIndexExclusive); // The last translateY value that we are at
@@ -945,12 +945,12 @@ export class MatImageGridLibComponent<
    * @returns true=image grid height must be adjusted, as average values have been changed
    */
   private computeLayoutAtEnd(startIndex: number, endIndexExclusive: number) {
-    let adjustImageGridHeight = false;
-    const wrapperWidth = this.migContainerNative.clientWidth;
+    const wrapperWidth = this.containerWidth;
     let row: ProgressiveImage<ServerData>[] = []; // The list of images in the current row.
     let rowAspectRatio = 0; // The aspect ratio of the row we are building
     let translateX = 0; // The current translateX value that we are at
     let translateY = this.bottomOfImage(startIndex - 1); // The bottom of the previous row
+    let adjustImageGridHeight = false;
 
     // limit loop defining values to prevent accessing non existing images
     const startindexLimited = Math.max(startIndex, 0);
@@ -1298,8 +1298,8 @@ export class MatImageGridLibComponent<
   }
 
   private onResized() {
-    this.containerHeight = this.migContainerNative.offsetHeight;
-    this.containerWidth = this.migContainerNative.offsetWidth;
+    this.containerHeight = this.migContainerNative.clientHeight;
+    this.containerWidth = this.migContainerNative.clientWidth;
     this.minAspectRatio = this.getMinAspectRatio(this.containerWidth);
     this.resetAverageValues();
 
