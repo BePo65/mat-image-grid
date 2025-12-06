@@ -1,7 +1,7 @@
 describe('Test minimal demo application', () => {
   it('contains header', () => {
     cy.visit('/');
-    cy.contains('Minimal Demo for Mat-Image-Grid');
+    cy.contains('MatImageGrid Minimal Demo');
   });
 
   it('contains figures in grid', () => {
