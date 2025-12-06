@@ -116,6 +116,7 @@ export class MatImageGridLibComponent<
   @Input() spaceBetweenImages = 8;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
+  // dataStore is an input parameter (and not injected via DI) to enable more than 1 grid on a page
   @Input({ required: true })
   datastore!: DatastoreAdapterServiceBase<ServerData>; // Do not use before ngAfterViewInit
   @Input({ required: true })
