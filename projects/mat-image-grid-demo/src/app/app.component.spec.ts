@@ -4,20 +4,20 @@ import { Router, RouterModule, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 
 import { AppComponent } from './app.component';
-import { AppDataSource } from './classes/app.data-source.class';
-import {
-  RequestImagesRange,
-  FieldSortDefinition,
-  FieldFilterDefinition,
-} from './interfaces/datastore-provider.interface';
 import { ExtendedGridComponent } from './pages/extended-grid/extended-grid.component';
 import { MigImageExtData } from './pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 import { LargeDatasetComponent } from './pages/large-dataset/large-dataset.component';
 import { PageNotFoundComponent } from './pages/not-found/not-found.component';
 import { SimpleGridComponent } from './pages/simple-grid/simple-grid.component';
-import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
 
-import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
+import {
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
+  MigImageData,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -56,10 +56,9 @@ describe('Demo Component', () => {
                 useValue: simpleGridImageServiceConfig,
               },
               {
-                provide: AppDatastoreServiceBase,
+                provide: DatastoreAdapterServiceBase,
                 useClass: MatImageGridMockupService,
               },
-              AppDataSource,
             ],
           },
           {
@@ -71,10 +70,9 @@ describe('Demo Component', () => {
                 useValue: extendedGridImageServiceConfig,
               },
               {
-                provide: AppDatastoreServiceBase,
+                provide: DatastoreAdapterServiceBase,
                 useClass: MatImageGridExtendedMockupService,
               },
-              AppDataSource,
             ],
           },
           {
@@ -86,10 +84,9 @@ describe('Demo Component', () => {
                 useValue: largeDatasetImageServiceConfig,
               },
               {
-                provide: AppDatastoreServiceBase,
+                provide: DatastoreAdapterServiceBase,
                 useClass: MatImageGridMockupService,
               },
-              AppDataSource,
             ],
           },
           { path: '', redirectTo: '/simple-grid', pathMatch: 'full' },
@@ -233,7 +230,7 @@ describe('Demo Component', () => {
 });
 
 @Injectable()
-class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
+class MatImageGridMockupService extends DatastoreAdapterServiceBase<MigImageData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
@@ -282,7 +279,7 @@ class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
 }
 
 @Injectable()
-class MatImageGridExtendedMockupService extends AppDatastoreServiceBase<MigImageExtData> {
+class MatImageGridExtendedMockupService extends DatastoreAdapterServiceBase<MigImageExtData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {

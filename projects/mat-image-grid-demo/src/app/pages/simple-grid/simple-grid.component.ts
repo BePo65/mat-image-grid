@@ -1,10 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
-
-import { AppDataSource } from '../../classes/app.data-source.class';
+import { Component } from '@angular/core';
 
 import { SimpleGridSettings } from './simple-grid-settings.class';
 
 import {
+  DatastoreAdapterServiceBase,
   MatImageGridLibComponent,
   MigImageData,
 } from 'projects/mat-image-grid-lib/src';
@@ -19,14 +18,11 @@ import {
 export class SimpleGridComponent {
   public componentType = 'SimpleGridComponent';
 
-  @ViewChild(MatImageGridLibComponent)
-  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
-
   private imagesBaseUrl: string;
 
   constructor(
     private settings: SimpleGridSettings,
-    protected simpleDataSource: AppDataSource<MigImageData>,
+    protected simpleDatastore: DatastoreAdapterServiceBase<MigImageData>,
   ) {
     // SimpleGridSettings is not listed in 'providers' or in route definition,
     // as it is defined with 'providedIn: root'

@@ -4,18 +4,17 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
-import { AppDataSource } from '../../classes/app.data-source.class';
-import {
-  FieldFilterDefinition,
-  FieldSortDefinition,
-  RequestImagesRange,
-} from '../../interfaces/datastore-provider.interface';
-import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
-
 import { SimpleGridSettings } from './simple-grid-settings.class';
 import { SimpleGridComponent } from './simple-grid.component';
 
-import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
+import {
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
+  MigImageData,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -47,10 +46,9 @@ describe('SimpleGridComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: AppDatastoreServiceBase,
+                provide: DatastoreAdapterServiceBase,
                 useClass: MatImageGridMockupService,
               },
-              AppDataSource,
             ],
           },
         ]),
@@ -147,7 +145,7 @@ describe('SimpleGridComponent', () => {
 });
 
 @Injectable()
-class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
+class MatImageGridMockupService extends DatastoreAdapterServiceBase<MigImageData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {

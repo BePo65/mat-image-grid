@@ -1,22 +1,22 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import {
-  RequestImagesRange,
-  FieldSortDefinition,
-  FieldFilterDefinition,
-} from '../interfaces/datastore-provider.interface';
-
-import { AppDatastoreServiceBase } from './app.datastore.base.service';
 import SIMPLE_GRID_DATA from './simple-grid-images.mock.data';
 
-import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
+import {
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
+  MigImageData,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 /**
  * Class to get a list of information about the images to display in the LargeDatasetComponent.
  */
 @Injectable()
-export class SimpleGridDatastoreService extends AppDatastoreServiceBase<MigImageData> {
+export class SimpleGridDatastoreService extends DatastoreAdapterServiceBase<MigImageData> {
   private images: MigImageData[];
 
   public constructor() {

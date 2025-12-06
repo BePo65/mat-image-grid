@@ -1,11 +1,10 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 
-import { AppDataSource } from './classes/app.data-source.class';
 import { MinimalGridSettings } from './classes/minimal-grid-settings.class';
-import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
 import { MinimalGridDatastoreService } from './services/minimal-grid.datastore.service';
 
 import {
+  DatastoreAdapterServiceBase,
   MatImageGridLibComponent,
   MigImageData,
 } from 'projects/mat-image-grid-lib/src';
@@ -16,10 +15,9 @@ import {
   imports: [MatImageGridLibComponent],
   providers: [
     {
-      provide: AppDatastoreServiceBase,
+      provide: DatastoreAdapterServiceBase,
       useClass: MinimalGridDatastoreService,
     },
-    AppDataSource,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -27,14 +25,11 @@ import {
 export class AppComponent {
   public title = 'MatImageGrid Minimal Demo';
 
-  @ViewChild(MatImageGridLibComponent)
-  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
-
   private imagesBaseUrl: string;
 
   constructor(
     private settings: MinimalGridSettings,
-    protected demoDataSource: AppDataSource<MigImageData>,
+    protected demoDatastore: DatastoreAdapterServiceBase<MigImageData>,
   ) {
     // MinimalGridSettings is not listed in 'providers', as it is defined with 'providedIn: root'
     this.imagesBaseUrl = this.settings.imagesBaseUrl;

@@ -1,4 +1,4 @@
-import { Component, Inject, Injectable, InjectionToken } from '@angular/core';
+import { Inject, Injectable, InjectionToken } from '@angular/core';
 import {
   ComponentFixture,
   ComponentFixtureAutoDetect,
@@ -6,20 +6,16 @@ import {
 } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 
-import { AppDataSource } from './classes/app.data-source.class';
-import { MinimalGridSettings } from './classes/minimal-grid-settings.class';
-import {
-  RequestImagesRange,
-  FieldSortDefinition,
-  FieldFilterDefinition,
-} from './interfaces/datastore-provider.interface';
-import { AppDatastoreServiceBase } from './services/app.datastore.base.service';
+import { AppComponent } from './app.component';
 import { MinimalGridDatastoreService } from './services/minimal-grid.datastore.service';
 
 import {
-  MatImageGridLibComponent,
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
   MigImageData,
   Page,
+  RequestImagesRange,
 } from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
@@ -29,8 +25,8 @@ const IMAGE_SERVICE_CONFIG = new InjectionToken<MigMockupServiceConfig>(
 );
 
 describe('Minimal Demo Component', () => {
-  let fixture: ComponentFixture<AppTestComponent>;
-  let app: AppTestComponent;
+  let fixture: ComponentFixture<AppComponent>;
+  let app: AppComponent;
   let originalTimeout: number;
 
   // it will take quite a long time, until all images have been loaded
@@ -44,7 +40,7 @@ describe('Minimal Demo Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppTestComponent],
+      imports: [AppComponent],
       providers: [
         {
           provide: IMAGE_SERVICE_CONFIG,
@@ -60,7 +56,7 @@ describe('Minimal Demo Component', () => {
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AppTestComponent);
+    fixture = TestBed.createComponent(AppComponent);
     app = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -106,7 +102,7 @@ describe('Minimal Demo Component', () => {
 });
 
 @Injectable()
-class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
+class MatImageGridMockupService extends DatastoreAdapterServiceBase<MigImageData> {
   private entriesInDatastore = 0;
 
   constructor(@Inject(IMAGE_SERVICE_CONFIG) config: MigMockupServiceConfig) {
@@ -152,63 +148,4 @@ class MatImageGridMockupService extends AppDatastoreServiceBase<MigImageData> {
     resultPage.totalFilteredElements = resultPage.returnedElements;
     return of(resultPage);
   }
-}
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [MatImageGridLibComponent],
-  providers: [
-    {
-      provide: AppDatastoreServiceBase,
-      useClass: MinimalGridDatastoreService,
-    },
-    AppDataSource,
-  ],
-  template: `
-    <div id="grid-container" #gridContainer>
-      <mat-image-grid
-        id="test-grid"
-        [dataSource]="demoDataSource"
-        [urlForImage]="urlForImage"
-      >
-        loading...
-      </mat-image-grid>
-    </div>
-  `,
-  styles: `
-    #grid-container {
-      height: 600px;
-    }
-  `,
-})
-export class AppTestComponent {
-  public title = 'MatImageGrid Minimal Demo';
-
-  private imagesBaseUrl: string;
-
-  constructor(
-    private settings: MinimalGridSettings,
-    protected demoDataSource: AppDataSource<MigImageData>,
-  ) {
-    // MinimalGridSettings is not listed in 'providers', as it is defined with 'providedIn: root'
-    this.imagesBaseUrl = this.settings.imagesBaseUrl;
-  }
-
-  /**
-   * Get the URL for an image with the given image data & dimensions.
-   * Used by mat-image-grid 'urlForImage' parameter.
-   * This demo uses an url like 'https://picsum.photos/id/201/800/600'.
-   * @param singleImageData - The properties of one image (e.g. containing the imageId).
-   * @param imageWidth - The width (in pixels) of the image.
-   * @param imageHeight - The height (in pixels) of the image.
-   * @returns The URL of the image with the given size.
-   */
-  protected urlForImage = (
-    singleImageData: MigImageData,
-    imageWidth: number,
-    imageHeight: number,
-  ) => {
-    return `${this.imagesBaseUrl}/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
-  };
 }

@@ -1,6 +1,6 @@
-import { RequestImagesRange } from '../interfaces/datastore-provider.interface';
-
 import { ExtendedGridDatastoreService } from './extended-grid.datastore.service';
+
+import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
 
 describe('ExtendedGridDatastoreService', () => {
   let service: ExtendedGridDatastoreService;

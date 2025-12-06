@@ -4,21 +4,21 @@ import { Observable } from 'rxjs';
 import {
   FieldFilterDefinition,
   FieldSortDefinition,
-  DataStoreProvider,
   RequestImagesRange,
-} from '../interfaces/datastore-provider.interface';
-
-import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
+  DataStoreAdapter,
+} from '../interfaces/datastore-adapter.interface';
+import { MigImageData } from '../interfaces/mig-image-data.interface';
+import { Page } from '../interfaces/page.interface';
 
 /**
- * Base class to get a list of information about the images to display.
+ * Base class for the adapter that gets a list of image data
+ * from the data store.
  * @template T - class derived from MigImageData
  */
-// todo rename to data store
 @Injectable()
-export abstract class AppDatastoreServiceBase<
+export abstract class DatastoreAdapterServiceBase<
   T extends MigImageData = MigImageData,
-> implements DataStoreProvider<T>
+> implements DataStoreAdapter<T>
 {
   // eslint-disable-next-line jsdoc/require-returns-check
   /**

@@ -30,14 +30,12 @@ import {
   tap,
 } from 'rxjs';
 
+import { DatastoreAdapterServiceBase } from './classes/datastore-adapter.service.base';
 import { FloatingAverage } from './classes/floating-average.class';
 import { LoadingService } from './classes/loading-service.class';
+import { MigDataSource } from './classes/mig-data-source.class';
 import { ProgressiveImage } from './classes/progressive-image.class';
 import { MigResizableDirective } from './directives/mig-resizable-directive';
-import {
-  DataSourcePaged,
-  Page,
-} from './interfaces/data-source-paged.interface';
 import {
   CreateMigImage,
   GetImageSize,
@@ -46,6 +44,7 @@ import {
 } from './interfaces/mig-common.types';
 import { MigImageConfiguration } from './interfaces/mig-image-configuration.interface';
 import { MigImageData } from './interfaces/mig-image-data.interface';
+import { Page } from './interfaces/page.interface';
 
 type ServerDataTotals = {
   totalElements: number;
@@ -117,8 +116,8 @@ export class MatImageGridLibComponent<
   @Input() spaceBetweenImages = 8;
   @Input() thumbnailSize = 20;
   @Input() withImageClickEvents = false;
-
-  @Input({ required: true }) dataSource!: DataSourcePaged<ServerData>; // Do not use before ngAfterViewInit
+  @Input({ required: true })
+  datastore!: DatastoreAdapterServiceBase<ServerData>; // Do not use before ngAfterViewInit
   @Input({ required: true })
   urlForImage: UrlForImageFromDimensions<ServerData> = this.urlForImageDefault;
   @Input() urlForThumbnail: UrlForImageFromDimensions<ServerData> =
@@ -178,6 +177,8 @@ export class MatImageGridLibComponent<
 
   private readonly unsubscribe$ = new Subject<void>();
 
+  private dataSource!: MigDataSource<ServerData>;
+
   /** Emits when new data is available. */
   private dataFromDataSource!: Observable<Page<ServerData>>; // Do not use before AfterViewInit
   private dataFromDataSourceTotals!: Observable<ServerDataTotals>; // Do not use before AfterViewInit
@@ -198,6 +199,7 @@ export class MatImageGridLibComponent<
   }
 
   public ngOnInit(): void {
+    this.dataSource = new MigDataSource<ServerData>(this.datastore);
     this.dataFromDataSource = this.dataSource.connect(this);
     this.initDataFromDataSourceTotals();
     this.initDataFromDataSourceImages();

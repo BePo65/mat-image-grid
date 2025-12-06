@@ -4,19 +4,17 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Observable, of } from 'rxjs';
 
-import { AppDataSource } from '../../classes/app.data-source.class';
-import {
-  FieldFilterDefinition,
-  FieldSortDefinition,
-  RequestImagesRange,
-} from '../../interfaces/datastore-provider.interface';
-import { AppDatastoreServiceBase } from '../../services/app.datastore.base.service';
-
 import { ExtendedGridSettings } from './extended-grid-settings.class';
 import { ExtendedGridComponent } from './extended-grid.component';
 import { MigImageExtData } from './mig-customization/mig-image-ext-data.interface';
 
-import { Page } from 'projects/mat-image-grid-lib/src';
+import {
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 type MigMockupServiceConfig = { numberOfImages: number };
 
@@ -48,10 +46,9 @@ describe('ExtendedGridComponent', () => {
                 useValue: testImageServiceConfig,
               },
               {
-                provide: AppDatastoreServiceBase,
+                provide: DatastoreAdapterServiceBase,
                 useClass: MatImageGridExtendedMockupService,
               },
-              AppDataSource,
             ],
           },
         ]),
@@ -143,7 +140,7 @@ describe('ExtendedGridComponent', () => {
 });
 
 @Injectable()
-class MatImageGridExtendedMockupService extends AppDatastoreServiceBase<MigImageExtData> {
+class MatImageGridExtendedMockupService extends DatastoreAdapterServiceBase<MigImageExtData> {
   private entriesInDatastore = 0;
   private dummyImage =
     'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAUABQDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAUG/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AoQGJRwAAAAAH/9k=';

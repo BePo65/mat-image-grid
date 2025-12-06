@@ -1,6 +1,6 @@
-import { RequestImagesRange } from '../interfaces/datastore-provider.interface';
-
 import { LargeDatasetDatastoreService } from './large-dataset.datastore.service';
+
+import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
 
 describe('LargeDatasetDatastoreService', () => {
   let service: LargeDatasetDatastoreService;

@@ -1,6 +1,6 @@
-import { RequestImagesRange } from '../interfaces/datastore-provider.interface';
-
 import { MinimalGridDatastoreService } from './minimal-grid.datastore.service';
+
+import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
 
 describe('MinimalGridDatastoreService', () => {
   let service: MinimalGridDatastoreService;

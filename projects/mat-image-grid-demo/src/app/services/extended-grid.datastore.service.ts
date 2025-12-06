@@ -1,23 +1,23 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
-import {
-  RequestImagesRange,
-  FieldSortDefinition,
-  FieldFilterDefinition,
-} from '../interfaces/datastore-provider.interface';
 import { MigImageExtData } from '../pages/extended-grid/mig-customization/mig-image-ext-data.interface';
 
-import { AppDatastoreServiceBase } from './app.datastore.base.service';
 import EXTENDED_GRID_DATA from './extended-grid-images.mock.data';
 
-import { Page } from 'projects/mat-image-grid-lib/src';
+import {
+  DatastoreAdapterServiceBase,
+  FieldFilterDefinition,
+  FieldSortDefinition,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 /**
  * Class to get a list of information about the images to display in the ExtendedGridComponent.
  */
 @Injectable()
-export class ExtendedGridDatastoreService extends AppDatastoreServiceBase<MigImageExtData> {
+export class ExtendedGridDatastoreService extends DatastoreAdapterServiceBase<MigImageExtData> {
   private images: MigImageExtData[];
 
   public constructor() {

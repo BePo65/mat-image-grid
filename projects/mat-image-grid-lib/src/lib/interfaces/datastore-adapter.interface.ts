@@ -1,7 +1,7 @@
 import { SortDirection } from '@angular/material/sort';
 import { Observable } from 'rxjs';
 
-import { Page } from 'projects/mat-image-grid-lib/src';
+import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
 
 type UnionKeys<T> = T extends T ? keyof T : never;
 type StrictUnionHelper<T, TAll> = T extends T
@@ -60,7 +60,7 @@ export interface RequestImagesRange {
  * Interface defining the methods of a class fetching image data from a server.
  * @template T - type defining the data of an image
  */
-export interface DataStoreProvider<T> {
+export interface DataStoreAdapter<T extends MigImageData> {
   /**
    * Fetching data from the datastore respecting sorting and filtering.
    * @param imagesRange - range of images to get data for

@@ -5,13 +5,12 @@ import {
   MatSlideToggle,
 } from '@angular/material/slide-toggle';
 
-import { AppDataSource } from '../../classes/app.data-source.class';
-
 import { ExtendedGridSettings } from './extended-grid-settings.class';
 import { MigImageExtData } from './mig-customization/mig-image-ext-data.interface';
 import { ProgressiveImageExt } from './mig-customization/progressive-image-ext.class';
 
 import {
+  DatastoreAdapterServiceBase,
   MatImageGridLibComponent,
   MigImageConfiguration,
 } from 'projects/mat-image-grid-lib/src';
@@ -41,7 +40,7 @@ export class ExtendedGridComponent {
 
   constructor(
     private settings: ExtendedGridSettings,
-    protected extendedDataSource: AppDataSource<MigImageExtData>,
+    protected extendedDatastore: DatastoreAdapterServiceBase<MigImageExtData>,
   ) {
     // ExtendedGridSettings is not listed in 'providers' or in route definition,
     // as it is defined with 'providedIn: root'

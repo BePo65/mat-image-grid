@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 
 import 'zone.js/testing';
 
-import { DemoDataSource } from './fixtures/demo-data-source';
+import { TestDatastore } from './fixtures/demo-datastore';
 import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridLibComponent } from './mat-image-grid.component';
 
@@ -13,7 +13,7 @@ const testImageServiceConfig = {
   numberOfImages: 50,
 } as DemoComponentConfig;
 
-const demoDataSource = new DemoDataSource<MigImageData>(testImageServiceConfig);
+const demoDatastore = new TestDatastore(testImageServiceConfig);
 
 describe('MatImageGridLibComponent', () => {
   let fixture: ComponentFixture<MatImageGridLibComponent>;
@@ -44,7 +44,7 @@ describe('MatImageGridLibComponent', () => {
   beforeEach(async () => {
     fixture = TestBed.createComponent(MatImageGridLibComponent);
     const compRef = fixture.componentRef;
-    compRef.setInput('dataSource', demoDataSource);
+    compRef.setInput('datastore', demoDatastore);
     compRef.setInput('urlForImage', urlForImage);
     component = fixture.componentInstance;
     fixture.autoDetectChanges();

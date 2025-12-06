@@ -4,11 +4,13 @@
 
 export * from './lib/mat-image-grid.component';
 
+export * from './lib/classes/datastore-adapter.service.base';
 export * from './lib/classes/progressive-image.class';
 
-export * from './lib/interfaces/mig-image-data.interface';
-export * from './lib/interfaces/data-source-paged.interface';
+export * from './lib/interfaces/datastore-adapter.interface';
 export * from './lib/interfaces/mig-image-configuration.interface';
+export * from './lib/interfaces/mig-image-data.interface';
+export * from './lib/interfaces/page.interface';
 export * from './lib/interfaces/progressive-image.interface';
 
 export * from './lib/interfaces/mig-common.types';

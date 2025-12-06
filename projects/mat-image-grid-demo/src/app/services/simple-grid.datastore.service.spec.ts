@@ -1,6 +1,6 @@
-import { RequestImagesRange } from '../interfaces/datastore-provider.interface';
-
 import { SimpleGridDatastoreService } from './simple-grid.datastore.service';
+
+import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
 
 describe('SimpleGridDatastoreService', () => {
   let service: SimpleGridDatastoreService;

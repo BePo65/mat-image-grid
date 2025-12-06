@@ -2,20 +2,19 @@ import { Injectable } from '@angular/core';
 import { Observable, delay, of } from 'rxjs';
 
 import {
-  RequestImagesRange,
-  FieldSortDefinition,
+  DatastoreAdapterServiceBase,
   FieldFilterDefinition,
-} from '../interfaces/datastore-provider.interface';
-
-import { AppDatastoreServiceBase } from './app.datastore.base.service';
-
-import { MigImageData, Page } from 'projects/mat-image-grid-lib/src';
+  FieldSortDefinition,
+  MigImageData,
+  Page,
+  RequestImagesRange,
+} from 'projects/mat-image-grid-lib/src';
 
 /**
  * Class to get a list of information about the images to display in the LargeDatasetComponent.
  */
 @Injectable()
-export class LargeDatasetDatastoreService extends AppDatastoreServiceBase<MigImageData> {
+export class LargeDatasetDatastoreService extends DatastoreAdapterServiceBase<MigImageData> {
   private numberOfImages = 1000;
 
   public constructor() {

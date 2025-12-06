@@ -1,8 +1,7 @@
 import { Component, Renderer2, ViewChild } from '@angular/core';
 
-import { AppDataSource } from '../../classes/app.data-source.class';
-
 import {
+  DatastoreAdapterServiceBase,
   MatImageGridLibComponent,
   MigImageData,
 } from 'projects/mat-image-grid-lib/src';
@@ -66,11 +65,11 @@ export class LargeDatasetComponent {
   /**
    * Creates an instance of ProgressiveImage.
    * @param renderer - Angular class to modify DOM
-   * @param largeDataSource - data source used to convert data from datastore
+   * @param largeDatastore - adapter used to get images data from datastore
    */
   constructor(
     private renderer: Renderer2,
-    protected largeDataSource: AppDataSource<MigImageData>,
+    protected largeDatastore: DatastoreAdapterServiceBase<MigImageData>,
   ) {}
 
   /**
