@@ -18,7 +18,7 @@ type RouteTab = { title: string; route: string; index: number };
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit, OnDestroy {
-  public title = 'MatImageGrid Demo';
+  public title = 'MatImageGrid Full Demo';
 
   private readonly unsubscribe$ = new Subject<void>();
 

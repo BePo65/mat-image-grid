@@ -14,7 +14,7 @@ export const routes: Routes = [
   {
     path: 'simple-grid',
     component: SimpleGridComponent,
-    title: 'MatImageGrid Demo - Simple Grid',
+    title: 'MatImageGrid Full Demo - Simple Grid',
     providers: [
       {
         provide: DatastoreAdapterServiceBase,
@@ -25,7 +25,7 @@ export const routes: Routes = [
   {
     path: 'extended-grid',
     component: ExtendedGridComponent,
-    title: 'MatImageGrid Demo - Extended Grid',
+    title: 'MatImageGrid Full Demo - Extended Grid',
     providers: [
       {
         provide: DatastoreAdapterServiceBase,
@@ -36,7 +36,7 @@ export const routes: Routes = [
   {
     path: 'large-dataset',
     component: LargeDatasetComponent,
-    title: 'MatImageGrid Demo - Large Dataset',
+    title: 'MatImageGrid Full Demo - Large Dataset',
     providers: [
       {
         provide: DatastoreAdapterServiceBase,
@@ -48,6 +48,6 @@ export const routes: Routes = [
   {
     path: '**',
     component: PageNotFoundComponent,
-    title: 'MatImageGrid Demo - Page not found',
+    title: 'MatImageGrid Full Demo - Page not found',
   },
 ];
