@@ -6,6 +6,8 @@
     "dist/**",
     "coverage/**",
     "projects/**",
-    "node_modules/**"
+    "node_modules/**",
+    "ghpages/full-demo/**",
+    "ghpages/min-demo/**"
   ]
 }
