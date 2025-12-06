@@ -29,7 +29,7 @@
     "build:demo:prod": "ng build mat-image-grid-demo --delete-output-path --configuration production --base-href ./",
     "build:demo:min": "ng build minimal-demo --delete-output-path --configuration development",
     "build:demo:min:prod": "ng build minimal-demo --delete-output-path --configuration production --base-href ./",
-    "build:ghpages": "npm run build:lib:prod && npm run build:demo:prod -- --base-href=/mat-image-grid/ && del-cli ghpages && cpy \"dist/mat-image-grid-demo/browser/**\" ghpages  && cpy \"dist/mat-image-grid-demo/3rdpartylicenses.txt\" ghpages --flat",
+    "build:ghpages": "npm run build:lib:prod && npm run build:demo:prod -- --base-href=/mat-image-grid/full-demo/ && npm run build:demo:min:prod -- --base-href=/mat-image-grid/min-demo/ && del-cli ghpages/full-demo && del-cli ghpages/min-demo && cpy \"demo/**\" ghpages && cpy \"dist/mat-image-grid-demo/browser/**\" ghpages/full-demo && cpy \"dist/minimal-demo/browser/**\" ghpages/min-demo && cpy \"dist/mat-image-grid-demo/3rdpartylicenses.txt\" ghpages --flat",
     "start": "ng serve mat-image-grid-demo --open",
     "start:demo:min": "ng serve minimal-demo --open",
     "start:debug": "ng serve mat-image-grid-demo --host=127.0.0.1 --open=false",

@@ -18,6 +18,11 @@ chrome-profiler-events*.json
 **/cypress/screenshots
 **/cypress/videos
 
+# gh-pages besides the main page
+ghpages/3rdpartylicenses.txt
+ghpages/full-demo
+ghpages/min-demo
+
 # IDEs and editors
 /.idea
 .project
