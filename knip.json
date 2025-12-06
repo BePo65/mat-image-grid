@@ -4,14 +4,20 @@
     "projects/mat-image-grid-lib/src/index.ts",
     "projects/mat-image-grid-demo/src/main.ts",
     "**/*.spec.ts",
+    "projects/mat-image-grid-lib/karma.conf.js",
     "projects/mat-image-grid-demo/cypress.config.ts",
     "projects/mat-image-grid-demo/cypress/e2e/*.ts",
-    "projects/mat-image-grid-lib/karma.conf.js",
     "projects/mat-image-grid-demo/karma.conf.js",
+    "projects/minimal-demo/cypress.config.ts",
+    "projects/minimal-demo/cypress/e2e/*.ts",
+    "projects/minimal-demo/karma.conf.js",
     "tools/npm-scripts/readme-updater.js",
     "tools/create-mockup-extended-grid.mjs"
   ],
-  "ignore": ["projects/mat-image-grid-demo/cypress/support/*.ts"],
+  "ignore": [
+    "projects/mat-image-grid-demo/cypress/support/*.ts",
+    "projects/minimal-demo/cypress/support/*.ts"
+  ],
   "ignoreDependencies": [
     "@angular/compiler",
     "@angular-eslint/schematics",
