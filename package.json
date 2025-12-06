@@ -36,7 +36,7 @@
     "start:debug:demo:min": "ng serve minimal-demo --host=127.0.0.1 --open=false",
     "unimported": "npx knip",
     "deprecated": "npx check-is-deprecated -g -m -f",
-    "copy-doc-to-lib": "cpy README.md dist/mat-image-grid-lib/ && cpy assets/screenshot.jpg dist/mat-image-grid-lib/ && cpy CHANGELOG.md dist/mat-image-grid-lib/ ",
+    "copy-doc-to-lib": "cpy README.md dist/mat-image-grid-lib/ && cpy assets/screenshot_full-demo.jpg dist/mat-image-grid-lib/ && cpy assets/mat-image-grid-buffers.pdf dist/mat-image-grid-lib/ && cpy CHANGELOG.md dist/mat-image-grid-lib/ ",
     "init-changelog": "commit-and-tag-version -i CHANGELOG.md --same-file --prerelease pre --first-release --commit-all",
     "release": "commit-and-tag-version -i CHANGELOG.md --same-file --commit-all",
     "e2e": "npm run e2e:demo && npm run e2e:demo:min",
