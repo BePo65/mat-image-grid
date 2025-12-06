@@ -22,9 +22,9 @@ An Angular material component showing images in a grid display. Based on the [Pr
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
         <li><a href="#embed-mat-image-grid-in-your-project">Embed Mat-Image-Grid In Your Project</a></li>
+        <li><a href="#extending">Extending</a></li>
       </ul>
     </li>
-    <li><a href="#mat-image-grid-demo">Mat-Image-Grid Demo</a></li>
     <li><a href="#theming">Theming</a></li>
     <li>
       <a href="#basic-buffer-layout">Basic buffer layout</a>
@@ -53,7 +53,7 @@ An Angular material component showing images in a grid display. Based on the [Pr
 
 This project modifies the 'Progressive Image Grid' so that it can be used in an Angular Material project.
 
-![Screenshot](assets/screenshot.jpg 'Screenshot of the demo page')
+![Screenshot](assets/screenshot_full-demo.jpg 'Screenshot of the demo page')
 
 Try out the [live demo](https://bepo65.github.io/mat-image-grid/).
 
@@ -79,40 +79,43 @@ npm install @bepo65/mat-image-grid
 
 Configure the `mat-image-grid` in your application template and provide the necessary settings.
 
-Important: `mat-image-grid` must have a defined height, as the component uses `height. 100%` in one of its subcomponents.
+**Important**: the container for `mat-image-grid` must have a defined height, as this component uses `height. 100%` in one of its subcomponents.
+
+So for example mat-image-grid can be surrounded with a div that has a height set in css or it can be embedded in a css flex or grid element (for examples see the demo projects in mat-image-grid on github).
 
 ```html
-<mat-image-grid [urlForImage]="UrlForImage"> loading... </mat-image-grid>
+<mat-image-grid [datastore]="myDatastore" [urlForImage]="myUrlForImage"> loading... </mat-image-grid>
 ```
 
 ```typescript
-  protected UrlForImage = (
-    singleImageData: MigImageData,
-    imageWidth: number,
-    imageHeight: number,
-  ) => {
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [MatImageGridLibComponent],
+  providers: [
+    {
+      provide: AppDatastoreServiceBase,
+      useClass: MyGridDatastoreService, // datastore adapter extending DatastoreAdapterServiceBase abstract class
+    },
+  ],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
+})
+export class AppComponent {
+  constructor(protected myDatastore: AppDatastoreServiceBase<MigImageData>) {}
+
+  protected myUrlForImage = (singleImageData: MigImageData, imageWidth: number, imageHeight: number) => {
     // In this demo we use an url like 'https://picsum.photos/id/201/800/600'
     return `https://picsum.photos/id/${singleImageData.imageId}/${imageWidth.toString(10)}/${imageHeight.toString(10)}`;
   };
+}
 ```
 
-Besides this, we need a service that extends `MatImageGridImageServiceBase` and provides a list with information about each image to display.
+Besides this, we need a service that extends `DatastoreAdapterServiceBase` and provides a list with information about each image to display.
 
-In the html part of your project, the mat-image-grid control must be embedded in a container with a defined height that is filled by the control (e.g. by using css flex or grid).
+### Extending
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-## Mat-Image-Grid Demo
-
-Demo project to show all features of Mat-Image-Grid.
-
-```
-git clone git@github.com:BePo65/mat-image-grid.git
-cd mat-image-grid
-npm start
-```
-
-Navigate to http://localhost:4200
+`mat-image-grid` can be extended to use more fields from the data store in the displayed images. Details can be found in the mat-image-grid-demo project in the `extended-grid` page.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -194,6 +197,8 @@ The Mat-Image-Grid component uses Angular Material (the 'mat-progress-bar' compo
 
 When scrolling upward, Pre- and Post- multipliers change place.
 
+A more detailed graphic can be found in the [pdf](assets\mat-image-grid-buffers.pdf).
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## API Reference
@@ -206,7 +211,7 @@ When scrolling upward, Pre- and Post- multipliers change place.
 
 #### MatImageGrid
 
-Component to create an angular material .....
+Component to create a `mat-image-grid` UI element.
 
 ##### **Properties**
 
@@ -217,13 +222,15 @@ Component to create an angular material .....
 | `@Input() PreViewportDomBufferMultiplier: number`                                            | Multiplier to calculate the height of the buffer for images already in the DOM, but not yet visible; base is the height of the current viewport (default = 1).           |
 | `@Input() PreViewportTriggerLoadBufferMultiplier: number`                                    | Multiplier to calculate the position of the trigger point, where more image data is requested from the server; base is the height of the current viewport (default = 1). |
 | `@Input() PreViewportLoadBufferMultiplier: number`                                           | Multiplier to calculate the height of the buffer for image data already loaded, but not yet in the DOM; base is the height of the current viewport (default = 3).        |
+| `@Input() ScrollDirectionChangeThreshold: number`                                            | Minimum number of pixels to scroll, before a change in scroll direction is recognized (default = 2).                                                                     |
 | `@Input() spaceBetweenImages: number`                                                        | Space (in 'px') between the rows of images (default = 8).                                                                                                                |
 | `@Input() thumbnailSize: number`                                                             | Size (in 'px') of the shown thumbnails (scaled to the image size; default = 20).                                                                                         |
 | `@Input() withImageClickEvents: boolean`                                                     | Should this component emit events, when clicking the image (default = false).                                                                                            |
-| `@Input() urlForImage: UrlForImageFromDimensions = this.urlForSizeDefault`                   | Callback for getting the url for an image based on the given server data and size (default: url = '/ID/width/height').                                                   |
+| `@Input() datastore: DatastoreAdapterServiceBase<ServerData>`                                | Required: adapter for getting a list of images data from the datastore.                                                                                                  |
+| `@Input() urlForImage: UrlForImageFromDimensions = this.urlForSizeDefault`                   | Required: callback for getting the url for an image based on the given server data and size (default: url = '/ID/width/height').                                         |
 | `@Input() urlForThumbnail: UrlForImageFromDimensions = this.urlForImage`                     | Callback for getting the url for a thumbnail image based on the given server data and size (default: url = '/ID/width/height').                                          |
 | `@Input() createMigImage: CreateMigImage<ServerData, MigImage> = this.createMigImageDefault` | Callback for creating a new instance of the ProgressiveImage class (default: new instance of the ProgressiveImage class).                                                |
-| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the aspect minimal ratio for a given viewport size (default: getMinAspectRatioDefault).                                                             |
+| `@Input() getMinAspectRatio: GetMinAspectRatio = this.getMinAspectRatioDefault`              | Callback for getting the minimal aspect ratio for a given viewport size (default: getMinAspectRatioDefault).                                                             |
 | `@Input() getImageSize: GetImageSize = this.getImageSizeDefault`                             | Callback for getting the image size (height in pixels) to use for a given viewport size (default: getImageSizeDefault).                                                  |
 | `@Output() numberOfImagesOnServer: EventEmitter<number>`                                     | Observable emitting the total number of images on the server.                                                                                                            |
 | `@Output() numberOfImagesOnServerFiltered: EventEmitter<number>`                             | Observable emitting the number of images on the server after applying the current filter.                                                                                |
@@ -235,33 +242,42 @@ The buffer multipliers are accumulative, i.e.
 
 - above the viewport (visible area of the image grid) we have an area with images that already have been added to the DOM and that have just been scrolled out of view. These images can be scrolled into view very fast. The height of this area is viewportHeight \* PostViewportDOMBufferMultiplier.
 
-- above this DOM buffer we have an area with images that already have been loaded from the server, but that are not yet part of the DOM. Before they can be displayed, they must be added to the DOM, which will take a few milliseconds, but what will be much faster than fetching the images from the server. The height of this area is (viewportHeight \* PostViewportLoadBufferMultiplier).
+- above this DOM buffer we have an area with images that have been loaded from the server, but that are no more part of the DOM. Before they can be displayed, they must be added to the DOM, which will take a few milliseconds, but what will be much faster than fetching the images from the server. The height of this area is (viewportHeight \* PostViewportLoadBufferMultiplier).
 
 - below the viewport (when scrolling down) we have the same buffers only the name of the multipliers change from PostViewportXxx to PreViewportXxx.
 
-- an additional element is the point where we request more images from the server. This happens before all images already loaded are added to the DOM, as it will take some time, before the images are available. The distance of this trigger point from the bottom of the PreViewportLoadBuffer is (viewportHeight \* PreViewportTriggerLoadBufferMultiplier).
+- an additional element is the point where we request more images from the server. This happens before all images already loaded are added to the DOM, as it will take some time, before a new image list requested from the server arrives. The distance of this trigger point from the bottom of the PreViewportDomBuffer is (viewportHeight \* PreViewportTriggerLoadBufferMultiplier).
 
 **Recommendation**
 
 Make (PostViewportDOMBufferMultiplier + PostViewportLoadBufferMultiplier) the same as (PreViewportDOMBufferMultiplier + PreViewportLoadBufferMultiplier) to avoid too many delete and load operations when scrolling only a little bit up and down.
 
-PreViewportTriggerLoadBufferMultiplier should be greater or equal to (PreViewportTriggerLoadBufferMultiplier \* 0.5) otherwise some of the images that would be requested from the server are already in the load buffer.
+PreViewportTriggerLoadBufferMultiplier should be greater or equal to (PreViewportTriggerLoadBufferMultiplier \* 0.5) otherwise some of the images that would be requested from the server would already be in the load buffer and we requested more data than necessary.
 
-##### **Injectables**
+**Note**: the dataStore is connected to mat-image-grid (and not injected to the component) to enable more than 1 mat-image-grid on a web page.
 
-| Name                                                     | Description                                               |
-| -------------------------------------------------------- | --------------------------------------------------------- |
-| `matImageGridImageService: MatImageGridImageServiceBase` | Service that acts as an interface to the database server. |
-|                                                          |                                                           |
+<a id="interfaces-api"></a>
+
+#### ProgressiveImage
+
+Representation of a single image in a `mat-image-grid`. This class is responsible for defining the html elements of an image and for adding / removing an image from the DOM.
+
+##### **Properties**
+
+This is only an extract of the properties; for more details see the source code.
+
+| Name                             | Description                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
+| `classNames: MigImageClassNames` | Object containing all css classes used in the html of an image. |
 
 <a id="interfaces-api"></a>
 
 ### Interfaces
 
-#### DataStoreProvider
+#### DataStoreAdapter
 
 Interface for a component that fetches data from the datastore respecting sorting and filtering.
-The component is generic; the given type is used to define the object for an object with image data.
+The interface is generic; the given type is used to define the object with image data.
 
 ##### **Methods**
 
@@ -269,7 +285,7 @@ The component is generic; the given type is used to define the object for an obj
 | ----------------------------------- | ----------------------------------------------------------------- |
 | `getPagedData`                      | Fetches data from the datastore respecting sorting and filtering. |
 | **Parameters**                      |
-| imagesRange: RequestRowsRange       | The range of images to fetch.                                     |
+| imagesRange: RequestImagesRange     | The range of images to fetch.                                     |
 | sorts: FieldSortDefinition<T>[]     | The sort definitions to use.                                      |
 | filters: FieldFilterDefinition<T>[] | The filter definitions to use.                                    |
 | **Returns**                         |
@@ -293,7 +309,7 @@ Interface defining the properties of a page of images data returned from the dat
 
 #### MigImageData
 
-This interface defines the parameters from the data store defining an image.
+This interface defines the minimal set required of parameters from the data store defining an image.
 
 ##### **Properties**
 
