@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, Renderer2, ViewChild } from '@angular/core';
+import { Component, Renderer2 } from '@angular/core';
 import {
   MatSlideToggleChange,
   MatSlideToggle,
@@ -27,9 +27,6 @@ import {
 })
 export class ExtendedGridComponent {
   public componentType = 'ExtendedGridComponent';
-
-  @ViewChild(MatImageGridLibComponent)
-  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
 
   protected showImageDetails = true;
   protected showImageFullScreen = true;

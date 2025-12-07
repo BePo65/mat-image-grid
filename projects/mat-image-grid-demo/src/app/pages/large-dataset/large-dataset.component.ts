@@ -1,4 +1,4 @@
-import { Component, Renderer2, ViewChild } from '@angular/core';
+import { Component, Renderer2 } from '@angular/core';
 
 import {
   DatastoreAdapterServiceBase,
@@ -15,9 +15,6 @@ import {
 })
 export class LargeDatasetComponent {
   public componentType = 'LargeDatasetComponent';
-
-  @ViewChild(MatImageGridLibComponent)
-  imageGrid!: MatImageGridLibComponent; // Do not use before ngAfterViewInit
 
   private imageColors = [
     {
