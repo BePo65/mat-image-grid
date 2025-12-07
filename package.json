@@ -63,7 +63,7 @@
     "@angular/router": "^17.3.12",
     "@fontsource/material-icons": "^5.2.7",
     "rxjs": "^7.8.2",
-    "zone.js": "^0.14.10"
+    "zone.js": "^0.16.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.3.17",
