@@ -2,8 +2,14 @@ name: publish-demo-to-github-pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
+
+# Ensure only one deployment runs at a time.
+# We set 'cancel-in-progress: false' to let active deployments finish safely before starting a new one.
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
 
 env:
   # Avoid installing Git Hooks
@@ -11,37 +17,42 @@ env:
 
 jobs:
   publish:
-    permissions:
-      contents: write # as we overwrite the target branch
-      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Use Node v22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
-          cache: "npm"
+          node-version: '24.x'
+          cache: 'npm'
 
-      - name: npm ci and npm run build
+      - name: npm ci and npm build files for ghpages
         run: |
           npm ci
           npm run build:ghpages
+          # Create .nojekyll to disable Jekyll processing (speeds up build and allows files starting with _)
+          touch ghpages/.nojekyll
 
-      - name: Publish current workdir (which contains generated content) to GitHub Pages
-        uses: rayluo/github-pages-overwriter@v1.3
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v4
         with:
-          # Optional. Default value "." means the root directory of your project will be published.
-          # You can use whatever directory your project uses, for example "wwwroot".
-          # Such a directory does *not* have to already exist in your repo,
-          # it could be an output directory created dynamically by your static website builder.
-          source-directory: ghpages
+          path: 'ghpages'
 
-          # Optional. Default value "gh_pages".
-          # It specifies the temporary branch which hosts the static website.
-          # Each build will OVERWRITE this branch.
-          target-branch: gh_pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
