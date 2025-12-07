@@ -1,11 +1,29 @@
-h1 {
-  padding-left: 0.5rem;
+.header {
+  display: grid;
+  flex-grow: 0;
+  grid-template-columns: max-content auto max-content;
+  margin: 0.25em 0.5em 0.75em;
+}
+
+.header-source {
+  place-self: center center;
+  margin: 0 2em;
 }
 
 #grid-container {
   border: 1px solid red;
   height: 600px;
   margin-left: 0.5rem;
-  max-width: 75%;
+  max-width: calc(100vw - 1.5rem);
   padding: 2px;
+}
+
+.footer {
+  flex-grow: 0;
+  font-size: smaller;
+  margin: 1rem 0.5em 0.75rem;
+}
+
+.text-spacer {
+  margin: 0 0.5em;
 }

@@ -51,5 +51,9 @@ body {
 .footer {
   flex-grow: 0;
   font-size: smaller;
-  margin: 0.25em 0.5em 0.75em;
+  margin: 1rem 0.5em 0.75rem;
+}
+
+.text-spacer {
+  margin: 0 0.5em;
 }
