@@ -19,10 +19,7 @@ module.exports = function (config) {
       suppressAll: true, // removes the duplicated traces
     },
     coverageReporter: {
-      dir: require('path').join(
-        __dirname,
-        '../../coverage/mat-image-grid-demo',
-      ),
+      dir: require('path').join(__dirname, '../../coverage/full-demo'),
       subdir: '.',
       reporters: [{ type: 'html' }, { type: 'text-summary' }],
     },

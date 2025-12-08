@@ -3,31 +3,31 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "mat-image-grid-demo": {
+    "full-demo": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "projects/mat-image-grid-demo",
-      "sourceRoot": "projects/mat-image-grid-demo/src",
+      "root": "projects/full-demo",
+      "sourceRoot": "projects/full-demo/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/mat-image-grid-demo",
-            "index": "projects/mat-image-grid-demo/src/index.html",
-            "browser": "projects/mat-image-grid-demo/src/main.ts",
+            "outputPath": "dist/full-demo",
+            "index": "projects/full-demo/src/index.html",
+            "browser": "projects/full-demo/src/main.ts",
             "polyfills": ["zone.js"],
-            "tsConfig": "projects/mat-image-grid-demo/tsconfig.app.json",
+            "tsConfig": "projects/full-demo/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "projects/mat-image-grid-demo/src/favicon.ico",
-              "projects/mat-image-grid-demo/src/assets"
+              "projects/full-demo/src/favicon.ico",
+              "projects/full-demo/src/assets"
             ],
-            "styles": ["projects/mat-image-grid-demo/src/styles.scss"],
+            "styles": ["projects/full-demo/src/styles.scss"],
             "scripts": []
           },
           "configurations": {
@@ -58,10 +58,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "mat-image-grid-demo:build:production"
+              "buildTarget": "full-demo:build:production"
             },
             "development": {
-              "buildTarget": "mat-image-grid-demo:build:development"
+              "buildTarget": "full-demo:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -69,21 +69,21 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "mat-image-grid-demo:build"
+            "buildTarget": "full-demo:build"
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
-            "tsConfig": "projects/mat-image-grid-demo/tsconfig.spec.json",
-            "karmaConfig": "projects/mat-image-grid-demo/karma.conf.js",
+            "tsConfig": "projects/full-demo/tsconfig.spec.json",
+            "karmaConfig": "projects/full-demo/karma.conf.js",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "projects/mat-image-grid-demo/src/favicon.ico",
-              "projects/mat-image-grid-demo/src/assets"
+              "projects/full-demo/src/favicon.ico",
+              "projects/full-demo/src/assets"
             ],
-            "styles": ["projects/mat-image-grid-demo/src/styles.scss"],
+            "styles": ["projects/full-demo/src/styles.scss"],
             "scripts": []
           }
         },
@@ -91,9 +91,9 @@
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": [
-              "projects/mat-image-grid-demo/**/*.ts",
-              "projects/mat-image-grid-demo/**/*.json",
-              "projects/mat-image-grid-demo/**/*.html"
+              "projects/full-demo/**/*.ts",
+              "projects/full-demo/**/*.json",
+              "projects/full-demo/**/*.html"
             ]
           }
         }

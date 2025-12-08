@@ -115,7 +115,7 @@ Besides this, we need a service that extends `DatastoreAdapterServiceBase` and p
 
 ### Extending
 
-`mat-image-grid` can be extended to use more fields from the data store in the displayed images. Details can be found in the mat-image-grid-demo project in the `extended-grid` page.
+`mat-image-grid` can be extended to use more fields from the data store in the displayed images. Details can be found in the full-demo project in the `extended-grid` page.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

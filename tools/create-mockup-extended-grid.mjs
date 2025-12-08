@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 
 import { faker } from '@faker-js/faker';
 
-const filesDirectory = './projects/mat-image-grid-demo/src/app/services/';
+const filesDirectory = './projects/full-demo/src/app/services/';
 const sourcePath = resolve(
   process.cwd(),
   filesDirectory,
