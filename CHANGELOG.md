@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [17.0.0](https://github.com/BePo65/mat-image-grid/compare/v0.6.4...v17.0.0) (2025-12-08)
+
+### ⚠ BREAKING CHANGES
+
+- as dataSource is always the same, it is made part of
+  the library project and a dataStore is used as a required input.
+
+### Features
+
+- add a demo with 1 image grid only ([3dc3aed](https://github.com/BePo65/mat-image-grid/commit/3dc3aedea8b1f8055fe56a29881b63294fb99e25))
+- add landing page for github pages site ([d7581b1](https://github.com/BePo65/mat-image-grid/commit/d7581b17c958e9dd1a6781cf879fe71860ebb620))
+- add virtual datasource to handle unlimited large datasets - eeors ([ac9d907](https://github.com/BePo65/mat-image-grid/commit/ac9d907804c8b372ae3823cabc6eddfa2eafaf46))
+- simplify api by using datastore as an [@input](https://github.com/input) ([480c9e1](https://github.com/BePo65/mat-image-grid/commit/480c9e175fe41c49990cc92bf781816278b3259d))
+
+### Bug Fixes
+
+- adapt title of minimal demo to form of title from full demo ([cb3fe64](https://github.com/BePo65/mat-image-grid/commit/cb3fe644fc8ca3b8be4ea877d63cba842f48c4ef))
+- add hint to picsum to footer of web pages ([3eacd8d](https://github.com/BePo65/mat-image-grid/commit/3eacd8df8c9bd60e5fb7d518f754f24eabb27aae))
+- add zone version 0.16 to dependabot configuration ([972d304](https://github.com/BePo65/mat-image-grid/commit/972d3049fd98199c4b5151f1e185e1460e5b647a))
+- chane titles from 'Demo' to 'Full Demo' ([00d0fc4](https://github.com/BePo65/mat-image-grid/commit/00d0fc4f30da890c6ac7b4282d634be231e98607))
+- minimal demo threw in debug mode ([752756a](https://github.com/BePo65/mat-image-grid/commit/752756a97547b6b50cd7bb777ed11394bdf09e37))
+- move classes in demo-app into new subdirectory "classes" ([319a1eb](https://github.com/BePo65/mat-image-grid/commit/319a1eb4c9d3e94a4ce0cc927482736abdeb0480))
+- move classes in minimal demo-app into new subdirectory "classes" ([d709244](https://github.com/BePo65/mat-image-grid/commit/d709244b8dd087bc63858035d2f90c85c16103df))
+- remove debugging helper code ([4939a9f](https://github.com/BePo65/mat-image-grid/commit/4939a9fceb3f314f01c40e259426bfb7a70ba111))
+- remove error thrown, when tests terminated ([49b3448](https://github.com/BePo65/mat-image-grid/commit/49b34483de3f918c3fba26ec896477e4706ef9b1))
+- remove unnecessary @ViewChild ([b9ddf93](https://github.com/BePo65/mat-image-grid/commit/b9ddf932212c689d5f2c8f0e63e4deb5a31f3ba4))
+- remove unnecessary empty providers list from component definition ([b6e3588](https://github.com/BePo65/mat-image-grid/commit/b6e358816e0150b4878eaaac6887b336e3c1d7b3))
+- remove unnecessary import from AppComponent ([6ae3ee3](https://github.com/BePo65/mat-image-grid/commit/6ae3ee32a62ebf2aea4e945d3b80a130b2594958))
+- resize does not change grid height ([7dc6c73](https://github.com/BePo65/mat-image-grid/commit/7dc6c73329426ab27955555e52e3af055ebff040))
+- scrolling fast prevented the last images to be loaded ([ae277a4](https://github.com/BePo65/mat-image-grid/commit/ae277a49df18503b9dc77e69ddfc63650ce68382))
+- set height of container in demo tests to display images ([12fb361](https://github.com/BePo65/mat-image-grid/commit/12fb361a348df609f4c0710eb20f72904be96848))
+- update name of screenshot for readme in build script ([814343a](https://github.com/BePo65/mat-image-grid/commit/814343aca7bc4cfe82eab456993a41fc362abbf4))
+- update packages to fix security warnings ([24f88ae](https://github.com/BePo65/mat-image-grid/commit/24f88ae6365f1ec58e6d1412ab88a234dc0cc0ef))
+- use older icon file for demos ([d3f8035](https://github.com/BePo65/mat-image-grid/commit/d3f80355b2e4e83b15ae93ce2620a16df17b0e49))
+- used cached width of container ([6cc8ab4](https://github.com/BePo65/mat-image-grid/commit/6cc8ab4af43662d15d0f3ca57b5ba3c5b27f091a))
+
 ## [0.6.4](https://github.com/BePo65/mat-image-grid/compare/v0.6.3...v0.6.4) (2025-07-02)
 
 ### Bug Fixes
