@@ -17,14 +17,9 @@ env:
 
 jobs:
   publish:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     permissions:
-      contents: read
+      contents: write # as we overwrite the target branch
       pages: write
-      id-token: write
 
     runs-on: ubuntu-24.04
 
@@ -42,17 +37,17 @@ jobs:
         run: |
           npm ci
           npm run build:ghpages
-          # Create .nojekyll to disable Jekyll processing (speeds up build and allows files starting with _)
-          touch ghpages/.nojekyll
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifacts
-        uses: actions/upload-pages-artifact@v4
+      - name: Publish current workdir (which contains generated content) to GitHub Pages
+        uses: rayluo/github-pages-overwriter@v1.3
         with:
-          path: 'ghpages'
+          # Optional. Default value "." means the root directory of your project will be published.
+          # You can use whatever directory your project uses, for example "wwwroot".
+          # Such a directory does *not* have to already exist in your repo,
+          # it could be an output directory created dynamically by your static website builder.
+          source-directory: ghpages
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          # Optional. Default value "gh_pages".
+          # It specifies the temporary branch which hosts the static website.
+          # Each build will OVERWRITE this branch.
+          target-branch: gh_pages
