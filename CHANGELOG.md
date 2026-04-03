@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [17.0.1](https://github.com/BePo65/mat-image-grid/compare/v17.0.0...v17.0.1) (2026-04-03)
+
+### Bug Fixes
+
+- update packages to fix github dependabot security warning ([cfaf071](https://github.com/BePo65/mat-image-grid/commit/cfaf0717a4d86d81052c8a711fc003f0144f03f3))
+- update packages to fix github dependabot security warnings ([357324c](https://github.com/BePo65/mat-image-grid/commit/357324c72365c81ef124ca7c02741ba84e476a4b))
+
 ## [17.0.0](https://github.com/BePo65/mat-image-grid/compare/v0.6.4...v17.0.0) (2025-12-08)
 
 ### ⚠ BREAKING CHANGES
