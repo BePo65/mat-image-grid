@@ -1,7 +1,5 @@
 import { LargeDatasetDatastoreService } from './large-dataset.datastore.service';
 
-import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
-
 describe('LargeDatasetDatastoreService', () => {
   let service: LargeDatasetDatastoreService;
 
@@ -17,7 +15,7 @@ describe('LargeDatasetDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 0,
       numberOfImages: 0,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(0);
       expect(result.returnedElements).toBe(0);
@@ -32,7 +30,7 @@ describe('LargeDatasetDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 0,
       numberOfImages: 1,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(1);
       expect(result.returnedElements).toBe(1);
@@ -51,7 +49,7 @@ describe('LargeDatasetDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 998,
       numberOfImages: 2,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(2);
       expect(result.returnedElements).toBe(2);
@@ -76,7 +74,7 @@ describe('LargeDatasetDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 994,
       numberOfImages: 10,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(6);
       expect(result.returnedElements).toBe(6);

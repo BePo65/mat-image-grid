@@ -36,7 +36,7 @@ describe('Minimal Demo Component', () => {
   const imagesOnFirstLoad = 16;
   const MinimalGridImageServiceConfig = {
     numberOfImages: 200,
-  } as MigMockupServiceConfig;
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -140,7 +140,7 @@ class MatImageGridMockupService extends DatastoreAdapterServiceBase<MigImageData
       const entry = {
         imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
-      } as MigImageData;
+      };
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 

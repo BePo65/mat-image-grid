@@ -29,7 +29,7 @@ describe('ExtendedGridComponent', () => {
   const imagesOnFirstLoad = 20;
   const testImageServiceConfig = {
     numberOfImages: 200,
-  } as MigMockupServiceConfig;
+  };
   const appConfig = new ExtendedGridSettings();
 
   beforeEach(async () => {
@@ -184,7 +184,7 @@ class MatImageGridExtendedMockupService extends DatastoreAdapterServiceBase<MigI
         description: `description ${i + 1}`,
         toursId: i + 1,
         thumbnailDataUrl: this.dummyImage,
-      } as MigImageExtData;
+      };
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 

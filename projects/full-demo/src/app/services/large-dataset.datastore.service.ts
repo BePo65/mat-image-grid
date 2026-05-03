@@ -47,7 +47,7 @@ export class LargeDatasetDatastoreService extends DatastoreAdapterServiceBase<Mi
       migImages[i] = {
         imageId: (imagesRange.startImageIndex + i + 1).toString(),
         aspectRatio: (Math.log10(aspectRatioBase + 1) % 1) + 0.5,
-      } as MigImageData;
+      };
     }
 
     const simulatedResponseTime =

@@ -36,7 +36,7 @@ export class ProgressiveImageExt extends ProgressiveImage<MigImageExtData> {
       imageDescription: 'mat-image-grid-desc',
       imageOverlay: 'mat-image-grid-overlay',
       fullImageVisibility: 'mat-image-grid-full-image-visibility',
-    } as MigImageExtClassNames;
+    };
   }
 
   /**

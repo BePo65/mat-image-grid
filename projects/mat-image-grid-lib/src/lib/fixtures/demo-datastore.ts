@@ -66,7 +66,7 @@ export class TestDatastore extends DatastoreAdapterServiceBase {
       const entry = {
         imageId: `${i.toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
-      } as MigImageData;
+      };
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 

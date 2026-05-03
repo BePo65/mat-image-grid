@@ -28,7 +28,7 @@ describe('LargeDatasetComponent', () => {
   const imagesOnFirstLoad = 20;
   const testImageServiceConfig = {
     numberOfImages: 200,
-  } as MigMockupServiceConfig;
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -171,7 +171,7 @@ class MatImageGridLargeDatasetMockupService extends DatastoreAdapterServiceBase<
       const entry = {
         imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
-      } as MigImageData;
+      };
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 
