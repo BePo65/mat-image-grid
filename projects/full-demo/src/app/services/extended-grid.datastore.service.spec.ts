@@ -1,7 +1,5 @@
 import { ExtendedGridDatastoreService } from './extended-grid.datastore.service';
 
-import { RequestImagesRange } from 'projects/mat-image-grid-lib/src';
-
 describe('ExtendedGridDatastoreService', () => {
   let service: ExtendedGridDatastoreService;
 
@@ -17,7 +15,7 @@ describe('ExtendedGridDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 0,
       numberOfImages: 0,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(0);
       expect(result.returnedElements).toBe(0);
@@ -32,7 +30,7 @@ describe('ExtendedGridDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 0,
       numberOfImages: 1,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(1);
       expect(result.returnedElements).toBe(1);
@@ -56,7 +54,7 @@ describe('ExtendedGridDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 198,
       numberOfImages: 2,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(2);
       expect(result.returnedElements).toBe(2);
@@ -92,7 +90,7 @@ describe('ExtendedGridDatastoreService', () => {
     const requestedRange = {
       startImageIndex: 194,
       numberOfImages: 10,
-    } as RequestImagesRange;
+    };
     service.getPagedData(requestedRange).subscribe((result) => {
       expect(result.content.length).toBe(6);
       expect(result.returnedElements).toBe(6);

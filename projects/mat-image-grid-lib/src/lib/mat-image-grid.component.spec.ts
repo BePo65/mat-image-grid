@@ -7,11 +7,9 @@ import { TestDatastore } from './fixtures/demo-datastore';
 import { MigImageData } from './interfaces/mig-image-data.interface';
 import { MatImageGridLibComponent } from './mat-image-grid.component';
 
-type DemoComponentConfig = { numberOfImages: number };
-
 const testImageServiceConfig = {
   numberOfImages: 50,
-} as DemoComponentConfig;
+};
 
 const demoDatastore = new TestDatastore(testImageServiceConfig);
 

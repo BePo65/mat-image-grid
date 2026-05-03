@@ -76,7 +76,7 @@ export class ProgressiveImage<ServerData extends MigImageData> {
       fullImage: 'mat-image-grid-full-image',
       thumbnail: 'mat-image-grid-thumbnail',
       loaded: 'mat-image-grid-loaded',
-    } as MigImageClassNames;
+    };
   }
 
   /**

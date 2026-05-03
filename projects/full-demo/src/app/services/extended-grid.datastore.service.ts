@@ -22,7 +22,7 @@ export class ExtendedGridDatastoreService extends DatastoreAdapterServiceBase<Mi
 
   public constructor() {
     super();
-    this.images = EXTENDED_GRID_DATA.map((image) => image as MigImageExtData);
+    this.images = EXTENDED_GRID_DATA.map((image) => image);
   }
 
   // TODO add 'sorts?: FieldSortDefinition<MigImageData>[]' and 'filters?: FieldFilterDefinition<MigImageData>[]'

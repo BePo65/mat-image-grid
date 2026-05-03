@@ -29,7 +29,7 @@ describe('SimpleGridComponent', () => {
   const imagesOnFirstLoad = 20;
   const testImageServiceConfig = {
     numberOfImages: 200,
-  } as MigMockupServiceConfig;
+  };
   const appConfig = new SimpleGridSettings();
 
   beforeEach(async () => {
@@ -183,7 +183,7 @@ class MatImageGridMockupService extends DatastoreAdapterServiceBase<MigImageData
       const entry = {
         imageId: `${(imagesRange.startImageIndex + i).toString().padStart(5, '0').slice(-5)}`,
         aspectRatio: 1.3,
-      } as MigImageData;
+      };
       resultPage.returnedElements = resultPage.content.push(entry);
     }
 

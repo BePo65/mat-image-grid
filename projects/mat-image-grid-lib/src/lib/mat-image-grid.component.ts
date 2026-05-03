@@ -84,10 +84,9 @@ const SCROLL_SCHEDULER =
   styleUrl: './mat-image-grid.component.scss',
 })
 export class MatImageGridLibComponent<
-    ServerData extends MigImageData = MigImageData,
-    MigImage extends
-      ProgressiveImage<ServerData> = ProgressiveImage<ServerData>,
-  >
+  ServerData extends MigImageData = MigImageData,
+  MigImage extends ProgressiveImage<ServerData> = ProgressiveImage<ServerData>,
+>
   implements AfterViewInit, OnDestroy, OnInit, CollectionViewer
 {
   /**
@@ -174,7 +173,7 @@ export class MatImageGridLibComponent<
   private serverDataTotals = {
     totalElements: 0,
     totalFilteredElements: 0,
-  } as ServerDataTotals;
+  };
 
   private readonly unsubscribe$ = new Subject<void>();
 
@@ -467,7 +466,7 @@ export class MatImageGridLibComponent<
         return {
           totalElements: serverResponse.totalElements,
           totalFilteredElements: serverResponse.totalFilteredElements,
-        } as ServerDataTotals;
+        };
       }),
     );
     this.dataFromDataSourceTotals.pipe(takeUntil(this.unsubscribe$)).subscribe({
@@ -491,7 +490,7 @@ export class MatImageGridLibComponent<
           content: serverResponse.content,
           startImageIndex: serverResponse.startImageIndex,
           returnedElements: serverResponse.returnedElements,
-        } as serverDataImages<ServerData>;
+        };
       }),
       tap(() => this.ngZone.run(() => this.loadingService.receivedResponse())),
     );

@@ -1,7 +1,6 @@
 import { CollectionViewer } from '@angular/cdk/collections';
 import { BehaviorSubject, Observable, Subscription, first } from 'rxjs';
 
-import { RequestImagesRange } from '../interfaces/datastore-adapter.interface';
 import { MigImageData } from '../interfaces/mig-image-data.interface';
 import { Page } from '../interfaces/page.interface';
 
@@ -54,7 +53,7 @@ export class MigDataSource<T extends MigImageData = MigImageData> {
         const requestedRange = {
           startImageIndex: listRange.start,
           numberOfImages: numberOfRequestedImages,
-        } as RequestImagesRange;
+        };
 
         this.datastore
           .getPagedData(requestedRange)
