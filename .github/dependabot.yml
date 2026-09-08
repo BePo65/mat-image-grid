@@ -11,7 +11,7 @@ updates:
       - dependency-name: 'eslint'
         versions: ['9.x', '10.x']
       - dependency-name: 'eslint-plugin-cypress'
-        versions: ['4.x', '5.x', '6.x']
+        versions: ['4.x', '5.x', '6.x', '7.x']
       - dependency-name: '@angular/*'
         versions: ['18.x', '19.x', '20.x', '21.x', '22.x']
       - dependency-name: '@angular-devkit/build-angular'
@@ -25,9 +25,9 @@ updates:
       - dependency-name: 'zone'
         versions: ['0.15.x', '0.16.x']
       - dependency-name: 'cypress'
-        versions: ['15.x']
+        versions: ['15.x', '16.x']
       - dependency-name: '@cypress/schematic'
-        versions: ['4.x', '5.x']
+        versions: ['4.x', '5.x', '6.x']
       - dependency-name: '@cypress/webpack-preprocessor'
         versions: ['7.x']
       - dependency-name: '@types/node'
