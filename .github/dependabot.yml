@@ -29,7 +29,7 @@ updates:
       - dependency-name: '@cypress/schematic'
         versions: ['4.x', '5.x', '6.x']
       - dependency-name: '@cypress/webpack-preprocessor'
-        versions: ['7.x']
+        versions: ['7.x', '8.x']
       - dependency-name: '@types/node'
         versions: ['25.x', '26.x']
       - dependency-name: 'jasmine-core'
