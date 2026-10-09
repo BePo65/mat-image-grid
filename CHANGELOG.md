@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [17.0.2](https://github.com/BePo65/mat-image-grid/compare/v17.0.1...v17.0.2) (2026-10-09)
+
+### Bug Fixes
+
+- resolve eslint errors ([5bf2a98](https://github.com/BePo65/mat-image-grid/commit/5bf2a98df3aafa8aedb0ab9894d80c285c169d46))
+
 ## [17.0.1](https://github.com/BePo65/mat-image-grid/compare/v17.0.0...v17.0.1) (2026-04-03)
 
 ### Bug Fixes
