@@ -39,7 +39,7 @@
     "copy-doc-to-lib": "cpy README.md dist/mat-image-grid-lib/ && cpy assets/screenshot_full-demo.jpg dist/mat-image-grid-lib/ && cpy assets/mat-image-grid-buffers.pdf dist/mat-image-grid-lib/ && cpy CHANGELOG.md dist/mat-image-grid-lib/ ",
     "copy-demo-to-ghpages": "del-cli ghpages/full-demo && del-cli ghpages/min-demo && cpy \"demo/**\" ghpages && cpy \"dist/full-demo/browser/**\" ghpages/full-demo && cpy \"dist/minimal-demo/browser/**\" ghpages/min-demo && cpy \"dist/full-demo/3rdpartylicenses.txt\" ghpages/full-demo --flat && cpy \"dist/minimal-demo/3rdpartylicenses.txt\" ghpages/min-demo --flat",
     "init-changelog": "commit-and-tag-version -i CHANGELOG.md --same-file --prerelease pre --first-release --commit-all",
-    "release": "commit-and-tag-version -i CHANGELOG.md --same-file --commit-all",
+    "release": "commit-and-tag-version -i CHANGELOG.md --same-file --commit-all && npm run build:prod",
     "e2e": "npm run e2e:demo:full && npm run e2e:demo:min",
     "e2e:demo:full": "npm run cypress:demo:full:run:e2e",
     "e2e:demo:min": "npm run cypress:demo:min:run:e2e",
