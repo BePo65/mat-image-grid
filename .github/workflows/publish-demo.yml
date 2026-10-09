@@ -6,7 +6,7 @@ on:
 
   workflow_dispatch:
 
-    # Ensure only one deployment runs at a time.
+# Ensure only one deployment runs at a time.
 # We set 'cancel-in-progress: false' to let active deployments finish safely before starting a new one.
 concurrency:
   group: 'pages'
