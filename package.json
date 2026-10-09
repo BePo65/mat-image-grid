@@ -47,7 +47,8 @@
     "cypress:demo:min:open": "start-server-and-test \"ng serve minimal-demo\" http://localhost:4200 \"cypress open --project=projects/minimal-demo\"",
     "cypress:demo:full:run:e2e": "start-server-and-test \"ng serve full-demo\" http://localhost:4200 \"cypress run --project=projects/full-demo\"",
     "cypress:demo:min:run:e2e": "start-server-and-test \"ng serve minimal-demo\" http://localhost:4200 \"cypress run --project=projects/minimal-demo\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "ncu:test": "npm run test && npm run build && npm run e2e"
   },
   "private": false,
   "dependencies": {
